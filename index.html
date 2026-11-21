@@ -28,6 +28,10 @@
       user-select: none;
       cursor: col-resize;
     }
+    body.resizing-split-v {
+      user-select: none;
+      cursor: row-resize;
+    }
     body.view-only .edit-only {
       pointer-events: none;
       opacity: 0.48;
@@ -218,7 +222,7 @@
     .canvas-wrap {
       flex: 1;
       min-width: 200px;
-      min-height: 0;
+      min-height: 110px;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -232,47 +236,6 @@
       touch-action: none;
     }
 
-    .coord-popup {
-      position: fixed;
-      z-index: 40;
-      pointer-events: none;
-      display: none;
-      background: rgba(15, 23, 42, 0.96);
-      color: #f8fafc;
-      border: 1px solid #38bdf8;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
-      border-radius: 8px;
-      padding: 7px 11px;
-      font-size: 12px;
-      line-height: 1.45;
-      max-width: 320px;
-      white-space: nowrap;
-    }
-    .coord-popup.show {
-      display: block;
-    }
-    .coord-popup .popup-main {
-      font-weight: bold;
-      color: #fef08a;
-      font-size: 12.5px;
-    }
-    .coord-popup .popup-sub {
-      color: #cbd5e1;
-      font-size: 11px;
-      margin-top: 1px;
-    }
-    body.mobile-mode .coord-popup {
-      left: 50% !important;
-      top: auto !important;
-      bottom: 18px !important;
-      transform: translateX(-50%);
-      max-width: 92vw;
-      white-space: normal;
-      text-align: center;
-      padding: 9px 14px;
-      border-width: 1.5px;
-    }
-
     .splitter {
       width: 10px;
       margin: 0 4px;
@@ -282,6 +245,7 @@
       flex-shrink: 0;
       position: relative;
       transition: background 0.15s;
+      touch-action: none;
     }
     .splitter::after {
       content: "";
@@ -295,23 +259,25 @@
       background: #64748b;
     }
     .splitter:hover,
-    body.resizing-split .splitter {
+    body.resizing-split .splitter,
+    body.resizing-split-v .splitter {
       background: #0284c7;
     }
     .splitter:hover::after,
-    body.resizing-split .splitter::after {
+    body.resizing-split .splitter::after,
+    body.resizing-split-v .splitter::after {
       background: #e0f2fe;
     }
 
     .roster-panel {
       width: 470px;
       min-width: 330px;
+      min-height: 110px;
       background: #20242f;
       border: 1px solid #3a4052;
       border-radius: 8px;
       display: flex;
       flex-direction: column;
-      min-height: 0;
       flex-shrink: 0;
     }
     .roster-header {
@@ -407,6 +373,56 @@
       width: 100%;
     }
 
+    .coord-popup {
+      position: fixed;
+      z-index: 40;
+      pointer-events: none;
+      display: none;
+      background: rgba(15, 23, 42, 0.96);
+      color: #f8fafc;
+      border: 1px solid #38bdf8;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+      border-radius: 8px;
+      padding: 7px 11px;
+      font-size: 12px;
+      line-height: 1.45;
+      max-width: 340px;
+      white-space: nowrap;
+    }
+    .coord-popup.show {
+      display: block;
+    }
+    .coord-popup.dragging-popup {
+      border-color: #fbbf24;
+    }
+    .coord-popup.invalid-popup {
+      border-color: #f87171;
+    }
+    .coord-popup .popup-main {
+      font-weight: bold;
+      color: #fef08a;
+      font-size: 12.5px;
+    }
+    .coord-popup.invalid-popup .popup-main {
+      color: #fca5a5;
+    }
+    .coord-popup .popup-sub {
+      color: #cbd5e1;
+      font-size: 11px;
+      margin-top: 1px;
+    }
+    body.mobile-mode .coord-popup {
+      left: 50% !important;
+      top: auto !important;
+      bottom: 14px !important;
+      transform: translateX(-50%);
+      max-width: 94vw;
+      white-space: normal;
+      text-align: center;
+      padding: 9px 14px;
+      border-width: 1.5px;
+    }
+
     body.mobile-mode {
       padding: 6px 8px;
       gap: 4px;
@@ -439,31 +455,47 @@
     }
     body.mobile-mode .main-layout {
       flex-direction: column;
-      gap: 6px;
+      gap: 0;
     }
     body.mobile-mode .splitter {
-      display: none;
+      display: block;
+      width: 100%;
+      height: 14px;
+      margin: 4px 0;
+      border-radius: 7px;
+      cursor: row-resize;
+    }
+    body.mobile-mode .splitter::after {
+      width: 44px;
+      height: 3px;
     }
     body.mobile-mode .canvas-wrap {
       width: 100%;
       min-width: 0;
-      flex: 1.05;
+      min-height: 90px;
+      flex: none;
+      height: 48%;
     }
     body.mobile-mode .roster-panel {
       width: 100% !important;
       min-width: 0;
+      min-height: 90px;
       flex: 1;
     }
-    body.mobile-mode.mobile-tab-map .roster-panel {
+    body.mobile-mode.mobile-tab-map .roster-panel,
+    body.mobile-mode.mobile-tab-map .splitter {
       display: none;
     }
     body.mobile-mode.mobile-tab-map .canvas-wrap {
+      height: 100%;
       flex: 1;
     }
-    body.mobile-mode.mobile-tab-list .canvas-wrap {
+    body.mobile-mode.mobile-tab-list .canvas-wrap,
+    body.mobile-mode.mobile-tab-list .splitter {
       display: none;
     }
     body.mobile-mode.mobile-tab-list .roster-panel {
+      height: 100%;
       flex: 1;
     }
     body.mobile-mode .roster-cols,
@@ -657,7 +689,7 @@
       <canvas id="mapCanvas"></canvas>
     </div>
 
-    <div id="splitter" class="splitter" title="ドラッグしてマップとリストの幅を調整"></div>
+    <div id="splitter" class="splitter" title="ドラッグしてマップとリストの表示幅・高さを調整"></div>
 
     <aside id="rosterPanel" class="roster-panel">
       <div class="roster-header">
@@ -683,7 +715,7 @@
     </aside>
   </div>
 
-  <!-- 座標ポップアップ（PCホバー停止時 / スマホタップ時） -->
+  <!-- 座標ポップアップ（PCホバー停止時 / スマホタップ・ドラッグ移動時） -->
   <div id="coordPopup" class="coord-popup" role="tooltip">
     <div id="popupMain" class="popup-main"></div>
     <div id="popupSub" class="popup-sub"></div>
@@ -1088,6 +1120,7 @@
     let panY = 0;
 
     let isResizingSplitter = false;
+    let isResizingMobileSplitter = false;
 
     let isPanning = false;
     let hasMovedDuringPan = false;
@@ -1103,15 +1136,16 @@
     let draggingTarget = null;
     let dragPreviewGridBase = null;
     let dragPreviewValid = true;
+    let dragPreviewReason = "";
     let dragOffsetGridX = 0;
     let dragOffsetGridY = 0;
 
     let currentUiMode = "pc";
     let mobileTab = "split";
 
-    // ==================== 座標ポップアップ制御（PC停止ホバー / スマホタップ） ====================
+    // ==================== 座標ポップアップ制御（PC停止ホバー / スマホタップ / ドラッグ移動予定座標） ====================
     const PC_HOVER_DELAY_MS = 450;
-    const MOBILE_POPUP_DURATION_MS = 2600;
+    const MOBILE_POPUP_DURATION_MS = 2800;
     let hoverTimerId = null;
     let mobilePopupTimerId = null;
     let lastMouseClientPos = { x: 0, y: 0 };
@@ -1121,7 +1155,31 @@
         clearTimeout(hoverTimerId);
         hoverTimerId = null;
       }
-      coordPopup.classList.remove("show");
+      coordPopup.classList.remove("show", "dragging-popup", "invalid-popup");
+    }
+
+    function showDragPreviewPopup(dragEnt, previewBase, isValid, reason, clientX = null, clientY = null) {
+      if (mobilePopupTimerId !== null) {
+        clearTimeout(mobilePopupTimerId);
+        mobilePopupTimerId = null;
+      }
+      const def = FACILITY_TYPES[dragEnt.type] || FACILITY_TYPES.city;
+      const gPreview = gridToGame(previewBase.x, previewBase.y);
+      coordPopup.classList.remove("invalid-popup");
+      coordPopup.classList.add("show", "dragging-popup");
+
+      if (isValid) {
+        popupMain.textContent = `移動予定：(${gPreview.x}, ${gPreview.y})`;
+        popupSub.textContent = `${def.label}「${dragEnt.name}」／ 離すと配置されます`;
+      } else {
+        coordPopup.classList.add("invalid-popup");
+        popupMain.textContent = `配置不可：(${gPreview.x}, ${gPreview.y})`;
+        popupSub.textContent = reason || "他の施設または範囲外と重なっています";
+      }
+
+      if (currentUiMode !== "mobile" && clientX !== null && clientY !== null) {
+        positionPcPopupNearCursor(clientX, clientY);
+      }
     }
 
     function buildPopupContentForGrid(gx, gy) {
@@ -1138,7 +1196,7 @@
         const gBase = gridToGame(hitEnt.x, hitEnt.y);
         return {
           main: `${def.label}「${hitEnt.name}」 (${gBase.x}, ${gBase.y})`,
-          sub: `タップ/指先マス：(${gCoord.x}, ${gCoord.y}) ／ サイズ ${def.size}×${def.size}`
+          sub: `選択マス：(${gCoord.x}, ${gCoord.y}) ／ サイズ ${def.size}×${def.size}`
         };
       }
       return {
@@ -1151,8 +1209,8 @@
       const offset = 16;
       const vw = window.innerWidth;
       const vh = window.innerHeight;
-      coordPopup.style.left = `${Math.min(vw - 240, Math.max(8, clientX + offset))}px`;
-      coordPopup.style.top = `${Math.min(vh - 72, Math.max(8, clientY + offset))}px`;
+      coordPopup.style.left = `${Math.min(vw - 260, Math.max(8, clientX + offset))}px`;
+      coordPopup.style.top = `${Math.min(vh - 76, Math.max(8, clientY + offset))}px`;
     }
 
     function schedulePcHoverPopup(clientX, clientY) {
@@ -1161,7 +1219,9 @@
       if (hoverTimerId !== null) {
         clearTimeout(hoverTimerId);
       }
-      coordPopup.classList.remove("show");
+      if (!draggingTarget) {
+        coordPopup.classList.remove("show", "dragging-popup", "invalid-popup");
+      }
 
       hoverTimerId = setTimeout(() => {
         hoverTimerId = null;
@@ -1173,6 +1233,7 @@
 
         const { x, y } = toGrid(mx, my);
         const content = buildPopupContentForGrid(x, y);
+        coordPopup.classList.remove("dragging-popup", "invalid-popup");
         popupMain.textContent = content.main;
         popupSub.textContent = content.sub;
         positionPcPopupNearCursor(lastMouseClientPos.x, lastMouseClientPos.y);
@@ -1180,19 +1241,22 @@
       }, PC_HOVER_DELAY_MS);
     }
 
-    function showMobileTapPopup(gx, gy) {
+    function showTapPopup(gx, gy) {
       if (mobilePopupTimerId !== null) {
         clearTimeout(mobilePopupTimerId);
         mobilePopupTimerId = null;
       }
       const content = buildPopupContentForGrid(gx, gy);
+      coordPopup.classList.remove("dragging-popup", "invalid-popup");
       popupMain.textContent = content.main;
       popupSub.textContent = content.sub;
       coordPopup.classList.add("show");
 
       mobilePopupTimerId = setTimeout(() => {
         mobilePopupTimerId = null;
-        coordPopup.classList.remove("show");
+        if (!draggingTarget) {
+          coordPopup.classList.remove("show");
+        }
       }, MOBILE_POPUP_DURATION_MS);
     }
 
@@ -1501,6 +1565,7 @@
         draggingTarget = null;
         dragPreviewGridBase = null;
         isMoveMode = false;
+        hideCoordPopup();
         statusMsg.classList.remove("ok");
         statusMsg.textContent = "閲覧モード中です。編集するには上部の「編集モードへ切替」を押してください。";
       }
@@ -1593,6 +1658,7 @@
         setMobileTab(mobileTab);
       } else {
         document.body.classList.remove("mobile-tab-map", "mobile-tab-list");
+        canvasWrap.style.height = "";
       }
 
       if (persist) {
@@ -1608,6 +1674,11 @@
       mobileTab = tab;
       document.body.classList.toggle("mobile-tab-map", tab === "map");
       document.body.classList.toggle("mobile-tab-list", tab === "list");
+      if (tab === "split") {
+        canvasWrap.style.height = canvasWrap.style.height || "48%";
+      } else {
+        canvasWrap.style.height = "";
+      }
 
       mobileViewTabs.querySelectorAll("button").forEach((btn) => {
         btn.classList.toggle("active", btn.dataset.tab === tab);
@@ -1652,7 +1723,8 @@
           orderedMemberIds,
           facilities,
           nextFacilityId,
-          panelWidth: rosterPanel.style.width || ""
+          panelWidth: rosterPanel.style.width || "",
+          mobileMapHeight: canvasWrap.style.height || ""
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
       } catch (_) {}
@@ -1715,6 +1787,9 @@
 
         if (typeof parsed.panelWidth === "string" && parsed.panelWidth.trim()) {
           rosterPanel.style.width = parsed.panelWidth;
+        }
+        if (typeof parsed.mobileMapHeight === "string" && parsed.mobileMapHeight.trim()) {
+          canvasWrap.style.height = parsed.mobileMapHeight;
         }
 
         return true;
@@ -1798,7 +1873,7 @@
       if (canvasWrap.clientWidth === 0 || canvasWrap.clientHeight === 0) return;
 
       const wrapW = Math.max(180, canvasWrap.clientWidth - 4);
-      const wrapH = Math.max(160, canvasWrap.clientHeight - 4);
+      const wrapH = Math.max(90, canvasWrap.clientHeight - 4);
 
       canvas.width = wrapW;
       canvas.height = wrapH;
@@ -1844,7 +1919,7 @@
       const tiles = getAreaTiles(bx, by, size);
       for (const t of tiles) {
         if (t.x < 0 || t.x >= cols || t.y < 0 || t.y >= rows) {
-          return { ok: false, reason: `${size}×${size}の枠がマップ範囲外になるため配置できません。` };
+          return { ok: false, reason: `${size}×${size}の枠がマップ範囲外になります。` };
         }
       }
 
@@ -2727,12 +2802,39 @@
       persistChanges();
     });
 
+    // スプリッター操作（PC横幅調整 / スマホ上下高さ調整）
     splitter.addEventListener("mousedown", (e) => {
-      if (e.button !== 0 || currentUiMode === "mobile") return;
+      if (e.button !== 0) return;
       hideCoordPopup();
-      isResizingSplitter = true;
-      document.body.classList.add("resizing-split");
+      if (currentUiMode === "mobile") {
+        if (mobileTab !== "split") return;
+        isResizingMobileSplitter = true;
+        document.body.classList.add("resizing-split-v");
+      } else {
+        isResizingSplitter = true;
+        document.body.classList.add("resizing-split");
+      }
     });
+
+    splitter.addEventListener("touchstart", (e) => {
+      if (currentUiMode !== "mobile" || mobileTab !== "split" || e.touches.length !== 1) return;
+      e.preventDefault();
+      hideCoordPopup();
+      isResizingMobileSplitter = true;
+      document.body.classList.add("resizing-split-v");
+    }, { passive: false });
+
+    function applyMobileSplitByClientY(clientY) {
+      const layoutRect = mainLayout.getBoundingClientRect();
+      const splitterH = splitter.offsetHeight || 14;
+      const minMapH = 95;
+      const minListH = 95;
+      const maxMapH = Math.max(minMapH, layoutRect.height - minListH - splitterH);
+      const rawMapH = clientY - layoutRect.top - splitterH / 2;
+      const nextMapH = Math.min(maxMapH, Math.max(minMapH, rawMapH));
+      canvasWrap.style.height = `${Math.round(nextMapH)}px`;
+      resizeCanvas();
+    }
 
     facilityTypeSelect.addEventListener("change", () => {
       if (!isEditable) return;
@@ -2875,6 +2977,7 @@
           draggingTarget = { kind: hitEnt.kind, id: hitEnt.id };
           dragPreviewGridBase = { x: hitEnt.x, y: hitEnt.y };
           dragPreviewValid = true;
+          dragPreviewReason = "";
           dragOffsetGridX = x - hitEnt.x;
           dragOffsetGridY = y - hitEnt.y;
 
@@ -2886,6 +2989,7 @@
           syncToolbar();
           updateRowSelectionClasses();
           render();
+          showDragPreviewPopup(hitEnt, dragPreviewGridBase, true, "", clientX, clientY);
           return;
         }
       }
@@ -2917,7 +3021,9 @@
         const def = FACILITY_TYPES[dragEnt.type] || FACILITY_TYPES.city;
         const check = canPlaceAt(nextBaseX, nextBaseY, def.size, draggingTarget);
         dragPreviewValid = check.ok;
+        dragPreviewReason = check.reason;
         render();
+        showDragPreviewPopup(dragEnt, dragPreviewGridBase, dragPreviewValid, dragPreviewReason, clientX, clientY);
         return;
       }
 
@@ -2941,6 +3047,7 @@
         draggingTarget = null;
         dragPreviewGridBase = null;
         dragPreviewValid = true;
+        dragPreviewReason = "";
 
         if (preview && isValid) {
           if (targetInfo.kind === "facility") {
@@ -2960,6 +3067,7 @@
           }
           persistChanges();
         }
+        hideCoordPopup();
         syncToolbar();
         updateRowSelectionClasses();
         render();
@@ -2978,8 +3086,8 @@
       const my = clientY - rect.top;
       const { x, y } = toGrid(mx, my);
 
-      if (isTouchTap) {
-        showMobileTapPopup(x, y);
+      if (isTouchTap || currentUiMode === "mobile") {
+        showTapPopup(x, y);
       }
 
       if (x < 0 || x >= cols || y < 0 || y >= rows) {
@@ -3062,7 +3170,7 @@
     }, { passive: false });
 
     canvas.addEventListener("mousedown", (e) => {
-      if (e.button !== 0 || isResizingSplitter) return;
+      if (e.button !== 0 || isResizingSplitter || isResizingMobileSplitter) return;
       hideCoordPopup();
       beginPointerAction(e.clientX, e.clientY);
     });
@@ -3074,12 +3182,16 @@
     });
 
     canvas.addEventListener("mouseleave", () => {
-      if (currentUiMode !== "mobile") {
+      if (currentUiMode !== "mobile" && !draggingTarget) {
         hideCoordPopup();
       }
     });
 
     window.addEventListener("mousemove", (e) => {
+      if (isResizingMobileSplitter) {
+        applyMobileSplitByClientY(e.clientY);
+        return;
+      }
       if (isResizingSplitter) {
         const layoutRect = mainLayout.getBoundingClientRect();
         const minPanelW = 330;
@@ -3094,6 +3206,13 @@
     });
 
     window.addEventListener("mouseup", (e) => {
+      if (isResizingMobileSplitter) {
+        isResizingMobileSplitter = false;
+        document.body.classList.remove("resizing-split-v");
+        resizeCanvas();
+        saveToLocalStorageOnly();
+        return;
+      }
       if (isResizingSplitter) {
         isResizingSplitter = false;
         document.body.classList.remove("resizing-split");
@@ -3150,6 +3269,12 @@
       }
     }, { passive: false });
 
+    window.addEventListener("touchmove", (e) => {
+      if (!isResizingMobileSplitter || e.touches.length !== 1) return;
+      e.preventDefault();
+      applyMobileSplitByClientY(e.touches[0].clientY);
+    }, { passive: false });
+
     canvas.addEventListener("touchend", (e) => {
       e.preventDefault();
       if (isPinching) {
@@ -3161,6 +3286,15 @@
       const changed = e.changedTouches[0];
       if (changed) {
         endPointerAction(changed.clientX, changed.clientY, true, true);
+      }
+    }, { passive: false });
+
+    window.addEventListener("touchend", () => {
+      if (isResizingMobileSplitter) {
+        isResizingMobileSplitter = false;
+        document.body.classList.remove("resizing-split-v");
+        resizeCanvas();
+        saveToLocalStorageOnly();
       }
     }, { passive: false });
 
