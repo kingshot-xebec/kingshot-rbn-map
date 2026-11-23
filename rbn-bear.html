@@ -482,7 +482,6 @@
     }
     .toast.show { opacity: 1; transform: translateY(0); }
 
-
     /* View Mode Toggle (PC / Mobile / Auto) */
     .view-switch-group {
       display: inline-flex;
@@ -554,7 +553,6 @@
       grid-template-columns: 1fr;
       gap: 10px;
     }
-    /* スマホでのSTEP1兵士数入力は横3列コンパクトで一望しやすくする */
     body.view-mobile .troop-input-grid {
       grid-template-columns: repeat(3, 1fr);
       gap: 6px;
@@ -568,7 +566,6 @@
       text-align: center;
       font-weight: 700;
     }
-    /* 定員入力グリッドを2列＋大きめタップ領域に */
     body.view-mobile .cap-grid {
       grid-template-columns: repeat(2, 1fr);
       gap: 8px;
@@ -580,14 +577,12 @@
       padding: 9px 10px;
       font-size: 0.95rem;
     }
-    /* タップしやすい高さ確保 */
     body.view-mobile input[type="number"],
     body.view-mobile input[type="text"],
     body.view-mobile select {
       min-height: 42px;
       font-size: 0.95rem;
     }
-    /* バフ優先切替ボタンをスマホ幅いっぱいに2分割 */
     body.view-mobile .buff-priority-bar {
       padding: 8px;
     }
@@ -602,7 +597,6 @@
       justify-content: center;
       text-align: center;
     }
-    /* 英雄カード：親指でタップしやすいレイアウト */
     body.view-mobile .hero-list {
       grid-template-columns: 1fr;
       gap: 8px;
@@ -624,7 +618,6 @@
       min-width: 36px;
       justify-content: center;
     }
-    /* 結果表示：スマホ時は横スクロール表を隠し、見やすい縦積みカードを表示 */
     .mobile-result-cards {
       display: none;
       flex-direction: column;
@@ -702,7 +695,6 @@
       display: block;
     }
 
-    /* スマホ画面下部の固定コピーバー */
     .mobile-sticky-bar {
       display: none;
       position: fixed;
@@ -726,7 +718,6 @@
       left: 12px;
       text-align: center;
     }
-
 
     /* マスター確認・補正ページ（モーダル）用スタイル */
     .inspect-tabs {
@@ -1259,7 +1250,7 @@
       <div class="guide-box">
         <strong>📖 新世代（S9以降）実装時のマスターデータ更新手順</strong>
         <ol>
-          <li>下の<strong>「🤖 AI更新用プロンプト＋現行JSONをコピー」</strong>ボタンを押します（アルテマから新キャラ・スキル数値を抽出し、Redditの考察を反映した最新JSONを作らせる指示文と現在データがセットでコピーされます）。</li>
+          <li>下の<strong>「🤖 AI更新用プロンプト＋現行JSONをコピー」</strong>ボタンを押します（アルテマ優先・他日本語サイト補完でキャラ／スキル情報を収集し、Redditは仕様考察の参考として反映する指示文と現在データがセットでコピーされます）。</li>
           <li>Gemini等のAIチャットにそのまま貼り付けて送信し、出力された<strong>更新済みJSON</strong>をコピーします。</li>
           <li>下の「マスタJSONデータ」欄へ貼り付け（スマートマージON推奨）、管理者パスコードを入力して<strong>「☁️ Firebaseへ保存して全員に配信」</strong>を押すと、全英雄データと<strong>環境Tier表</strong>が同盟メンバー全員へ即時反映されます。</li>
         </ol>
@@ -1516,7 +1507,7 @@
     inf: [
       "アマデウス (S1)", "ヘルガ (S1)", "ゾーイ (S2)", "ディエゴ (S8)", "アルカ (S4)",
       "ロンフェイ (S5)", "トライトン (S6)", "チャールズ (S7)",
-      "イェーガー (S3)", "インウー (SR)", "ハワード (SR)", "セス (R)", "エドウィン (R)", "フォレスト (R)"
+      "イェーガー (S3)", "インウー (SR)", "ハワード (SR)", "スミス (R)", "エドウィン (R)", "フォレスト (R)"
     ],
     cav: [
       "アイヴァ (S7)", "ペーラ (S3)", "スルード (S5)",
@@ -1542,7 +1533,7 @@
       inf: [
         "アマデウス (S1)", "ヘルガ (S1)", "ゾーイ (S2)", "ディエゴ (S8)", "アルカ (S4)",
         "ロンフェイ (S5)", "トライトン (S6)", "チャールズ (S7)",
-        "イェーガー (S3)", "インウー (SR)", "ハワード (SR)", "セス (R)", "エドウィン (R)", "フォレスト (R)"
+        "イェーガー (S3)", "インウー (SR)", "ハワード (SR)", "スミス (R)", "エドウィン (R)", "フォレスト (R)"
       ],
       cav: [
         "アイヴァ (S7)", "ペーラ (S3)", "スルード (S5)",
@@ -1629,7 +1620,6 @@
     if (!targetMaster.rallyPools || typeof targetMaster.rallyPools !== "object") {
       targetMaster.rallyPools = { inf: [], cav: [], arc: [] };
     }
-    // すでに全3兵種にキャラクターが重複なく明示的に割り当てられているか判定
     const allPoolsPopulated = ["inf", "cav", "arc"].every(
       (t) => Array.isArray(targetMaster.rallyPools[t]) && targetMaster.rallyPools[t].length > 0
     );
@@ -1651,8 +1641,6 @@
         }
       });
 
-      // trustIncomingPools=true（確認ページで手動補正した直後・JSON明示読込時）は入力されたプール配置を尊重
-      // false（古いFirebaseデータの自動同期時など）はHERO_TYPE_REGISTRYの他兵種定義も使って誤混入を自動修正
       const otherRegistryNames = new Set();
       if (!trustIncomingPools || !allPoolsPopulated) {
         otherTypes.forEach((other) => {
@@ -1926,7 +1914,6 @@
         .map((h) => String(h.rallyAlias || h.name || "").trim())
         .filter(Boolean);
 
-      // 該当兵種のキャラのみを厳格抽出（他兵種の混入を完全排除）
       const filteredPool = [];
       const poolSeen = new Set();
       [...rawPool, ...heroNamesOfType].forEach((name) => {
@@ -1975,7 +1962,6 @@
     buildTypeOptions("rallyCav", "cav", userState.rallyCav);
     buildTypeOptions("rallyArc", "arc", userState.rallyArc);
 
-    // 不正な他兵種が保存されていた場合は正しい兵種値へ補正
     userState.rallyInf = document.getElementById("rallyInf").value;
     userState.rallyCav = document.getElementById("rallyCav").value;
     userState.rallyArc = document.getElementById("rallyArc").value;
@@ -2401,15 +2387,17 @@
     const promptText = `あなたはスマホゲーム「キングショット（KingShot）」の巨熊狩猟（Bear Trap）データアナリストです。
 以下の手順とルールに従って、既存の「マスターデータJSON」を最新世代までアップデートした新しいJSONを作成してください。
 
-【調査・データ抽出ルール】
-1. キャラクター情報・スキル数値の取得：
-   - 日本の攻略サイト「アルテマ（altema.jp/kingshot）」の最新英雄一覧・スキルページを参照し、新世代キャラクターの名前・兵種（inf/cav/arc）・第1遠征スキルのLv.1〜Lv.5倍率・発動確率・持続ターンを正確に取得してください。
-2. 集結主リスト（rallyPools）の兵種別更新：
-   - rallyPools.inf（歩兵のみ）、rallyPools.cav（騎兵のみ）、rallyPools.arc（弓兵のみ）のそれぞれに、新世代を含む該当兵種の全キャラクターを漏れなく登録してください（他兵種を混ぜないでください）。
-3. 評価・考察の反映：
-   - 海外コミュニティ「Reddit（r/KingShot）」の最新考察を分析し、集結主（rallyPools）の優先順位、乗り手Tier（S/A）、重複不可（unique: true/false）、状態異常などの熊無効スキル（buffType: "invalid"）の判定を反映してください。
+【情報収集・分析の役割分担（厳守）】
+1. キャラクター情報・兵種・スキル数値の一次ソース（日本の攻略サイト最優先）：
+   - キャラクター名・兵種（inf=歩兵 / cav=騎兵 / arc=弓兵）・スキル効果・Lv倍率・確率・持続ターンなどの基礎マスタデータは、必ず「アルテマ（altema.jp/kingshot）」を最優先で参照して収集してください。
+   - アルテマで見つからない・未掲載の項目がある場合のみ、他の日本語攻略サイト（Game8・攻略Wiki・日本語データベース等）を補完的に参照して収集してください。
+   - 英語圏のRedditからキャラ情報やスキル数値を直接収集しないでください。
+2. Reddit（r/KingShot）の活用範囲（仕様考察・判定の参考のみ）：
+   - Redditの考察・検証情報は、「このスキルは巨熊にダメージが入る／無効になる」「状態異常や重複バフの挙動はどうなるか」「実戦での評価や立ち回り」といった**仕様判定・考察の参考**としてのみ活用してください。
+3. 集結主リスト（rallyPools）の兵種別更新：
+   - rallyPools.inf（歩兵のみ）、rallyPools.cav（騎兵のみ）、rallyPools.arc（弓兵のみ）のそれぞれに、アルテマ等の日本語攻略サイトで確認できた該当兵種のキャラクターのみを登録してください（他兵種を絶対に混ぜないでください）。
 4. 環境Tier表（tierGuide）の同時更新：
-   - JSON内の "version" および "tierGuide"（集結主優先度・乗り手S/A基準・10ターン仕様とReddit考察）も、新世代の評価を含めた最新内容へ書き換えてください。
+   - JSON内の "version" および "tierGuide"（集結主優先度・乗り手S/A基準・10ターン仕様とReddit検証考察）も、新世代の評価を含めた最新内容へ書き換えてください。
 5. 出力形式の厳守：
    - 既存キャラクターの "id" は変更しないでください（ユーザーの個人保存データとスマートマージするため）。
    - 解説は最小限にし、そのままツールへ貼り付けられる完全なJSONコードブロックのみを出力してください。
@@ -2492,7 +2480,6 @@ ${currentJson}`;
     setTimeout(() => t.classList.remove("show"), 2600);
   }
 
-
   // ==========================================
   // 8. マスターデータ確認・補正ページ（一覧表示＆ワンクリック兵種・数値補正）
   // ==========================================
@@ -2514,7 +2501,6 @@ ${currentJson}`;
   }
 
   function renderInspectModal() {
-    // 1. 集結主プルダウン3列一覧
     const poolsEl = document.getElementById("inspectPoolsGrid");
     const typeDefs = [
       { key: "inf", label: "🛡️ 歩兵（集結主）", color: "#60a5fa" },
@@ -2550,7 +2536,6 @@ ${currentJson}`;
       `;
     }).join("");
 
-    // 2. 乗り手英雄・スキル数値一覧テーブル
     const hBody = document.getElementById("inspectHeroesBody");
     hBody.innerHTML = (masterData.heroes || []).map((h, idx) => `
       <tr>
@@ -2589,7 +2574,6 @@ ${currentJson}`;
       </tr>
     `).join("");
 
-    // 3. Tier表プレビュー
     const tierEl = document.getElementById("inspectTierPreview");
     const guide = masterData.tierGuide || DEFAULT_MASTER.tierGuide;
     tierEl.innerHTML = (guide.sections || []).map((sec) => `
@@ -2609,7 +2593,6 @@ ${currentJson}`;
     if (!masterData.rallyPools[toType].includes(heroName)) {
       masterData.rallyPools[toType].push(heroName);
     }
-    // heroes配列側にも同名キャラがいれば兵種を連動変更
     (masterData.heroes || []).forEach((h) => {
       if (h && (h.name === heroName || h.rallyAlias === heroName)) {
         h.type = toType;
@@ -2647,7 +2630,7 @@ ${currentJson}`;
   }
 
   function resetPoolsToDefault() {
-    if (!confirm("集結主リストの兵種分けを最新の標準定義（クイン=弓兵、オリーブ=弓兵、フォレスト=歩兵）にリセットしますか？")) return;
+    if (!confirm("集結主リストの兵種分けを最新の標準定義（クイン=弓兵、オリーブ=弓兵、フォレスト=歩兵、スミス=歩兵）にリセットしますか？")) return;
     masterData.rallyPools = JSON.parse(JSON.stringify(DEFAULT_MASTER.rallyPools));
     (masterData.heroes || []).forEach((h) => {
       const regHit = ["inf", "cav", "arc"].find((t) => (HERO_TYPE_REGISTRY[t] || []).includes(h.name));
