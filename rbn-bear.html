@@ -482,6 +482,251 @@
     }
     .toast.show { opacity: 1; transform: translateY(0); }
 
+
+    /* View Mode Toggle (PC / Mobile / Auto) */
+    .view-switch-group {
+      display: inline-flex;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2px;
+      gap: 2px;
+    }
+    .view-switch-btn {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      padding: 5px 9px;
+      font-size: 0.76rem;
+      border-radius: 6px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .view-switch-btn:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .view-switch-btn.active {
+      background: var(--blue-strong);
+      color: #fff;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+    }
+
+    /* 強制PC表示モード（スマホ画面でもPCレイアウトを維持） */
+    body.force-pc {
+      max-width: 1120px;
+      min-width: 960px;
+    }
+
+    /* スマホ表示モード（強制スマホ または 画面幅680px以下の自動判定） */
+    body.view-mobile {
+      max-width: 540px;
+      padding: 10px 10px 76px;
+    }
+    body.view-mobile header {
+      padding: 12px;
+      gap: 10px;
+    }
+    body.view-mobile h1 {
+      font-size: 1.08rem;
+    }
+    body.view-mobile .header-actions {
+      width: 100%;
+      justify-content: space-between;
+      gap: 6px;
+    }
+    body.view-mobile .header-actions button {
+      padding: 7px 9px;
+      font-size: 0.78rem;
+      flex: 1 1 auto;
+      justify-content: center;
+    }
+    body.view-mobile .card {
+      padding: 13px 12px;
+      margin-bottom: 12px;
+    }
+    body.view-mobile .card-title {
+      font-size: 0.95rem;
+      margin-bottom: 10px;
+    }
+    body.view-mobile .grid-3,
+    body.view-mobile .grid-2 {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    /* スマホでのSTEP1兵士数入力は横3列コンパクトで一望しやすくする */
+    body.view-mobile .troop-input-grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+    body.view-mobile .troop-input-grid label.field {
+      font-size: 0.75rem;
+    }
+    body.view-mobile .troop-input-grid input {
+      padding: 9px 6px;
+      font-size: 0.88rem;
+      text-align: center;
+      font-weight: 700;
+    }
+    /* 定員入力グリッドを2列＋大きめタップ領域に */
+    body.view-mobile .cap-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    body.view-mobile .cap-box.rally-cap {
+      grid-column: 1 / -1;
+    }
+    body.view-mobile .cap-box input {
+      padding: 9px 10px;
+      font-size: 0.95rem;
+    }
+    /* タップしやすい高さ確保 */
+    body.view-mobile input[type="number"],
+    body.view-mobile input[type="text"],
+    body.view-mobile select {
+      min-height: 42px;
+      font-size: 0.95rem;
+    }
+    /* バフ優先切替ボタンをスマホ幅いっぱいに2分割 */
+    body.view-mobile .buff-priority-bar {
+      padding: 8px;
+    }
+    body.view-mobile .buff-toggle-group {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+    body.view-mobile .buff-toggle-btn {
+      padding: 9px 6px;
+      font-size: 0.78rem;
+      justify-content: center;
+      text-align: center;
+    }
+    /* 英雄カード：親指でタップしやすいレイアウト */
+    body.view-mobile .hero-list {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+    body.view-mobile .hero-card {
+      padding: 11px 10px;
+    }
+    body.view-mobile .hero-left input[type="checkbox"] {
+      width: 22px;
+      height: 22px;
+    }
+    body.view-mobile .hero-right select {
+      width: 74px;
+      min-height: 36px;
+      font-size: 0.85rem;
+    }
+    body.view-mobile .icon-btn {
+      min-height: 36px;
+      min-width: 36px;
+      justify-content: center;
+    }
+    /* 結果表示：スマホ時は横スクロール表を隠し、見やすい縦積みカードを表示 */
+    .mobile-result-cards {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    body.view-mobile .desktop-result-table {
+      display: none;
+    }
+    body.view-mobile .mobile-result-cards {
+      display: flex;
+    }
+    .m-squad-card {
+      background: var(--card-sub);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .m-squad-card.rally {
+      border-color: rgba(245, 158, 11, 0.55);
+      background: linear-gradient(180deg, rgba(245, 158, 11, 0.12) 0%, var(--card-sub) 100%);
+    }
+    .m-squad-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .m-squad-title {
+      font-weight: 800;
+      font-size: 0.94rem;
+    }
+    .m-squad-cap {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+    .m-squad-hero {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--blue);
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+    .m-squad-card.rally .m-squad-hero {
+      color: #fde68a;
+    }
+    .m-troop-pills {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+    .m-pill {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 4px;
+      text-align: center;
+    }
+    .m-pill-lbl {
+      font-size: 0.7rem;
+      color: var(--muted);
+      display: block;
+    }
+    .m-pill-val {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .m-pill-pct {
+      font-size: 0.68rem;
+      color: var(--muted);
+      display: block;
+    }
+
+    /* スマホ画面下部の固定コピーバー */
+    .mobile-sticky-bar {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(15, 23, 42, 0.94);
+      backdrop-filter: blur(8px);
+      border-top: 1px solid var(--border);
+      padding: 10px 14px;
+      z-index: 900;
+      justify-content: center;
+      gap: 10px;
+    }
+    body.view-mobile .mobile-sticky-bar {
+      display: flex;
+    }
+    body.view-mobile .toast {
+      bottom: 72px;
+      right: 12px;
+      left: 12px;
+      text-align: center;
+    }
+
     @media (max-width: 640px) {
       th, td { padding: 8px 6px; font-size: 0.8rem; }
       .hero-list { grid-template-columns: 1fr; }
@@ -498,10 +743,15 @@
     </div>
   </div>
   <div class="header-actions">
+    <div class="view-switch-group" role="group" aria-label="表示モード切替">
+      <button type="button" id="btnViewAuto" class="view-switch-btn active" onclick="setViewMode('auto')" title="画面幅に応じて自動切替">自動</button>
+      <button type="button" id="btnViewMobile" class="view-switch-btn" onclick="setViewMode('mobile')" title="スマホ向け縦カード表示">📱 スマホ</button>
+      <button type="button" id="btnViewPc" class="view-switch-btn" onclick="setViewMode('pc')" title="PC向けワイド表表示">💻 PC</button>
+    </div>
     <span id="syncStatus" class="badge-sync offline">⚪ ローカル読込</span>
     <button class="btn-blue" onclick="openTierModal()">🏆 環境Tier表</button>
-    <button class="btn-green" onclick="openDataModal()">📦 マスタデータ管理</button>
-    <button class="btn-secondary" onclick="resetLocalUser()">🔄 個人設定初期化</button>
+    <button class="btn-green" onclick="openDataModal()">📦 マスタ管理</button>
+    <button class="btn-secondary" onclick="resetLocalUser()">🔄 初期化</button>
     <button class="btn-primary" onclick="openAppSettingsModal()">⚙️ 設定</button>
   </div>
 </header>
@@ -511,7 +761,7 @@
   <div class="card-title">
     <span><span class="step-badge">STEP 1</span>所持兵士数（総兵力）の入力</span>
   </div>
-  <div class="grid-3">
+  <div class="grid-3 troop-input-grid">
     <label class="field">
       🛡️ 歩兵（総数）
       <input type="number" id="infTotal" min="0" step="1000" value="150000" oninput="recalc()" />
@@ -678,7 +928,7 @@
     <span>📊 巨熊狩猟 最適部隊編成表（計算結果）</span>
     <button class="btn-accent" onclick="copyFormation()">📋 編成表をテキストコピー</button>
   </div>
-  <div style="overflow-x: auto;">
+  <div class="desktop-result-table" style="overflow-x: auto;">
     <table>
       <thead>
         <tr>
@@ -693,6 +943,7 @@
       <tbody id="resultBody"></tbody>
     </table>
   </div>
+  <div id="mobileResultCards" class="mobile-result-cards"></div>
 </section>
 
 <!-- 共通設定モーダル（リンク設定・Firebase・AI Studio API・共通JSON） -->
@@ -871,9 +1122,50 @@
   </div>
 </div>
 
+<div class="mobile-sticky-bar">
+  <button type="button" class="btn-accent" style="flex:1; justify-content:center; padding:11px 14px; font-size:0.92rem;" onclick="copyFormation()">📋 編成表をテキストコピー</button>
+  <button type="button" class="btn-secondary" style="padding:11px 12px;" onclick="window.scrollTo({top:0, behavior:'smooth'})" title="上部へ戻る">⬆️</button>
+</div>
+
 <div id="toast" class="toast">コピーしました！</div>
 
 <script>
+  // ==========================================
+  // 0. PC / スマホ表示モード切替（機能劣化なし・完全同期）
+  // ==========================================
+  const VIEW_MODE_KEY = "rbn_bear_view_mode_v1";
+  let currentViewMode = localStorage.getItem(VIEW_MODE_KEY) || "auto";
+
+  function applyViewMode() {
+    const body = document.body;
+    const isNarrow = window.innerWidth <= 680;
+    const useMobile = currentViewMode === "mobile" || (currentViewMode === "auto" && isNarrow);
+
+    body.classList.toggle("view-mobile", useMobile);
+    body.classList.toggle("force-pc", currentViewMode === "pc");
+
+    const btnAuto = document.getElementById("btnViewAuto");
+    const btnMobile = document.getElementById("btnViewMobile");
+    const btnPc = document.getElementById("btnViewPc");
+    if (btnAuto && btnMobile && btnPc) {
+      btnAuto.classList.toggle("active", currentViewMode === "auto");
+      btnMobile.classList.toggle("active", currentViewMode === "mobile");
+      btnPc.classList.toggle("active", currentViewMode === "pc");
+    }
+  }
+
+  function setViewMode(mode) {
+    currentViewMode = ["auto", "mobile", "pc"].includes(mode) ? mode : "auto";
+    localStorage.setItem(VIEW_MODE_KEY, currentViewMode);
+    applyViewMode();
+    const labelMap = { auto: "🔄 自動表示モード（画面幅に連動）", mobile: "📱 スマホ表示モードに切り替えました", pc: "💻 PC表示モードに切り替えました" };
+    showToast(labelMap[currentViewMode]);
+  }
+
+  window.addEventListener("resize", () => {
+    if (currentViewMode === "auto") applyViewMode();
+  });
+
   // ==========================================
   // 1. 共通設定＆Firebase接続設定
   // ==========================================
@@ -1172,6 +1464,7 @@
   normalizeMasterConsistency(masterData);
 
   function initApp() {
+    applyViewMode();
     loadUserState();
     syncSettingsModalUI();
     initFirebase();
@@ -1603,7 +1896,9 @@
     });
 
     const tbody = document.getElementById("resultBody");
+    const mobileCardsEl = document.getElementById("mobileResultCards");
     let rowsHtml = "";
+    let mobileHtml = "";
     window._lastExportLines = [];
 
     squads.forEach((s, i) => {
@@ -1631,6 +1926,25 @@
               </div>
             </td>
           </tr>
+        `;
+        mobileHtml += `
+          <div class="m-squad-card rally">
+            <div class="m-squad-head">
+              <span class="m-squad-title" style="color:var(--accent);">🔥 自集結（集結主）</span>
+              <span class="m-squad-cap">計 ${total.toLocaleString()} / ${s.cap.toLocaleString()}</span>
+            </div>
+            <div class="m-squad-hero">${heroStr}</div>
+            <div class="m-troop-pills">
+              <div class="m-pill"><span class="m-pill-lbl">🛡️ 歩兵</span><span class="m-pill-val">${s.inf.toLocaleString()}</span><span class="m-pill-pct">${pInf}%</span></div>
+              <div class="m-pill"><span class="m-pill-lbl">🐎 騎兵</span><span class="m-pill-val">${s.cav.toLocaleString()}</span><span class="m-pill-pct">${pCav}%</span></div>
+              <div class="m-pill" style="border-color:rgba(245,158,11,0.5);"><span class="m-pill-lbl">🏹 弓兵</span><span class="m-pill-val" style="color:var(--accent);">${s.arc.toLocaleString()}</span><span class="m-pill-pct">${pArc}%</span></div>
+            </div>
+            <div class="ratio-bar">
+              <div class="r-inf" style="width:${pInf}%"></div>
+              <div class="r-cav" style="width:${pCav}%"></div>
+              <div class="r-arc" style="width:${pArc}%"></div>
+            </div>
+          </div>
         `;
         window._lastExportLines.push(`【自集結】${heroStr}｜歩:${s.inf.toLocaleString()} / 騎:${s.cav.toLocaleString()} / 弓:${s.arc.toLocaleString()}（${pInf}/${pCav}/${pArc}%）`);
       } else {
@@ -1660,11 +1974,31 @@
             </td>
           </tr>
         `;
+        mobileHtml += `
+          <div class="m-squad-card">
+            <div class="m-squad-head">
+              <span class="m-squad-title">⚔️ 乗り ${i}軍</span>
+              <span class="m-squad-cap">計 ${total.toLocaleString()} / ${s.cap.toLocaleString()}</span>
+            </div>
+            <div class="m-squad-hero">左端: ${leaderName} <span style="font-size:0.74rem; color:var(--muted); font-weight:400;">＋ 自由2名</span>${dupTag}</div>
+            <div class="m-troop-pills">
+              <div class="m-pill"><span class="m-pill-lbl">🛡️ 歩兵</span><span class="m-pill-val">${s.inf.toLocaleString()}</span><span class="m-pill-pct">${pInf}%</span></div>
+              <div class="m-pill"><span class="m-pill-lbl">🐎 騎兵</span><span class="m-pill-val">${s.cav.toLocaleString()}</span><span class="m-pill-pct">${pCav}%</span></div>
+              <div class="m-pill"><span class="m-pill-lbl">🏹 弓兵</span><span class="m-pill-val" style="color:var(--accent);">${s.arc.toLocaleString()}</span><span class="m-pill-pct">${pArc}%</span></div>
+            </div>
+            <div class="ratio-bar">
+              <div class="r-inf" style="width:${pInf}%"></div>
+              <div class="r-cav" style="width:${pCav}%"></div>
+              <div class="r-arc" style="width:${pArc}%"></div>
+            </div>
+          </div>
+        `;
         window._lastExportLines.push(`【乗り${i}軍】左端:${leaderName}｜歩:${s.inf.toLocaleString()} / 騎:${s.cav.toLocaleString()} / 弓:${s.arc.toLocaleString()}（${pInf}/${pCav}/${pArc}%）`);
       }
     });
 
     tbody.innerHTML = rowsHtml;
+    if (mobileCardsEl) mobileCardsEl.innerHTML = mobileHtml;
   }
 
   function copyFormation() {
