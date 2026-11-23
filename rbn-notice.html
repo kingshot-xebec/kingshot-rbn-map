@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>キングショット 同盟通知ジェネレーター v6.5</title>
+  <title>キングショット 同盟通知ジェネレーター v6.6</title>
   <style>
     :root {
       --bg-color: #12151c;
@@ -33,7 +33,7 @@
     }
 
     .container {
-      max-width: 720px;
+      max-width: 740px;
       margin: 0 auto;
     }
 
@@ -80,7 +80,7 @@
 
     .nav-tabs {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(5, 1fr);
       gap: 4px;
       background: var(--card-bg);
       padding: 4px;
@@ -93,12 +93,13 @@
       background: transparent;
       border: none;
       color: var(--text-muted);
-      padding: 8px 4px;
+      padding: 8px 2px;
       border-radius: 7px;
-      font-size: 0.82rem;
+      font-size: 0.78rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.15s;
+      white-space: nowrap;
     }
 
     .nav-tab.active {
@@ -373,7 +374,8 @@
       color: #60a5fa;
     }
 
-    .event-chip.edit-mode {
+    .event-chip.edit-mode,
+    .phase-chip.edit-mode {
       cursor: default;
       border-style: dashed;
       border-color: #60a5fa;
@@ -410,9 +412,12 @@
       color: #d1d5db;
       padding: 5px 9px;
       border-radius: 999px;
-      font-size: 0.78rem;
+      font-size: 0.79rem;
       cursor: pointer;
       user-select: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
 
     .phase-chip.checked {
@@ -431,6 +436,50 @@
     .custom-event-row input {
       padding: 7px 10px;
       font-size: 0.84rem;
+    }
+
+    /* 早見表カード用スタイル */
+    .chart-box {
+      background: #12151c;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .chart-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #93c5fd;
+    }
+
+    .chart-content {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, "Noto Sans Mono CJK JP", monospace;
+      font-size: 0.82rem;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      overflow-x: auto;
+      background: #181c25;
+      padding: 10px;
+      border-radius: 6px;
+      color: #e5e7eb;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .chart-editor {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, "Noto Sans Mono CJK JP", monospace;
+      font-size: 0.82rem;
+      line-height: 1.55;
+      margin-bottom: 8px;
     }
 
     #paste-zone {
@@ -669,6 +718,13 @@
       font-weight: 600;
     }
 
+    .mini-btn.primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+      font-weight: 600;
+    }
+
     .mini-btn.danger {
       color: #f87171;
     }
@@ -707,14 +763,15 @@
 
 <div class="container">
   <header>
-    <h1>📢 同盟通知ジェネレーター <span class="ver-badge">v6.5</span></h1>
+    <h1>📢 同盟通知ジェネレーター <span class="ver-badge">v6.6</span></h1>
     <span class="sync-badge warn" id="sync-status-badge">クラウド同期確認中...</span>
   </header>
 
   <nav class="nav-tabs">
     <button type="button" class="nav-tab active" data-tab="create">✏️ 通知作成</button>
-    <button type="button" class="nav-tab" data-tab="history">📚 履歴(学習)</button>
-    <button type="button" class="nav-tab" data-tab="ratio">📊 比率解説</button>
+    <button type="button" class="nav-tab" data-tab="charts">📅 早見表</button>
+    <button type="button" class="nav-tab" data-tab="history">📚 履歴</button>
+    <button type="button" class="nav-tab" data-tab="ratio">📊 比率</button>
     <button type="button" class="nav-tab" data-tab="settings">⚙️ 設定</button>
   </nav>
 
@@ -773,7 +830,6 @@
         </div>
       </div>
 
-      <!-- 作成方法切替：手動ビルダー / スクショAI -->
       <div class="mode-switch">
         <button type="button" class="mode-switch-btn active" data-mode="manual">☑️ 手動ビルダー（API不要・即作成）</button>
         <button type="button" class="mode-switch-btn" data-mode="screenshot">📸 スクショAI解析（自動読取）</button>
@@ -790,7 +846,7 @@
             </div>
           </div>
           <div id="edit-mode-hint" style="display: none; font-size: 0.76rem; color: #fbbf24; margin-bottom: 6px;">
-            ※編集モード中：「✎」で名前変更、「×」で削除できます。変更は自動保存＆クラウド同期されます。
+            ※イベント編集モード中：「✎」で名前変更、「×」で削除できます。
             <button type="button" class="mini-btn" id="reset-events-default-btn" style="margin-left: 6px;">初期リストに戻す</button>
           </div>
           <div class="chip-grid" id="manual-event-chips"></div>
@@ -803,9 +859,22 @@
 
         <div class="manual-section">
           <div class="manual-section-title">
-            <span>② ポイント対象項目（至高領主・最強王国・軍備競技など）</span>
+            <span>② ポイント対象項目（早見表の全項目・編集追加可）</span>
+            <div style="display: flex; gap: 4px;">
+              <button type="button" class="mini-btn" id="toggle-edit-phases-btn">✏️ 項目編集・削除</button>
+              <button type="button" class="mini-btn" id="clear-phase-checks-btn">選択解除</button>
+            </div>
+          </div>
+          <div id="phase-edit-mode-hint" style="display: none; font-size: 0.76rem; color: #fbbf24; margin-bottom: 6px;">
+            ※ポイント項目編集モード中：「✎」で名前変更、「×」で削除できます。
+            <button type="button" class="mini-btn" id="reset-phases-default-btn" style="margin-left: 6px;">初期リストに戻す</button>
           </div>
           <div class="chip-grid" id="manual-phase-chips"></div>
+
+          <div class="custom-event-row">
+            <input type="text" id="custom-phase-input" placeholder="新しいポイント対象項目を追加...">
+            <button type="button" class="mini-btn" id="add-custom-phase-btn" style="white-space: nowrap; padding: 0 12px;">＋ リストに追加</button>
+          </div>
         </div>
 
         <div class="manual-section">
@@ -871,7 +940,24 @@
     </div>
   </div>
 
-  <!-- 2. 履歴(学習)タブ -->
+  <!-- 2. 早見表タブ -->
+  <div id="tab-charts" class="tab-pane">
+    <div class="card">
+      <div class="card-title">
+        <span>📅 イベント別ポイント早見表（閲覧・編集＆クラウド同期）</span>
+        <div style="display: flex; gap: 6px;">
+          <button type="button" class="mini-btn" id="add-chart-btn">＋ 表を追加</button>
+          <button type="button" class="mini-btn" id="reset-charts-btn">初期表に戻す</button>
+        </div>
+      </div>
+      <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 12px;">
+        各イベントの日別ポイント対象早見表です。仕様変更や新イベントが追加された際は、各表の「✏️ 編集する」から内容を直接書き換えて保存すると全端末・共有メンバーにも同期されます。
+      </p>
+      <div id="charts-list-container"></div>
+    </div>
+  </div>
+
+  <!-- 3. 履歴(学習)タブ -->
   <div id="tab-history" class="tab-pane">
     <div class="card">
       <div class="card-title">
@@ -885,7 +971,7 @@
     </div>
   </div>
 
-  <!-- 3. 比率解説タブ -->
+  <!-- 4. 比率解説タブ -->
   <div id="tab-ratio" class="tab-pane">
     <div class="card">
       <div class="card-title">
@@ -933,7 +1019,7 @@
     </div>
   </div>
 
-  <!-- 4. 設定タブ -->
+  <!-- 5. 設定タブ -->
   <div id="tab-settings" class="tab-pane">
     <div class="card">
       <div class="card-title">
@@ -1000,11 +1086,11 @@
 全軍出撃：(領地外採集注意⚠
 チェーザレ討伐(最終日)：チェーザレボスは21時30分`;
 
-  // アルテマ「イベント開催の頻度まとめ」掲載イベントを網羅した初期リスト
   const DEFAULT_PRESET_EVENTS = [
     '軍備競技',
     '士官計画',
     '同盟総動員',
+    '同盟対決',
     '同盟争覇戦',
     '同盟争覇戦エントリー',
     '三盟争覇',
@@ -1035,7 +1121,6 @@
     'チェーザレ討伐(最終日)',
     '決起の角笛',
     '貿易復興',
-    '同盟対決',
     '海賊の秘宝',
     '秘宝海岸',
     '王国移民',
@@ -1044,16 +1129,85 @@
     '波越えの旅'
   ];
 
-  const PRESET_PHASES = [
-    'ペット',
+  // 提示いただいた3つの早見表から抽出したポイント対象項目一覧
+  const DEFAULT_PRESET_PHASES = [
     '黄金',
     '加速',
-    '領主装備',
     '領主宝石',
+    'ラキルレ',
+    '欠片',
+    'マスター',
+    'ペット',
     '英雄装備',
-    '採集',
+    '専用ハンマー',
+    'ミスリル',
+    '領主装備',
     '訓練',
-    '欠片'
+    '採集',
+    '塔',
+    'ハヤブサ',
+    '野獣巨獣',
+    'ダイヤ',
+    '課金'
+  ];
+
+  // 早見表タブの初期データ
+  const DEFAULT_REFERENCE_CHARTS = [
+    {
+      id: 'chart_kvk',
+      title: '【最強王国準備フェーズ】',
+      body: `日数 月 火 水 木 金土
+黄金 ◎｜◯｜－｜－｜◎｜
+加速 ◎｜◎｜－｜－｜◎｜
+宝石 ◎｜－｜◯｜◯｜－｜
+ﾗｷﾙﾚ －｜◎｜◯｜－｜－｜
+欠片 －｜◯｜◎｜－｜－｜
+ﾏｽﾀｰ －｜◯｜◯｜－｜－｜
+ﾍﾟｯﾄ －｜－｜◯｜－｜◎｜
+英装 －｜－｜－｜◯｜◎｜
+ﾊﾝﾏｰ －｜－｜－｜◯｜◎｜
+ﾐｽﾘﾙ －｜－｜－｜◯｜◯｜
+領装 －｜－｜－｜－｜◎｜
+訓練 －｜－｜－｜◎｜－｜
+採集 －｜◎｜－｜◎｜◎｜
+塔  ◎｜－｜◎｜－｜◎｜
+※◎◯：対象日 ◎：推奨日`
+    },
+    {
+      id: 'chart_alliance_duel',
+      title: '【同盟対決 早見表】',
+      body: `同盟対決  １ ２ ３ ４ ５ ６
+黄金加速  ◎|◎|－|－|◎|◎
+領主宝石  －|－|◎|◎|－|◎
+ハヤブサ  －|◎|－|◎|－|－
+英雄欠片  －|◎|－|－|－|◎
+資源採集  ◎|－|◎|－|－|－
+ペット   －|－|◎|－|－|◎
+専用ハンマー－|－|－|◎|－|◎
+訓練昇格  －|－|－|◎|－|－
+領主装備  －|－|－|－|◎|◎
+ミスリル  －|－|－|◎|－|◎
+野獣巨獣  －|－|－|－|◎|◎
+※ダイヤと課金は毎日`
+    },
+    {
+      id: 'chart_supreme_lord',
+      title: '【至高領主早見表】',
+      body: `項目   月 | 火 | 水 | 木 | 金 | 土 | 日
+黄金建設 ◎ | ◎ | － | － | ◎ | － | ◎
+領主装備 － | － | － | － | － | ◎ | ◎
+領主宝石 ◎ | － | ◎ | ◎ | － | － | －
+加速   ◎ | ◎ | － | － | ◎ | － | ◎
+欠片   － | ◎ | ◎ | － | － | － | ◎
+ﾙｰﾚｯﾄ   － | ◎ | ◎ | － | － | － | －
+マスター － | ◎ | ◎ | － | － | － | －
+ペット  － | － | ◎ | － | － | － | ◎
+兵士訓練 － | － | － | ◎ | － | ◎ | －
+英雄装備 － | ◎ | － | ◎ | ◎ | － | －
+ハンマー － | ◎ | － | ◎ | ◎ | － | －
+採集   － | － | － | － | － | － | ◎
+ミスリル － | ◎ | － | ◎ | ◎ | － | －`
+    }
   ];
 
   const BASE_FEW_SHOT = `
@@ -1110,16 +1264,28 @@
   const panelScreenshot = document.getElementById('panel-screenshot');
 
   const manualEventChipsContainer = document.getElementById('manual-event-chips');
-  const manualPhaseChipsContainer = document.getElementById('manual-phase-chips');
   const toggleEditEventsBtn = document.getElementById('toggle-edit-events-btn');
   const editModeHint = document.getElementById('edit-mode-hint');
   const resetEventsDefaultBtn = document.getElementById('reset-events-default-btn');
   const clearManualChecksBtn = document.getElementById('clear-manual-checks-btn');
   const customEventInput = document.getElementById('custom-event-input');
   const addCustomEventBtn = document.getElementById('add-custom-event-btn');
+
+  const manualPhaseChipsContainer = document.getElementById('manual-phase-chips');
+  const toggleEditPhasesBtn = document.getElementById('toggle-edit-phases-btn');
+  const phaseEditModeHint = document.getElementById('phase-edit-mode-hint');
+  const resetPhasesDefaultBtn = document.getElementById('reset-phases-default-btn');
+  const clearPhaseChecksBtn = document.getElementById('clear-phase-checks-btn');
+  const customPhaseInput = document.getElementById('custom-phase-input');
+  const addCustomPhaseBtn = document.getElementById('add-custom-phase-btn');
+
   const manualClosingSelect = document.getElementById('manual-closing-select');
   const manualClosingText = document.getElementById('manual-closing-text');
   const buildManualBtn = document.getElementById('build-manual-btn');
+
+  const chartsListContainer = document.getElementById('charts-list-container');
+  const addChartBtn = document.getElementById('add-chart-btn');
+  const resetChartsBtn = document.getElementById('reset-charts-btn');
 
   const pasteZone = document.getElementById('paste-zone');
   const fileInput = document.getElementById('file-input');
@@ -1141,10 +1307,15 @@
   let uploadedImages = [];
   let historyCache = {};
   let eventList = [...DEFAULT_PRESET_EVENTS];
+  let phaseList = [...DEFAULT_PRESET_PHASES];
+  let referenceCharts = JSON.parse(JSON.stringify(DEFAULT_REFERENCE_CHARTS));
   let availableModelsList = [...FALLBACK_DEFAULT_MODELS];
+
   let selectedEvents = new Set();
   let selectedPhases = new Set();
   let isEventEditMode = false;
+  let isPhaseEditMode = false;
+  let editingChartIds = new Set();
 
   let controlState = {
     asapan: 'auto',
@@ -1161,6 +1332,8 @@
       document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
       if (tab.dataset.tab === 'history') {
         renderHistoryList();
+      } else if (tab.dataset.tab === 'charts') {
+        renderReferenceCharts();
       }
     });
   });
@@ -1176,22 +1349,31 @@
     });
   });
 
-  // イベントリストの保存・同期
-  async function persistEventList() {
+  // クラウド同期用ヘルパー（リスト・早見表）
+  async function persistListsAndCharts() {
     localStorage.setItem('ks_custom_event_list', JSON.stringify(eventList));
+    localStorage.setItem('ks_custom_phase_list', JSON.stringify(phaseList));
+    localStorage.setItem('ks_reference_charts', JSON.stringify(referenceCharts));
+
     const baseUrl = getFirebaseBaseUrl();
     if (!baseUrl) return;
     try {
-      await fetch(`${baseUrl}/_shared_config/eventList.json`, {
-        method: 'PUT',
+      await fetch(`${baseUrl}/_shared_config.json`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(eventList)
+        body: JSON.stringify({
+          eventList: eventList,
+          phaseList: phaseList,
+          referenceCharts: referenceCharts,
+          updatedAt: Date.now()
+        })
       });
     } catch (err) {
-      console.error('Event list sync error:', err);
+      console.error('Lists/Charts sync error:', err);
     }
   }
 
+  // ① イベント項目の編集・削除・リセット
   toggleEditEventsBtn.addEventListener('click', () => {
     isEventEditMode = !isEventEditMode;
     toggleEditEventsBtn.classList.toggle('active-edit', isEventEditMode);
@@ -1201,10 +1383,32 @@
   });
 
   resetEventsDefaultBtn.addEventListener('click', async () => {
-    if (!confirm('イベント一覧を初期リスト（アルテマ掲載の全イベント）に戻しますか？')) return;
+    if (!confirm('イベント一覧を初期リストに戻しますか？')) return;
     eventList = [...DEFAULT_PRESET_EVENTS];
     selectedEvents.clear();
-    await persistEventList();
+    await persistListsAndCharts();
+    renderManualChips();
+  });
+
+  // ② ポイント対象項目の編集・削除・リセット
+  toggleEditPhasesBtn.addEventListener('click', () => {
+    isPhaseEditMode = !isPhaseEditMode;
+    toggleEditPhasesBtn.classList.toggle('active-edit', isPhaseEditMode);
+    toggleEditPhasesBtn.textContent = isPhaseEditMode ? '✅ 編集完了' : '✏️ 項目編集・削除';
+    phaseEditModeHint.style.display = isPhaseEditMode ? 'block' : 'none';
+    renderManualChips();
+  });
+
+  resetPhasesDefaultBtn.addEventListener('click', async () => {
+    if (!confirm('ポイント対象項目一覧を初期リスト（早見表の全18項目）に戻しますか？')) return;
+    phaseList = [...DEFAULT_PRESET_PHASES];
+    selectedPhases.clear();
+    await persistListsAndCharts();
+    renderManualChips();
+  });
+
+  clearPhaseChecksBtn.addEventListener('click', () => {
+    selectedPhases.clear();
     renderManualChips();
   });
 
@@ -1234,7 +1438,7 @@
               selectedEvents.delete(evName);
               selectedEvents.add(trimmed);
             }
-            await persistEventList();
+            await persistListsAndCharts();
             renderManualChips();
           }
         });
@@ -1242,7 +1446,7 @@
           e.stopPropagation();
           eventList.splice(idx, 1);
           selectedEvents.delete(evName);
-          await persistEventList();
+          await persistListsAndCharts();
           renderManualChips();
         });
       } else {
@@ -1262,19 +1466,53 @@
     });
 
     manualPhaseChipsContainer.innerHTML = '';
-    PRESET_PHASES.forEach(phName => {
+    phaseList.forEach((phName, idx) => {
       const isChecked = selectedPhases.has(phName);
       const chip = document.createElement('div');
-      chip.className = `phase-chip ${isChecked ? 'checked' : ''}`;
-      chip.textContent = (isChecked ? '✓ ' : '+ ') + phName;
-      chip.addEventListener('click', () => {
-        if (selectedPhases.has(phName)) {
+
+      if (isPhaseEditMode) {
+        chip.className = 'phase-chip edit-mode';
+        chip.innerHTML = `
+          <span>${phName}</span>
+          <span class="chip-edit-actions">
+            <button type="button" class="chip-action-btn edit" title="名前変更">✎</button>
+            <button type="button" class="chip-action-btn del" title="削除">×</button>
+          </span>
+        `;
+        chip.querySelector('.edit').addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const newName = prompt('ポイント対象項目名を編集:', phName);
+          if (newName && newName.trim() && newName.trim() !== phName) {
+            const trimmed = newName.trim();
+            phaseList[idx] = trimmed;
+            if (selectedPhases.has(phName)) {
+              selectedPhases.delete(phName);
+              selectedPhases.add(trimmed);
+            }
+            await persistListsAndCharts();
+            renderManualChips();
+          }
+        });
+        chip.querySelector('.del').addEventListener('click', async (e) => {
+          e.stopPropagation();
+          phaseList.splice(idx, 1);
           selectedPhases.delete(phName);
-        } else {
-          selectedPhases.add(phName);
-        }
-        renderManualChips();
-      });
+          await persistListsAndCharts();
+          renderManualChips();
+        });
+      } else {
+        chip.className = `phase-chip ${isChecked ? 'checked' : ''}`;
+        chip.textContent = (isChecked ? '✓ ' : '+ ') + phName;
+        chip.addEventListener('click', () => {
+          if (selectedPhases.has(phName)) {
+            selectedPhases.delete(phName);
+          } else {
+            selectedPhases.add(phName);
+          }
+          renderManualChips();
+        });
+      }
+
       manualPhaseChipsContainer.appendChild(chip);
     });
   }
@@ -1284,7 +1522,7 @@
     if (!val) return;
     if (!eventList.includes(val)) {
       eventList.unshift(val);
-      await persistEventList();
+      await persistListsAndCharts();
     }
     selectedEvents.add(val);
     customEventInput.value = '';
@@ -1298,6 +1536,25 @@
     }
   });
 
+  addCustomPhaseBtn.addEventListener('click', async () => {
+    const val = customPhaseInput.value.trim();
+    if (!val) return;
+    if (!phaseList.includes(val)) {
+      phaseList.push(val);
+      await persistListsAndCharts();
+    }
+    selectedPhases.add(val);
+    customPhaseInput.value = '';
+    renderManualChips();
+  });
+
+  customPhaseInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addCustomPhaseBtn.click();
+    }
+  });
+
   clearManualChecksBtn.addEventListener('click', () => {
     selectedEvents.clear();
     selectedPhases.clear();
@@ -1308,6 +1565,91 @@
 
   manualClosingSelect.addEventListener('change', () => {
     manualClosingText.value = manualClosingSelect.value;
+  });
+
+  // 📅 早見表タブの描画・編集機能
+  function renderReferenceCharts() {
+    chartsListContainer.innerHTML = '';
+    referenceCharts.forEach((chart, idx) => {
+      const isEditing = editingChartIds.has(chart.id);
+      const box = document.createElement('div');
+      box.className = 'chart-box';
+
+      if (isEditing) {
+        box.innerHTML = `
+          <div class="chart-header">
+            <input type="text" class="chart-title-input" style="font-weight: 700; padding: 6px 10px;" placeholder="早見表のタイトル">
+          </div>
+          <textarea class="chart-editor" rows="15"></textarea>
+          <div style="display: flex; justify-content: space-between; gap: 6px;">
+            <button type="button" class="mini-btn danger del-chart-btn">🗑️ この表を削除</button>
+            <div style="display: flex; gap: 6px;">
+              <button type="button" class="mini-btn cancel-chart-btn">キャンセル</button>
+              <button type="button" class="mini-btn primary save-chart-btn">💾 保存＆同期</button>
+            </div>
+          </div>
+        `;
+        box.querySelector('.chart-title-input').value = chart.title;
+        box.querySelector('.chart-editor').value = chart.body;
+
+        box.querySelector('.save-chart-btn').addEventListener('click', async () => {
+          const newTitle = box.querySelector('.chart-title-input').value.trim() || '無題の早見表';
+          const newBody = box.querySelector('.chart-editor').value;
+          referenceCharts[idx] = { ...chart, title: newTitle, body: newBody };
+          editingChartIds.delete(chart.id);
+          await persistListsAndCharts();
+          renderReferenceCharts();
+        });
+
+        box.querySelector('.cancel-chart-btn').addEventListener('click', () => {
+          editingChartIds.delete(chart.id);
+          renderReferenceCharts();
+        });
+
+        box.querySelector('.del-chart-btn').addEventListener('click', async () => {
+          if (!confirm(`「${chart.title}」を削除しますか？`)) return;
+          referenceCharts.splice(idx, 1);
+          editingChartIds.delete(chart.id);
+          await persistListsAndCharts();
+          renderReferenceCharts();
+        });
+      } else {
+        box.innerHTML = `
+          <div class="chart-header">
+            <span class="chart-title"></span>
+            <button type="button" class="mini-btn edit-chart-btn">✏️ 編集する</button>
+          </div>
+          <pre class="chart-content"></pre>
+        `;
+        box.querySelector('.chart-title').textContent = chart.title;
+        box.querySelector('.chart-content').textContent = chart.body;
+        box.querySelector('.edit-chart-btn').addEventListener('click', () => {
+          editingChartIds.add(chart.id);
+          renderReferenceCharts();
+        });
+      }
+
+      chartsListContainer.appendChild(box);
+    });
+  }
+
+  addChartBtn.addEventListener('click', () => {
+    const newId = 'chart_' + Date.now();
+    referenceCharts.push({
+      id: newId,
+      title: '【新しいイベント早見表】',
+      body: '日数 １｜２｜３｜４｜５｜\n項目 ◎｜－｜◎｜－｜◎｜'
+    });
+    editingChartIds.add(newId);
+    renderReferenceCharts();
+  });
+
+  resetChartsBtn.addEventListener('click', async () => {
+    if (!confirm('3つの早見表をすべて初期状態に戻しますか？')) return;
+    referenceCharts = JSON.parse(JSON.stringify(DEFAULT_REFERENCE_CHARTS));
+    editingChartIds.clear();
+    await persistListsAndCharts();
+    renderReferenceCharts();
   });
 
   function parseEventDictionary() {
@@ -1338,13 +1680,13 @@
     const chosenEvents = eventList.filter(ev => selectedEvents.has(ev));
 
     let phaseInserted = false;
-    const phaseTargets = ['至高領主', '最強王国', '最強領主', '軍備競技'];
+    const phaseTargets = ['至高領主', '最強王国', '最強領主', '同盟対決', '軍備競技'];
 
     chosenEvents.forEach(ev => {
       lines.push(`・${ev}`);
 
       if (!phaseInserted && selectedPhases.size > 0 && phaseTargets.some(t => ev.includes(t))) {
-        const orderedPhases = PRESET_PHASES.filter(p => selectedPhases.has(p));
+        const orderedPhases = phaseList.filter(p => selectedPhases.has(p));
         lines.push(orderedPhases.join('、'));
         phaseInserted = true;
       }
@@ -1361,7 +1703,7 @@
     });
 
     if (!phaseInserted && selectedPhases.size > 0) {
-      const orderedPhases = PRESET_PHASES.filter(p => selectedPhases.has(p));
+      const orderedPhases = phaseList.filter(p => selectedPhases.has(p));
       lines.push(orderedPhases.join('、'));
     }
 
@@ -1437,7 +1779,6 @@
         throw new Error('利用可能なGeminiモデルが見つかりませんでした。');
       }
 
-      // flash系・新しいモデルを優先順位付け
       validGeminiModels.sort((a, b) => {
         const score = (name) => {
           let s = 0;
@@ -1529,8 +1870,17 @@
           if (Array.isArray(cfg.eventList) && cfg.eventList.length > 0) {
             eventList = cfg.eventList;
             localStorage.setItem('ks_custom_event_list', JSON.stringify(eventList));
-            renderManualChips();
           }
+          if (Array.isArray(cfg.phaseList) && cfg.phaseList.length > 0) {
+            phaseList = cfg.phaseList;
+            localStorage.setItem('ks_custom_phase_list', JSON.stringify(phaseList));
+          }
+          if (Array.isArray(cfg.referenceCharts) && cfg.referenceCharts.length > 0) {
+            referenceCharts = cfg.referenceCharts;
+            localStorage.setItem('ks_reference_charts', JSON.stringify(referenceCharts));
+          }
+          renderManualChips();
+          renderReferenceCharts();
         }
 
         const logs = {};
@@ -1864,6 +2214,26 @@
       } catch {}
     }
 
+    const savedPhasesRaw = localStorage.getItem('ks_custom_phase_list');
+    if (savedPhasesRaw) {
+      try {
+        const parsedPhases = JSON.parse(savedPhasesRaw);
+        if (Array.isArray(parsedPhases) && parsedPhases.length > 0) {
+          phaseList = parsedPhases;
+        }
+      } catch {}
+    }
+
+    const savedChartsRaw = localStorage.getItem('ks_reference_charts');
+    if (savedChartsRaw) {
+      try {
+        const parsedCharts = JSON.parse(savedChartsRaw);
+        if (Array.isArray(parsedCharts) && parsedCharts.length > 0) {
+          referenceCharts = parsedCharts;
+        }
+      } catch {}
+    }
+
     const savedUrl = localStorage.getItem('ks_firebase_url') || EMBEDDED_FIREBASE_URL;
     const savedBearDate = localStorage.getItem('ks_bear_base_date') || '2026-11-22';
     const savedBearText = localStorage.getItem('ks_bear_text') || '熊罠 21時 22時';
@@ -1878,6 +2248,7 @@
     charLimitInput.value = savedLimit;
 
     renderManualChips();
+    renderReferenceCharts();
     setupSegmentedControl('asapan-group', 'asapan');
     setupSegmentedControl('bear-group', 'bear');
     setupSegmentedControl('gather-group', 'gather');
@@ -1928,6 +2299,8 @@
       bearText: bearText,
       eventDict: dict,
       eventList: eventList,
+      phaseList: phaseList,
+      referenceCharts: referenceCharts,
       updatedAt: Date.now()
     });
 
@@ -2131,7 +2504,7 @@
   generateBtn.addEventListener('click', async () => {
     const apiKey = (apiKeyInput.value || localStorage.getItem('ks_gemini_api_key') || '').trim();
     if (!apiKey) {
-      navTabs[3].click();
+      navTabs[4].click();
       showStatus('先に「⚙️ 設定」タブからGemini APIキーを保存してください。', 'error');
       return;
     }
