@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>キングショット 同盟通知ジェネレーター v6.3</title>
+  <title>キングショット 同盟通知ジェネレーター v6.4</title>
   <style>
     :root {
       --bg-color: #12151c;
@@ -225,7 +225,7 @@
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 10px;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
     }
 
     .control-box {
@@ -270,6 +270,133 @@
       background: var(--warning);
       color: #111;
       font-weight: 600;
+    }
+
+    /* 作成モード切替タブ */
+    .mode-switch {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      background: #12151c;
+      padding: 5px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      margin-bottom: 12px;
+    }
+
+    .mode-switch-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 8px 6px;
+      border-radius: 6px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .mode-switch-btn.active {
+      background: #262d3b;
+      color: #60a5fa;
+      border: 1px solid rgba(96, 165, 250, 0.4);
+    }
+
+    .builder-panel {
+      display: none;
+    }
+
+    .builder-panel.active {
+      display: block;
+    }
+
+    /* 手動ビルダー用スタイル */
+    .manual-section {
+      background: #12151c;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+
+    .manual-section-title {
+      font-size: 0.8rem;
+      color: #93c5fd;
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .chip-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .event-chip {
+      background: #1c212b;
+      border: 1px solid var(--border-color);
+      color: #d1d5db;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .event-chip:hover {
+      border-color: #4b5563;
+    }
+
+    .event-chip.checked {
+      background: rgba(59, 130, 246, 0.22);
+      border-color: var(--primary);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .event-chip .check-box {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .event-chip.checked .check-box {
+      color: #60a5fa;
+    }
+
+    .phase-chip {
+      background: #1c212b;
+      border: 1px solid var(--border-color);
+      color: #d1d5db;
+      padding: 5px 9px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .phase-chip.checked {
+      background: rgba(16, 185, 129, 0.22);
+      border-color: var(--success);
+      color: #6ee7b7;
+      font-weight: 600;
+    }
+
+    .custom-event-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .custom-event-row input {
+      padding: 7px 10px;
+      font-size: 0.84rem;
     }
 
     #paste-zone {
@@ -362,19 +489,6 @@
     .btn-primary:disabled {
       opacity: 0.5;
       cursor: not-allowed;
-    }
-
-    .btn-demo {
-      background-color: #262d3b;
-      border: 1px solid var(--border-color);
-      color: #e5e7eb;
-      margin-top: 8px;
-      padding: 9px;
-      font-size: 0.85rem;
-    }
-
-    .btn-demo:hover {
-      background-color: #323b4d;
     }
 
     .btn-success {
@@ -552,7 +666,7 @@
 
 <div class="container">
   <header>
-    <h1>📢 同盟通知ジェネレーター <span class="ver-badge">v6.3</span></h1>
+    <h1>📢 同盟通知ジェネレーター <span class="ver-badge">v6.4</span></h1>
     <span class="sync-badge warn" id="sync-status-badge">クラウド同期確認中...</span>
   </header>
 
@@ -618,24 +732,68 @@
         </div>
       </div>
 
-      <div id="paste-zone">
-        <div class="paste-icon">📋</div>
-        <div><strong>Ctrl + V</strong> でスクショ貼り付け / タップで画像選択</div>
-        <div class="paste-hint">対象日（翌日など）のイベント一覧・カレンダー等のスクショを貼ってください</div>
-        <input type="file" id="file-input" accept="image/*" multiple style="display:none;">
+      <!-- 作成方法切替：手動ビルダー / スクショAI -->
+      <div class="mode-switch">
+        <button type="button" class="mode-switch-btn active" data-mode="manual">☑️ 手動ビルダー（API不要・即作成）</button>
+        <button type="button" class="mode-switch-btn" data-mode="screenshot">📸 スクショAI解析（自動読取）</button>
       </div>
 
-      <div id="preview-grid"></div>
+      <!-- パネルA：手動イベントビルダー -->
+      <div id="panel-manual" class="builder-panel active">
+        <div class="manual-section">
+          <div class="manual-section-title">
+            <span>① 開催イベントを選択（設定の自動補足辞書も自動反映）</span>
+            <button type="button" class="mini-btn" id="clear-manual-checks-btn">選択解除</button>
+          </div>
+          <div class="chip-grid" id="manual-event-chips"></div>
 
-      <div style="margin-top: 14px; display: flex; gap: 8px;">
-        <button class="btn btn-primary" id="generate-btn" disabled>
-          <span class="spinner" id="loading-spinner"></span>
-          <span id="generate-btn-text">✨ スクショから通知文を生成</span>
-        </button>
-        <button class="icon-btn" id="clear-images-btn" style="display:none; white-space: nowrap;">🗑️ クリア</button>
+          <div class="custom-event-row">
+            <input type="text" id="custom-event-input" placeholder="リストにないイベント名を手入力して追加...">
+            <button type="button" class="mini-btn" id="add-custom-event-btn" style="white-space: nowrap; padding: 0 12px;">＋ 追加</button>
+          </div>
+        </div>
+
+        <div class="manual-section">
+          <div class="manual-section-title">
+            <span>② ポイント対象項目（至高領主・最強王国・同盟総動員など）</span>
+          </div>
+          <div class="chip-grid" id="manual-phase-chips"></div>
+        </div>
+
+        <div class="manual-section">
+          <div class="manual-section-title">
+            <span>③ 締めのひとこと（任意）</span>
+          </div>
+          <select id="manual-closing-select">
+            <option value="">なし</option>
+            <option value="同盟総動員みんなで力を&#10;合わせてがんばろー(٩・∀・ง)ｵｰ!">同盟総動員みんなで力を合わせてがんばろー(٩・∀・ง)ｵｰ!</option>
+            <option value="無理のない範囲でポイント稼いでいきましょー！">無理のない範囲でポイント稼いでいきましょー！</option>
+            <option value="報酬取り忘れのないようチェックお忘れなくー！">報酬取り忘れのないようチェックお忘れなくー！</option>
+          </select>
+        </div>
+
+        <button type="button" class="btn btn-primary" id="build-manual-btn">📝 選択した項目で通知文を組み立てる（API不要）</button>
       </div>
 
-      <button type="button" class="btn btn-demo" id="demo-generate-btn">🧪 サンプルデータで出力をテスト（APIキー不要）</button>
+      <!-- パネルB：スクショAI解析 -->
+      <div id="panel-screenshot" class="builder-panel">
+        <div id="paste-zone">
+          <div class="paste-icon">📋</div>
+          <div><strong>Ctrl + V</strong> でスクショ貼り付け / タップで画像選択</div>
+          <div class="paste-hint">対象日（翌日など）のイベント一覧・カレンダー等のスクショを貼ってください</div>
+          <input type="file" id="file-input" accept="image/*" multiple style="display:none;">
+        </div>
+
+        <div id="preview-grid"></div>
+
+        <div style="margin-top: 14px; display: flex; gap: 8px;">
+          <button class="btn btn-primary" id="generate-btn" disabled>
+            <span class="spinner" id="loading-spinner"></span>
+            <span id="generate-btn-text">✨ スクショから通知文を生成</span>
+          </button>
+          <button class="icon-btn" id="clear-images-btn" style="display:none; white-space: nowrap;">🗑️ クリア</button>
+        </div>
+      </div>
 
       <div class="status-msg" id="status-msg"></div>
     </div>
@@ -646,7 +804,7 @@
         <span style="font-size: 0.78rem; color: #60a5fa;" id="history-count-label">学習履歴: 0件</span>
       </div>
 
-      <textarea id="result-text" rows="13" placeholder="スクショを貼って生成ボタンを押すと、過去の確定履歴（直近1ヶ月分）を学習した文体で通知文が作成されます..."></textarea>
+      <textarea id="result-text" rows="13" placeholder="上の「手動ビルダー」でイベントを選ぶか、「スクショAI解析」で通知文を作成してください..."></textarea>
 
       <div class="counter-bar">
         <div class="char-count" id="char-count">0 / 300 文字</div>
@@ -742,7 +900,6 @@
           <option value="gemini-3.8-flash-lite">gemini-3.8-flash-lite（高速・軽量・混雑回避用）</option>
           <option value="gemini-3.5-flash">gemini-3.5-flash（安定代替モデル）</option>
         </select>
-        <div class="input-hint">※需要急増エラー時は自動で最大3回リトライし、それでも混雑している場合は自動的に他モデルへ切り替えて生成を続行します。</div>
       </div>
 
       <div class="input-group">
@@ -768,7 +925,7 @@
       <div class="input-group">
         <label for="event-dict-input">6. イベント別・自動補足辞書（イベント名：補足テキスト）</label>
         <textarea id="event-dict-input" rows="6"></textarea>
-        <div class="input-hint">※「イベント名：補足文」の形式で1行ずつ記述。スクショに該当イベントがあると自動追記します。</div>
+        <div class="input-hint">※「イベント名：補足文」の形式で1行ずつ記述。AI解析・手動ビルダーのどちらでも該当イベント選択時に自動追記します。</div>
       </div>
 
       <button class="btn btn-primary" id="save-settings-btn">設定を保存してクラウド同期する</button>
@@ -785,6 +942,33 @@
 調合ショップ：アイテム交換忘れずにー
 全軍出撃：(領地外採集注意⚠
 チェーザレ討伐(最終日)：チェーザレボスは21時30分`;
+
+  const PRESET_EVENTS = [
+    '軍備競技',
+    '同盟総動員',
+    '同盟争覇戦エントリー',
+    '三盟争覇エントリー',
+    '聖剣争奪エントリー',
+    '至高領主',
+    '最強王国',
+    '全軍出撃',
+    '調合ショップ',
+    'チェーザレ討伐',
+    'チェーザレ討伐(最終日)',
+    'バイキングの略奪'
+  ];
+
+  const PRESET_PHASES = [
+    'ペット',
+    '黄金',
+    '加速',
+    '領主装備',
+    '領主宝石',
+    '英雄装備',
+    '採集',
+    '訓練',
+    '欠片'
+  ];
 
   const BASE_FEW_SHOT = `
 【基本フォーマットお手本1】
@@ -833,13 +1017,24 @@
   const btnSetTomorrow = document.getElementById('btn-set-tomorrow');
   const dateBearBadge = document.getElementById('date-bear-badge');
 
+  const modeSwitchBtns = document.querySelectorAll('.mode-switch-btn');
+  const panelManual = document.getElementById('panel-manual');
+  const panelScreenshot = document.getElementById('panel-screenshot');
+
+  const manualEventChipsContainer = document.getElementById('manual-event-chips');
+  const manualPhaseChipsContainer = document.getElementById('manual-phase-chips');
+  const clearManualChecksBtn = document.getElementById('clear-manual-checks-btn');
+  const customEventInput = document.getElementById('custom-event-input');
+  const addCustomEventBtn = document.getElementById('add-custom-event-btn');
+  const manualClosingSelect = document.getElementById('manual-closing-select');
+  const buildManualBtn = document.getElementById('build-manual-btn');
+
   const pasteZone = document.getElementById('paste-zone');
   const fileInput = document.getElementById('file-input');
   const previewGrid = document.getElementById('preview-grid');
   const clearImagesBtn = document.getElementById('clear-images-btn');
   const generateBtn = document.getElementById('generate-btn');
   const generateBtnText = document.getElementById('generate-btn-text');
-  const demoGenerateBtn = document.getElementById('demo-generate-btn');
   const loadingSpinner = document.getElementById('loading-spinner');
   const statusMsg = document.getElementById('status-msg');
 
@@ -853,6 +1048,10 @@
 
   let uploadedImages = [];
   let historyCache = {};
+  let customEventsList = [];
+  let selectedEvents = new Set();
+  let selectedPhases = new Set();
+
   let controlState = {
     asapan: 'auto',
     bear: 'auto',
@@ -870,6 +1069,157 @@
         renderHistoryList();
       }
     });
+  });
+
+  modeSwitchBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      modeSwitchBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const mode = btn.dataset.mode;
+      panelManual.classList.toggle('active', mode === 'manual');
+      panelScreenshot.classList.toggle('active', mode === 'screenshot');
+      statusMsg.textContent = '';
+    });
+  });
+
+  // 手動ビルダーのチップ描画
+  function renderManualChips() {
+    manualEventChipsContainer.innerHTML = '';
+    const allEvents = [...PRESET_EVENTS, ...customEventsList];
+    allEvents.forEach(evName => {
+      const isChecked = selectedEvents.has(evName);
+      const chip = document.createElement('div');
+      chip.className = `event-chip ${isChecked ? 'checked' : ''}`;
+      chip.innerHTML = `<span class="check-box">${isChecked ? '☑' : '☐'}</span><span>${evName}</span>`;
+      chip.addEventListener('click', () => {
+        if (selectedEvents.has(evName)) {
+          selectedEvents.delete(evName);
+        } else {
+          selectedEvents.add(evName);
+        }
+        renderManualChips();
+      });
+      manualEventChipsContainer.appendChild(chip);
+    });
+
+    manualPhaseChipsContainer.innerHTML = '';
+    PRESET_PHASES.forEach(phName => {
+      const isChecked = selectedPhases.has(phName);
+      const chip = document.createElement('div');
+      chip.className = `phase-chip ${isChecked ? 'checked' : ''}`;
+      chip.textContent = (isChecked ? '✓ ' : '+ ') + phName;
+      chip.addEventListener('click', () => {
+        if (selectedPhases.has(phName)) {
+          selectedPhases.delete(phName);
+        } else {
+          selectedPhases.add(phName);
+        }
+        renderManualChips();
+      });
+      manualPhaseChipsContainer.appendChild(chip);
+    });
+  }
+
+  addCustomEventBtn.addEventListener('click', () => {
+    const val = customEventInput.value.trim();
+    if (!val) return;
+    if (!PRESET_EVENTS.includes(val) && !customEventsList.includes(val)) {
+      customEventsList.push(val);
+    }
+    selectedEvents.add(val);
+    customEventInput.value = '';
+    renderManualChips();
+  });
+
+  customEventInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addCustomEventBtn.click();
+    }
+  });
+
+  clearManualChecksBtn.addEventListener('click', () => {
+    selectedEvents.clear();
+    selectedPhases.clear();
+    manualClosingSelect.value = '';
+    renderManualChips();
+  });
+
+  function parseEventDictionary() {
+    const raw = eventDictInput.value || localStorage.getItem('ks_event_dict') || DEFAULT_EVENT_DICT;
+    const entries = [];
+    raw.split('\n').forEach(line => {
+      const trimmed = line.trim();
+      if (!trimmed) return;
+      const sepIdx = trimmed.indexOf('：') !== -1 ? trimmed.indexOf('：') : trimmed.indexOf(':');
+      if (sepIdx !== -1) {
+        const key = trimmed.slice(0, sepIdx).trim();
+        const note = trimmed.slice(sepIdx + 1).trim();
+        if (key && note) entries.push({ key, note });
+      }
+    });
+    return entries;
+  }
+
+  buildManualBtn.addEventListener('click', () => {
+    const targetStr = getTargetDateFormatted();
+    const asapanLine = controlState.asapan === 'ng'
+      ? '朝パーン温存（NG）※翌日ポイント対象のため待機推奨'
+      : '朝パーンOK！';
+    const bearLine = getBearLineText();
+    const dictEntries = parseEventDictionary();
+
+    const lines = [targetStr, asapanLine, bearLine];
+    const allOrderedEvents = [...PRESET_EVENTS, ...customEventsList];
+    const chosenEvents = allOrderedEvents.filter(ev => selectedEvents.has(ev));
+
+    let phaseInserted = false;
+    const phaseTargets = ['至高領主', '最強王国', '軍備競技'];
+
+    chosenEvents.forEach(ev => {
+      lines.push(`・${ev}`);
+
+      // フェーズ対象イベントの直下にポイント項目を挿入
+      if (!phaseInserted && selectedPhases.size > 0 && phaseTargets.some(t => ev.includes(t))) {
+        const orderedPhases = PRESET_PHASES.filter(p => selectedPhases.has(p));
+        lines.push(orderedPhases.join('、'));
+        phaseInserted = true;
+      }
+
+      // 自動補足辞書の照合（完全一致または部分一致）
+      const matchedNotes = [];
+      dictEntries.forEach(entry => {
+        if (ev === entry.key || (ev.includes(entry.key) && !ev.includes('最終日'))) {
+          matchedNotes.push(entry.note);
+        } else if (ev.includes('最終日') && entry.key.includes('最終日')) {
+          matchedNotes.push(entry.note);
+        }
+      });
+      matchedNotes.forEach(note => lines.push(note));
+    });
+
+    // もし至高領主等を選ばずにフェーズ項目だけチェックしていた場合
+    if (!phaseInserted && selectedPhases.size > 0) {
+      const orderedPhases = PRESET_PHASES.filter(p => selectedPhases.has(p));
+      lines.push(orderedPhases.join('、'));
+    }
+
+    const closing = manualClosingSelect.value;
+    if (closing) {
+      lines.push('');
+      lines.push(closing);
+    }
+
+    const prepItems = [];
+    if (controlState.gather === 'yes') prepItems.push('採取');
+    if (controlState.train === 'yes') prepItems.push('訓練');
+    if (prepItems.length > 0) {
+      lines.push(`※翌日${prepItems.join('・')}なので寝る前に仕込む人はお忘れなく〜`);
+    }
+
+    resultText.value = lines.join('\n');
+    updateCharCounter();
+    showStatus(`「${targetStr}」の通知文を手動ビルダーから組み立てました！必要に応じて微調整して「確定保存＆コピー」を押してください。`, 'ok');
   });
 
   function getFirebaseBaseUrl() {
@@ -1255,6 +1605,7 @@
     eventDictInput.value = savedDict;
     charLimitInput.value = savedLimit;
 
+    renderManualChips();
     setupSegmentedControl('asapan-group', 'asapan');
     setupSegmentedControl('bear-group', 'bear');
     setupSegmentedControl('gather-group', 'gather');
@@ -1429,35 +1780,6 @@
     }
   });
 
-  demoGenerateBtn.addEventListener('click', () => {
-    const targetStr = getTargetDateFormatted();
-    const bearLine = getBearLineText();
-    const asapanLine = controlState.asapan === 'ng'
-      ? '朝パーン温存（NG）※翌日ポイント対象のため待機推奨'
-      : '朝パーンOK！';
-
-    const prepItems = [];
-    if (controlState.gather === 'yes') prepItems.push('採取');
-    if (controlState.train === 'yes') prepItems.push('訓練');
-    const prepLine = prepItems.length > 0
-      ? `\n※翌日${prepItems.join('・')}なので寝る前に仕込む人はお忘れなく〜`
-      : '';
-
-    resultText.value = `${targetStr}
-${asapanLine}
-${bearLine}
-・軍備競技
-・同盟総動員
-・同盟争覇戦エントリー
-左寄せ、比率613
-
-同盟総動員みんなで力を
-合わせてがんばろー(٩・∀・ง)ｵｰ!${prepLine}`;
-
-    updateCharCounter();
-    showStatus(`「${targetStr}」のサンプル通知文を生成しました！手直しして「確定保存＆コピー」を押すと学習データに蓄積されます。`, 'ok');
-  });
-
   function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
@@ -1528,7 +1850,7 @@ ${bearLine}
       }
     }
 
-    throw lastError || new Error('すべてのモデルが混雑しています。少し時間を置いてお試しください。');
+    throw lastError || new Error('すべてのモデルが混雑しています。上の「手動ビルダー」タブから即作成できます。');
   }
 
   generateBtn.addEventListener('click', async () => {
