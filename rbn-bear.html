@@ -727,6 +727,105 @@
       text-align: center;
     }
 
+
+    /* マスター確認・補正ページ（モーダル）用スタイル */
+    .inspect-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    .inspect-tab-btn {
+      background: var(--bg);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+    }
+    .inspect-tab-btn.active {
+      background: var(--blue-strong);
+      color: #fff;
+      border-color: var(--blue);
+    }
+    .pool-columns {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    body.view-mobile .pool-columns {
+      grid-template-columns: 1fr;
+    }
+    .pool-col {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+    }
+    .pool-col-title {
+      font-weight: 800;
+      font-size: 0.88rem;
+      margin-bottom: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .pool-item-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 5px 6px;
+      border-radius: 6px;
+      background: var(--card-sub);
+      margin-bottom: 5px;
+      font-size: 0.8rem;
+    }
+    .pool-item-name {
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+    }
+    .pool-item-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .pool-item-actions select {
+      width: 66px;
+      padding: 2px 4px;
+      font-size: 0.75rem;
+      min-height: 26px !important;
+    }
+    .mini-del-btn {
+      padding: 2px 6px;
+      font-size: 0.72rem;
+      background: rgba(239, 68, 68, 0.18);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+    }
+    .inspect-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+    .inspect-table th, .inspect-table td {
+      padding: 7px 6px;
+      border-bottom: 1px solid var(--border);
+    }
+    .inspect-table select, .inspect-table input {
+      padding: 3px 6px;
+      font-size: 0.78rem;
+      min-height: 28px !important;
+    }
+
     @media (max-width: 640px) {
       th, td { padding: 8px 6px; font-size: 0.8rem; }
       .hero-list { grid-template-columns: 1fr; }
@@ -750,6 +849,7 @@
     </div>
     <span id="syncStatus" class="badge-sync offline">⚪ ローカル読込</span>
     <button class="btn-blue" onclick="openTierModal()">🏆 環境Tier表</button>
+    <button class="btn-purple" onclick="openInspectModal()">📋 マスター確認・補正</button>
     <button class="btn-green" onclick="openDataModal()">📦 マスタ管理</button>
     <button class="btn-secondary" onclick="resetLocalUser()">🔄 初期化</button>
     <button class="btn-primary" onclick="openAppSettingsModal()">⚙️ 設定</button>
@@ -1002,6 +1102,78 @@
 
       <div style="display:flex; justify-content:flex-end; gap:8px;">
         <button type="button" class="btn-primary" onclick="saveAppSettingsModal()">💾 共通設定を保存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- マスター確認・補正ページ（人間が見てわかりやすい一覧＆即時補正ビュー） -->
+<div id="inspectModal" class="modal-backdrop" onclick="if(event.target===this) closeModal('inspectModal')">
+  <div class="modal" style="max-width: 920px;">
+    <div class="modal-header">
+      <div>
+        <h3 style="color: #d8b4fe;">📋 マスターデータ確認・補正ページ（<span id="inspectVersionBadge">S1〜S8完全対応</span>）</h3>
+        <div style="font-size: 0.76rem; color: var(--muted); margin-top: 2px;">
+          現在の集結主リスト（歩・騎・弓）と乗り手スキル数値を一覧で確認し、兵種間違いや数値ズレをその場で補正できます。
+        </div>
+      </div>
+      <button class="btn-secondary" onclick="closeModal('inspectModal')">閉じる</button>
+    </div>
+    <div class="modal-body">
+      <div class="inspect-tabs">
+        <button type="button" id="tabInspectPools" class="inspect-tab-btn active" onclick="switchInspectTab('pools')">🛡️🐎🏹 1. 集結主プルダウン兵種一覧（補正）</button>
+        <button type="button" id="tabInspectHeroes" class="inspect-tab-btn" onclick="switchInspectTab('heroes')">⚔️ 2. 乗り手英雄・スキル数値一覧（補正）</button>
+        <button type="button" id="tabInspectTier" class="inspect-tab-btn" onclick="switchInspectTab('tier')">🏆 3. 環境Tier表テキスト確認</button>
+      </div>
+
+      <!-- タブ1: 集結主プルダウン兵種一覧 -->
+      <div id="inspectPanePools">
+        <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:10px; background:var(--bg); padding:10px; border-radius:8px; border:1px solid var(--border);">
+          <span style="font-size:0.8rem; font-weight:700; color:#e2e8f0;">＋ 集結主候補を追加：</span>
+          <input type="text" id="newPoolHeroName" placeholder="例: 新キャラ名 (S9)" style="max-width: 210px;" />
+          <select id="newPoolHeroType" style="max-width: 110px;">
+            <option value="inf">🛡️ 歩兵</option>
+            <option value="cav">🐎 騎兵</option>
+            <option value="arc">🏹 弓兵</option>
+          </select>
+          <button type="button" class="btn-primary" onclick="addPoolHeroManual()">追加する</button>
+          <button type="button" class="btn-secondary" style="margin-left:auto; font-size:0.76rem;" onclick="resetPoolsToDefault()">🔄 兵種分類を初期基準に戻す</button>
+        </div>
+        <div id="inspectPoolsGrid" class="pool-columns"></div>
+      </div>
+
+      <!-- タブ2: 乗り手英雄スキル一覧 -->
+      <div id="inspectPaneHeroes" style="display:none; overflow-x:auto;">
+        <table class="inspect-table">
+          <thead>
+            <tr>
+              <th>英雄名</th>
+              <th style="width:82px;">兵種</th>
+              <th style="width:74px;">Tier</th>
+              <th style="width:110px;">バフ種別</th>
+              <th style="width:68px;">確率%</th>
+              <th style="width:62px;">持続T</th>
+              <th style="width:72px;">Lv5倍率%</th>
+              <th style="width:84px;">重複制限</th>
+              <th style="width:50px;">削除</th>
+            </tr>
+          </thead>
+          <tbody id="inspectHeroesBody"></tbody>
+        </table>
+      </div>
+
+      <!-- タブ3: Tier表確認 -->
+      <div id="inspectPaneTier" style="display:none;">
+        <div id="inspectTierPreview" style="background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:12px;"></div>
+      </div>
+
+      <hr style="border: 0; border-top: 1px solid var(--border); margin: 14px 0;" />
+      <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:10px;">
+        <button type="button" class="btn-blue" onclick="applyInspectChangesLocal()">💾 この端末に補正を反映する</button>
+        <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+          <input type="password" id="inspectAdminPass" placeholder="管理者パスコード" style="width:160px;" />
+          <button type="button" class="btn-green" onclick="applyInspectAndPushFirebase()">☁️ 補正をFirebaseへ保存し全員に配信</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1344,17 +1516,17 @@
     inf: [
       "アマデウス (S1)", "ヘルガ (S1)", "ゾーイ (S2)", "ディエゴ (S8)", "アルカ (S4)",
       "ロンフェイ (S5)", "トライトン (S6)", "チャールズ (S7)",
-      "イェーガー (S3)", "インウー (SR)", "ハワード (SR)", "セス (R)", "エドウィン (R)"
+      "イェーガー (S3)", "インウー (SR)", "ハワード (SR)", "セス (R)", "エドウィン (R)", "フォレスト (R)"
     ],
     cav: [
       "アイヴァ (S7)", "ペーラ (S3)", "スルード (S5)",
       "リズ (S8)", "ソフィア (S6)", "ヒルデ (S3)", "ジェベル (S1)",
-      "チェンコ (SR)", "ゴードン (SR)", "ファーディ (SR)", "オリーブ (R)"
+      "チェンコ (SR)", "ゴードン (SR)", "ファーディ (SR)"
     ],
     arc: [
       "ルナ (S8)", "ヤン (S6)", "レン&ロン (S7)", "ローザ (S4)", "ビビアン (S5)", "マリン (S2)",
       "マーゴ (S4)", "サロ (S1)",
-      "あまね (SR)", "クイン (SR)", "ダイアナ (SR)", "パトリック (SR)", "フォレスト (R)"
+      "あまね (SR)", "クイン (SR)", "ダイアナ (SR)", "パトリック (SR)", "オリーブ (R)"
     ]
   };
 
@@ -1370,17 +1542,17 @@
       inf: [
         "アマデウス (S1)", "ヘルガ (S1)", "ゾーイ (S2)", "ディエゴ (S8)", "アルカ (S4)",
         "ロンフェイ (S5)", "トライトン (S6)", "チャールズ (S7)",
-        "イェーガー (S3)", "インウー (SR)", "ハワード (SR)", "セス (R)", "エドウィン (R)"
+        "イェーガー (S3)", "インウー (SR)", "ハワード (SR)", "セス (R)", "エドウィン (R)", "フォレスト (R)"
       ],
       cav: [
         "アイヴァ (S7)", "ペーラ (S3)", "スルード (S5)",
         "リズ (S8)", "ソフィア (S6)", "ヒルデ (S3)", "ジェベル (S1)",
-        "チェンコ (SR)", "ゴードン (SR)", "ファーディ (SR)", "オリーブ (R)"
+        "チェンコ (SR)", "ゴードン (SR)", "ファーディ (SR)"
       ],
       arc: [
         "ルナ (S8)", "ヤン (S6)", "レン&ロン (S7)", "ローザ (S4)", "ビビアン (S5)", "マリン (S2)",
         "マーゴ (S4)", "サロ (S1)",
-        "あまね (SR)", "クイン (SR)", "ダイアナ (SR)", "パトリック (SR)", "フォレスト (R)"
+        "あまね (SR)", "クイン (SR)", "ダイアナ (SR)", "パトリック (SR)", "オリーブ (R)"
       ]
     },
     tierGuide: {
@@ -1453,10 +1625,15 @@
   // ==========================================
   // 3. マスタデータ整合性保証＆Firebase同期ロジック
   // ==========================================
-  function normalizeMasterConsistency(targetMaster) {
+  function normalizeMasterConsistency(targetMaster, trustIncomingPools = false) {
     if (!targetMaster.rallyPools || typeof targetMaster.rallyPools !== "object") {
       targetMaster.rallyPools = { inf: [], cav: [], arc: [] };
     }
+    // すでに全3兵種にキャラクターが重複なく明示的に割り当てられているか判定
+    const allPoolsPopulated = ["inf", "cav", "arc"].every(
+      (t) => Array.isArray(targetMaster.rallyPools[t]) && targetMaster.rallyPools[t].length > 0
+    );
+
     ["inf", "cav", "arc"].forEach((t) => {
       const baseDefaults = DEFAULT_MASTER.rallyPools[t] || [];
       const existingPool = Array.isArray(targetMaster.rallyPools[t]) ? targetMaster.rallyPools[t] : [];
@@ -1473,20 +1650,26 @@
           if (h.rallyAlias) otherHeroNames.add(String(h.rallyAlias).trim());
         }
       });
-      const otherDefaultNames = new Set();
-      otherTypes.forEach((other) => {
-        ((HERO_TYPE_REGISTRY && HERO_TYPE_REGISTRY[other]) || (DEFAULT_MASTER.rallyPools && DEFAULT_MASTER.rallyPools[other]) || []).forEach((n) => {
-          otherDefaultNames.add(String(n).trim());
+
+      // trustIncomingPools=true（確認ページで手動補正した直後・JSON明示読込時）は入力されたプール配置を尊重
+      // false（古いFirebaseデータの自動同期時など）はHERO_TYPE_REGISTRYの他兵種定義も使って誤混入を自動修正
+      const otherRegistryNames = new Set();
+      if (!trustIncomingPools || !allPoolsPopulated) {
+        otherTypes.forEach((other) => {
+          (HERO_TYPE_REGISTRY[other] || []).forEach((n) => otherRegistryNames.add(String(n).trim()));
         });
-      });
+      }
 
       const merged = [];
       const seen = new Set();
-      [...existingPool, ...baseDefaults, ...fromHeroes].forEach((name) => {
+      const sourceList = (trustIncomingPools && allPoolsPopulated)
+        ? [...existingPool, ...fromHeroes]
+        : [...existingPool, ...baseDefaults, ...fromHeroes];
+
+      sourceList.forEach((name) => {
         const clean = String(name || "").trim();
         if (!clean || seen.has(clean)) return;
-        // 他の兵種として定義されているキャラを誤って混ぜない
-        if (otherHeroNames.has(clean) || otherDefaultNames.has(clean)) return;
+        if (otherHeroNames.has(clean) || otherRegistryNames.has(clean)) return;
         seen.add(clean);
         merged.push(clean);
       });
@@ -1705,10 +1888,8 @@
 
   function getAllowedNamesForType(typeKey) {
     const allowed = new Set();
-    // 1. HERO_TYPE_REGISTRY で該当兵種（inf / cav / arc）と定義されたキャラ
-    const regList = HERO_TYPE_REGISTRY[typeKey] || [];
-    regList.forEach((n) => allowed.add(String(n).trim()));
-    // 2. heroes配列で該当兵種（inf / cav / arc）と明示されたキャラ
+    const pool = (masterData.rallyPools && masterData.rallyPools[typeKey]) || [];
+    pool.forEach((n) => allowed.add(String(n).trim()));
     (masterData.heroes || []).forEach((h) => {
       if (h && h.type === typeKey) {
         if (h.name) allowed.add(String(h.name).trim());
@@ -1721,24 +1902,17 @@
   function isNameAllowedForType(name, typeKey) {
     const clean = String(name || "").trim();
     if (!clean) return false;
-    const allowedSet = getAllowedNamesForType(typeKey);
-    if (allowedSet.has(clean)) return true;
-
-    // 他の兵種（inf / cav / arc）に明示所属している場合は他兵種として除外
     const otherTypes = ["inf", "cav", "arc"].filter((t) => t !== typeKey);
     const inOtherHeroList = (masterData.heroes || []).some(
       (h) => h && otherTypes.includes(h.type) && (String(h.name || "").trim() === clean || String(h.rallyAlias || "").trim() === clean)
     );
     if (inOtherHeroList) return false;
 
-    const inOtherDefaultPool = otherTypes.some((t) =>
-      ((HERO_TYPE_REGISTRY && HERO_TYPE_REGISTRY[t]) || (DEFAULT_MASTER.rallyPools && DEFAULT_MASTER.rallyPools[t]) || []).includes(clean)
-    );
-    if (inOtherDefaultPool) return false;
-
-    // カスタム追加キャラは masterData.rallyPools[typeKey] にある場合のみ許可
     const pool = (masterData.rallyPools && masterData.rallyPools[typeKey]) || [];
-    return pool.includes(clean);
+    if (pool.includes(clean)) return true;
+
+    const allowedSet = getAllowedNamesForType(typeKey);
+    return allowedSet.has(clean);
   }
 
   function renderRallySelects() {
@@ -2252,7 +2426,7 @@ ${currentJson}`;
     if (!incoming || !Array.isArray(incoming.heroes)) {
       throw new Error("不正なJSON形式です（heroes配列が必要です）");
     }
-    masterData = normalizeMasterConsistency(incoming);
+    masterData = normalizeMasterConsistency(incoming, !!incoming._trustedManual);
     if (!masterData.tierGuide) {
       masterData.tierGuide = JSON.parse(JSON.stringify(DEFAULT_MASTER.tierGuide));
     }
@@ -2270,6 +2444,7 @@ ${currentJson}`;
   function importLocalJson() {
     try {
       const parsed = JSON.parse(document.getElementById("jsonArea").value);
+      parsed._trustedManual = true;
       const smart = document.getElementById("smartMergeChk").checked;
       applyMasterUpdate(parsed, smart);
       closeModal("dataModal");
@@ -2292,7 +2467,9 @@ ${currentJson}`;
       return alert("Firebaseが初期化されていません。設定を確認してください。");
     }
     try {
-      const parsed = normalizeMasterConsistency(JSON.parse(document.getElementById("jsonArea").value));
+      const rawParsed = JSON.parse(document.getElementById("jsonArea").value);
+      rawParsed._trustedManual = true;
+      const parsed = normalizeMasterConsistency(rawParsed, true);
       db.ref(DB_NODE).set(parsed).then(() => {
         applyMasterUpdate(parsed, true);
         closeModal("dataModal");
@@ -2313,6 +2490,241 @@ ${currentJson}`;
     t.textContent = msg;
     t.classList.add("show");
     setTimeout(() => t.classList.remove("show"), 2600);
+  }
+
+
+  // ==========================================
+  // 8. マスターデータ確認・補正ページ（一覧表示＆ワンクリック兵種・数値補正）
+  // ==========================================
+  function openInspectModal() {
+    document.getElementById("inspectVersionBadge").textContent = masterData.version || "S1〜S8完全対応";
+    switchInspectTab("pools");
+    renderInspectModal();
+    openModal("inspectModal");
+  }
+
+  function switchInspectTab(tabName) {
+    ["pools", "heroes", "tier"].forEach((t) => {
+      const btn = document.getElementById("tabInspect" + t.charAt(0).toUpperCase() + t.slice(1));
+      const pane = document.getElementById("inspectPane" + t.charAt(0).toUpperCase() + t.slice(1));
+      if (btn) btn.classList.toggle("active", t === tabName);
+      if (pane) pane.style.display = t === tabName ? "block" : "none";
+    });
+    renderInspectModal();
+  }
+
+  function renderInspectModal() {
+    // 1. 集結主プルダウン3列一覧
+    const poolsEl = document.getElementById("inspectPoolsGrid");
+    const typeDefs = [
+      { key: "inf", label: "🛡️ 歩兵（集結主）", color: "#60a5fa" },
+      { key: "cav", label: "🐎 騎兵（集結主）", color: "#34d399" },
+      { key: "arc", label: "🏹 弓兵（集結主）", color: "#fbbf24" }
+    ];
+    poolsEl.innerHTML = typeDefs.map((td) => {
+      const list = (masterData.rallyPools && masterData.rallyPools[td.key]) || [];
+      const rows = list.map((name, idx) => {
+        const isRec = (RALLY_RECOMMENDED[td.key] || []).includes(name);
+        return `
+          <div class="pool-item-row">
+            <span class="pool-item-name" title="${name}">${isRec ? "★ " : ""}${name}</span>
+            <div class="pool-item-actions">
+              <select aria-label="${name}の兵種変更" onchange="movePoolHeroType('${td.key}', ${idx}, this.value)">
+                <option value="inf" ${td.key === "inf" ? "selected" : ""}>歩兵</option>
+                <option value="cav" ${td.key === "cav" ? "selected" : ""}>騎兵</option>
+                <option value="arc" ${td.key === "arc" ? "selected" : ""}>弓兵</option>
+              </select>
+              <button type="button" class="mini-del-btn" title="削除" onclick="removePoolHero('${td.key}', ${idx})">×</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+      return `
+        <div class="pool-col">
+          <div class="pool-col-title" style="color:${td.color};">
+            <span>${td.label}</span>
+            <span style="font-size:0.75rem; color:var(--muted);">${list.length}名</span>
+          </div>
+          ${rows || '<div style="font-size:0.78rem; color:var(--muted);">登録なし</div>'}
+        </div>
+      `;
+    }).join("");
+
+    // 2. 乗り手英雄・スキル数値一覧テーブル
+    const hBody = document.getElementById("inspectHeroesBody");
+    hBody.innerHTML = (masterData.heroes || []).map((h, idx) => `
+      <tr>
+        <td><strong>${h.name}</strong></td>
+        <td>
+          <select onchange="updateInspectHeroField(${idx}, 'type', this.value)">
+            <option value="inf" ${h.type === "inf" ? "selected" : ""}>歩兵</option>
+            <option value="cav" ${h.type === "cav" ? "selected" : ""}>騎兵</option>
+            <option value="arc" ${h.type === "arc" ? "selected" : ""}>弓兵</option>
+          </select>
+        </td>
+        <td>
+          <select onchange="updateInspectHeroField(${idx}, 'tier', this.value)">
+            <option value="S" ${h.tier === "S" ? "selected" : ""}>S</option>
+            <option value="A" ${h.tier === "A" ? "selected" : ""}>A</option>
+          </select>
+        </td>
+        <td>
+          <select onchange="updateInspectHeroField(${idx}, 'buffType', this.value)">
+            <option value="atk" ${h.buffType === "atk" ? "selected" : ""}>攻撃力UP</option>
+            <option value="leth" ${h.buffType === "leth" ? "selected" : ""}>殺傷力UP</option>
+            <option value="dmg" ${h.buffType === "dmg" ? "selected" : ""}>ダメ増</option>
+            <option value="invalid" ${h.buffType === "invalid" ? "selected" : ""}>熊無効</option>
+          </select>
+        </td>
+        <td><input type="number" min="1" max="100" value="${h.chance}" onchange="updateInspectHeroField(${idx}, 'chance', Number(this.value))" /></td>
+        <td><input type="number" min="1" max="10" value="${h.dur}" onchange="updateInspectHeroField(${idx}, 'dur', Number(this.value))" /></td>
+        <td><input type="number" step="0.5" value="${h.lv ? h.lv[5] : 25}" onchange="updateInspectHeroLv5(${idx}, Number(this.value))" /></td>
+        <td>
+          <select onchange="updateInspectHeroField(${idx}, 'unique', this.value === 'true')">
+            <option value="false" ${!h.unique ? "selected" : ""}>重複可</option>
+            <option value="true" ${h.unique ? "selected" : ""}>1人まで</option>
+          </select>
+        </td>
+        <td><button type="button" class="mini-del-btn" onclick="deleteInspectHero(${idx})">🗑</button></td>
+      </tr>
+    `).join("");
+
+    // 3. Tier表プレビュー
+    const tierEl = document.getElementById("inspectTierPreview");
+    const guide = masterData.tierGuide || DEFAULT_MASTER.tierGuide;
+    tierEl.innerHTML = (guide.sections || []).map((sec) => `
+      <h4 style="color:var(--accent); margin:8px 0 4px;">${sec.heading}</h4>
+      <ul style="padding-left:18px; color:#cbd5e1; font-size:0.82rem;">
+        ${(sec.items || []).map((it) => `<li>${it}</li>`).join("")}
+      </ul>
+    `).join("");
+  }
+
+  function movePoolHeroType(fromType, index, toType) {
+    if (fromType === toType) return;
+    const list = masterData.rallyPools[fromType];
+    if (!Array.isArray(list) || index < 0 || index >= list.length) return;
+    const [heroName] = list.splice(index, 1);
+    if (!Array.isArray(masterData.rallyPools[toType])) masterData.rallyPools[toType] = [];
+    if (!masterData.rallyPools[toType].includes(heroName)) {
+      masterData.rallyPools[toType].push(heroName);
+    }
+    // heroes配列側にも同名キャラがいれば兵種を連動変更
+    (masterData.heroes || []).forEach((h) => {
+      if (h && (h.name === heroName || h.rallyAlias === heroName)) {
+        h.type = toType;
+      }
+    });
+    masterData._trustedManual = true;
+    renderInspectModal();
+    showToast(`「${heroName}」の兵種を変更しました`);
+  }
+
+  function removePoolHero(typeKey, index) {
+    const list = masterData.rallyPools[typeKey];
+    if (!Array.isArray(list)) return;
+    list.splice(index, 1);
+    masterData._trustedManual = true;
+    renderInspectModal();
+  }
+
+  function addPoolHeroManual() {
+    const nameInput = document.getElementById("newPoolHeroName");
+    const typeSel = document.getElementById("newPoolHeroType");
+    const name = nameInput.value.trim();
+    const typeKey = typeSel.value;
+    if (!name) return alert("キャラクター名を入力してください");
+    ["inf", "cav", "arc"].forEach((t) => {
+      if (Array.isArray(masterData.rallyPools[t])) {
+        masterData.rallyPools[t] = masterData.rallyPools[t].filter((n) => n !== name);
+      }
+    });
+    masterData.rallyPools[typeKey].push(name);
+    masterData._trustedManual = true;
+    nameInput.value = "";
+    renderInspectModal();
+    showToast(`「${name}」を追加しました`);
+  }
+
+  function resetPoolsToDefault() {
+    if (!confirm("集結主リストの兵種分けを最新の標準定義（クイン=弓兵、オリーブ=弓兵、フォレスト=歩兵）にリセットしますか？")) return;
+    masterData.rallyPools = JSON.parse(JSON.stringify(DEFAULT_MASTER.rallyPools));
+    (masterData.heroes || []).forEach((h) => {
+      const regHit = ["inf", "cav", "arc"].find((t) => (HERO_TYPE_REGISTRY[t] || []).includes(h.name));
+      if (regHit) h.type = regHit;
+    });
+    masterData._trustedManual = true;
+    renderInspectModal();
+    showToast("標準の兵種分類にリセットしました");
+  }
+
+  function updateInspectHeroField(idx, field, val) {
+    const h = masterData.heroes[idx];
+    if (!h) return;
+    const prevType = h.type;
+    h[field] = val;
+    if (field === "type" && prevType !== val) {
+      const alias = h.rallyAlias || h.name;
+      if (Array.isArray(masterData.rallyPools[prevType])) {
+        masterData.rallyPools[prevType] = masterData.rallyPools[prevType].filter((n) => n !== alias && n !== h.name);
+      }
+      if (!Array.isArray(masterData.rallyPools[val])) masterData.rallyPools[val] = [];
+      if (!masterData.rallyPools[val].includes(alias)) masterData.rallyPools[val].push(alias);
+    }
+    masterData._trustedManual = true;
+  }
+
+  function updateInspectHeroLv5(idx, lv5Val) {
+    const h = masterData.heroes[idx];
+    if (!h) return;
+    const v5 = Number(lv5Val) || 0;
+    h.lv = {
+      1: Number((v5 * 0.2).toFixed(1)),
+      2: Number((v5 * 0.4).toFixed(1)),
+      3: Number((v5 * 0.6).toFixed(1)),
+      4: Number((v5 * 0.8).toFixed(1)),
+      5: v5
+    };
+    masterData._trustedManual = true;
+  }
+
+  function deleteInspectHero(idx) {
+    const h = masterData.heroes[idx];
+    if (!h || !confirm(`「${h.name}」を削除しますか？`)) return;
+    masterData.heroes.splice(idx, 1);
+    masterData._trustedManual = true;
+    renderInspectModal();
+  }
+
+  function applyInspectChangesLocal() {
+    masterData._trustedManual = true;
+    normalizeMasterConsistency(masterData, true);
+    renderAll();
+    closeModal("inspectModal");
+    showToast("💾 補正内容をこの端末に反映しました！");
+  }
+
+  function applyInspectAndPushFirebase() {
+    const pass = document.getElementById("inspectAdminPass").value.trim();
+    if (pass !== ADMIN_PASSCODE) {
+      return alert("管理者パスコードが一致しません。");
+    }
+    if (!db) {
+      initFirebase();
+    }
+    if (!db) {
+      return alert("Firebaseが初期化されていません。設定を確認してください。");
+    }
+    masterData._trustedManual = true;
+    const cleaned = normalizeMasterConsistency(JSON.parse(JSON.stringify(masterData)), true);
+    db.ref(DB_NODE).set(cleaned).then(() => {
+      applyMasterUpdate(cleaned, true);
+      renderAll();
+      closeModal("inspectModal");
+      showToast("☁️ 補正内容をFirebaseへ保存し、全メンバーへ配信しました！");
+    }).catch((err) => {
+      alert("Firebase書き込みエラー: " + err.message);
+    });
   }
 
   window.addEventListener("DOMContentLoaded", initApp);
