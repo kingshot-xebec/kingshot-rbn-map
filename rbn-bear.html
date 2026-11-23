@@ -29,7 +29,7 @@
       color: var(--text);
       line-height: 1.5;
       padding: 16px;
-      max-width: 1100px;
+      max-width: 1120px;
       margin: 0 auto;
     }
     header {
@@ -38,18 +38,42 @@
       justify-content: space-between;
       align-items: center;
       gap: 12px;
-      padding: 16px 20px;
+      padding: 14px 18px;
       background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
       border: 1px solid var(--border);
       border-radius: 12px;
       margin-bottom: 16px;
     }
     h1 {
-      font-size: 1.3rem;
+      font-size: 1.25rem;
       display: flex;
       align-items: center;
       gap: 8px;
       color: var(--accent);
+    }
+    .nav-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .nav-pill {
+      font-size: 0.74rem;
+      padding: 3px 9px;
+      border-radius: 6px;
+      background: rgba(15, 23, 42, 0.75);
+      color: #cbd5e1;
+      border: 1px solid var(--border);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: 0.15s;
+    }
+    .nav-pill:hover {
+      border-color: var(--blue);
+      color: var(--blue);
+      background: rgba(56, 189, 248, 0.08);
     }
     .header-actions {
       display: flex;
@@ -58,7 +82,7 @@
       align-items: center;
     }
     .badge-sync {
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       padding: 4px 10px;
       border-radius: 999px;
       background: rgba(16, 185, 129, 0.15);
@@ -75,8 +99,8 @@
       cursor: pointer;
       border: none;
       border-radius: 8px;
-      padding: 8px 14px;
-      font-size: 0.85rem;
+      padding: 8px 13px;
+      font-size: 0.84rem;
       font-weight: 600;
       transition: 0.15s;
       display: inline-flex;
@@ -91,6 +115,8 @@
     .btn-blue:hover { background: rgba(56, 189, 248, 0.25); }
     .btn-green { background: rgba(16, 185, 129, 0.18); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.45); }
     .btn-green:hover { background: rgba(16, 185, 129, 0.28); }
+    .btn-purple { background: rgba(168, 85, 247, 0.18); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.45); }
+    .btn-purple:hover { background: rgba(168, 85, 247, 0.28); }
     .btn-danger { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.4); }
     .btn-danger:hover { background: rgba(239, 68, 68, 0.25); }
 
@@ -106,6 +132,7 @@
       font-weight: 700;
       margin-bottom: 12px;
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
       gap: 8px;
@@ -130,6 +157,41 @@
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 12px;
     }
+    .cap-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .cap-box {
+      background: var(--card-sub);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+    }
+    .cap-box.rally-cap {
+      border-color: rgba(245, 158, 11, 0.55);
+      background: rgba(245, 158, 11, 0.08);
+    }
+    .cap-box.inactive-cap {
+      opacity: 0.35;
+      pointer-events: none;
+    }
+    .cap-box label {
+      display: block;
+      font-size: 0.76rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+    .cap-box.rally-cap label {
+      color: var(--accent);
+    }
+    .cap-box input {
+      padding: 6px 8px;
+      font-size: 0.88rem;
+    }
+
     label.field {
       display: flex;
       flex-direction: column;
@@ -181,6 +243,18 @@
     }
     .rules-box ul { padding-left: 18px; }
     .rules-box li { margin-bottom: 3px; }
+
+    .guide-box {
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      font-size: 0.82rem;
+    }
+    .guide-box strong { color: var(--blue); display: block; margin-bottom: 6px; font-size: 0.88rem; }
+    .guide-box ol { padding-left: 18px; color: #e2e8f0; }
+    .guide-box li { margin-bottom: 4px; }
 
     .warning-box {
       background: rgba(239, 68, 68, 0.14);
@@ -300,7 +374,7 @@
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.75);
+      background: rgba(0, 0, 0, 0.78);
       display: none;
       align-items: center;
       justify-content: center;
@@ -312,9 +386,9 @@
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 12px;
-      max-width: 680px;
+      max-width: 720px;
       width: 100%;
-      max-height: 88vh;
+      max-height: 90vh;
       overflow-y: auto;
       padding: 20px;
     }
@@ -360,13 +434,18 @@
 <header>
   <div>
     <h1>🐻 RBN 巨熊狩猟 最適編成ナビ</h1>
-    <div style="font-size: 0.78rem; color: var(--muted); margin-top: 2px;">
-      S1〜S8完全対応・10ターン期待値＆スキル干渉自動判定モデル
+    <div style="font-size: 0.76rem; color: var(--muted); margin-top: 2px;">
+      <span id="masterVersionLabel">S1〜S8完全対応</span>・10ターン期待値＆スキル干渉自動判定モデル
+    </div>
+    <!-- 邪魔にならないコンパクト外部ツールリンク -->
+    <div class="nav-pills">
+      <a id="linkMap" href="./index.html" target="_blank" rel="noopener" class="nav-pill" onclick="return checkNavUrl(this, '都市マップ')">🗺️ 都市マップ</a>
+      <a id="linkNotice" href="./notice.html" target="_blank" rel="noopener" class="nav-pill" onclick="return checkNavUrl(this, '同盟通知ジェネレーター')">📢 同盟通知ジェネレーター</a>
     </div>
   </div>
   <div class="header-actions">
     <span id="syncStatus" class="badge-sync offline">⚪ ローカル読込</span>
-    <button class="btn-blue" onclick="openModal('tierModal')">🏆 S1〜S8環境Tier表</button>
+    <button class="btn-blue" onclick="openTierModal()">🏆 環境Tier表</button>
     <button class="btn-green" onclick="openDataModal()">📦 マスタデータ管理</button>
     <button class="btn-secondary" onclick="resetLocalUser()">🔄 個人設定初期化</button>
   </div>
@@ -397,28 +476,54 @@
 <div class="grid-2">
   <section class="card">
     <div class="card-title">
-      <span><span class="step-badge">STEP 2</span>出撃枠・部隊定員</span>
+      <span><span class="step-badge">STEP 2</span>出撃枠・部隊別出撃定員（最大7部隊）</span>
+      <button class="btn-secondary" style="font-size:0.75rem; padding:4px 9px;" onclick="syncJoinCaps()">乗り1軍の値を他に反映</button>
     </div>
     <div class="grid-2">
       <label class="field">
-        出撃部隊数（自集結＋乗り）
-        <select id="squadCount" onchange="recalc()">
+        総出撃部隊数（自集結＋乗り）
+        <select id="squadCount" onchange="updateCapBoxes(); recalc();">
           <option value="4">4部隊（自集結1＋乗り3）</option>
           <option value="5">5部隊（自集結1＋乗り4）</option>
-          <option value="6" selected>6部隊（自集結1＋乗り5）</option>
-          <option value="7">7部隊（自集結1＋乗り6）</option>
+          <option value="6">6部隊（自集結1＋乗り5）</option>
+          <option value="7" selected>7部隊（自集結1＋乗り6）</option>
         </select>
       </label>
       <label class="field">
-        1部隊あたりの出撃定員
-        <input type="number" id="marchCap" min="10000" step="1000" value="125000" oninput="recalc()" />
-      </label>
-    </div>
-    <div style="margin-top: 10px;">
-      <label class="field">
-        全兵種の最低確保人数（推奨 5,000人）
+        全兵種の最低確保人数（推奨 5,000）
         <input type="number" id="minTroop" min="0" step="1000" value="5000" oninput="recalc()" />
       </label>
+    </div>
+
+    <div class="cap-grid">
+      <div class="cap-box rally-cap" id="capBox0">
+        <label>🔥 自集結 定員</label>
+        <input type="number" id="cap0" min="1000" step="1000" value="140000" oninput="recalc()" />
+      </div>
+      <div class="cap-box" id="capBox1">
+        <label>⚔️ 乗り 1軍 定員</label>
+        <input type="number" id="cap1" min="1000" step="1000" value="125000" oninput="recalc()" />
+      </div>
+      <div class="cap-box" id="capBox2">
+        <label>⚔️ 乗り 2軍 定員</label>
+        <input type="number" id="cap2" min="1000" step="1000" value="125000" oninput="recalc()" />
+      </div>
+      <div class="cap-box" id="capBox3">
+        <label>⚔️ 乗り 3軍 定員</label>
+        <input type="number" id="cap3" min="1000" step="1000" value="125000" oninput="recalc()" />
+      </div>
+      <div class="cap-box" id="capBox4">
+        <label>⚔️ 乗り 4軍 定員</label>
+        <input type="number" id="cap4" min="1000" step="1000" value="125000" oninput="recalc()" />
+      </div>
+      <div class="cap-box" id="capBox5">
+        <label>⚔️ 乗り 5軍 定員</label>
+        <input type="number" id="cap5" min="1000" step="1000" value="125000" oninput="recalc()" />
+      </div>
+      <div class="cap-box" id="capBox6">
+        <label>⚔️ 乗り 6軍 定員</label>
+        <input type="number" id="cap6" min="1000" step="1000" value="125000" oninput="recalc()" />
+      </div>
     </div>
   </section>
 
@@ -518,7 +623,7 @@
           <th>🛡️ 歩兵</th>
           <th>🐎 騎兵</th>
           <th>🏹 弓兵</th>
-          <th>合計 / 比率</th>
+          <th>合計 / 定員（比率）</th>
         </tr>
       </thead>
       <tbody id="resultBody"></tbody>
@@ -526,31 +631,14 @@
   </div>
 </section>
 
-<!-- Tier Modal -->
+<!-- Tier Modal (マスターデータ連動動的描画) -->
 <div id="tierModal" class="modal-backdrop" onclick="if(event.target===this) closeModal('tierModal')">
   <div class="modal">
     <div class="modal-header">
-      <h3 style="color: var(--accent);">🏆 S1〜S8 巨熊狩猟 環境Tier・詳細仕様解説</h3>
+      <h3 id="tierModalTitle" style="color: var(--accent);">🏆 S1〜S8 巨熊狩猟 環境Tier・詳細仕様解説</h3>
       <button class="btn-secondary" onclick="closeModal('tierModal')">閉じる</button>
     </div>
-    <div class="modal-body">
-      <h4>1. 集結主（自集結）の世代別優先度</h4>
-      <ul>
-        <li><strong>弓兵（最重要）：</strong> ルナ(S8) ＞ ヤン(S6) ＞ レン&ロン(S7) ＞ ローザ(S4) ＞ ビビアン(S5) ＞ マリン(S2)</li>
-        <li><strong>騎兵：</strong> アイヴァ(S7) ＞ ペーラ(S3) ＞ スルード(S5)</li>
-        <li><strong>歩兵：</strong> アマデウス(S1) ＞ ヘルガ(S1) ＞ ゾーイ(S2) ＞ ディエゴ(S8) ＞ アルカ(S4)</li>
-      </ul>
-      <h4>2. 乗り手（参加者・左端）Sランク＆Aランク基準</h4>
-      <ul>
-        <li><strong>Sランク（常時発動・高倍率）：</strong> チェンコ（殺傷+25%）、インウー（殺傷+25%）、あまね（攻撃+25%）、マーゴ（攻撃+25%）、レン&ロン(S7)、リズ(S8 ※重複不可)、アイヴァ(S7)、ルナ(S8)、アマデウス(S1)</li>
-        <li><strong>Aランク（確率発動・重複不可デバフ）：</strong> ヤン(S6)、マリン(S2・40%1T=期待値4.00T)、ローザ(S4)、イェーガー(S3・20%3T=上書き/10T打ち切り込み期待値3.82T)、ビビアン(S5・重複不可)、スルード(S5)、ヒルデ(S3)</li>
-      </ul>
-      <h4>3. 10ターン戦闘の仕様・注意点</h4>
-      <ul>
-        <li><strong>10ターン制限と周期ロス：</strong> 巨熊戦は10ターンで終了するため、終盤（9〜10ターン目）に発動した3ターン持続バフは残りターンが切り捨てられます。</li>
-        <li><strong>重複不可デバフ：</strong> ペーラ・リズ・ビビアンの「敵被ダメージ増加」系は集結内で1人しか有効にならないため、同盟内で被らないよう調整が必要です。</li>
-      </ul>
-    </div>
+    <div id="tierModalBody" class="modal-body"></div>
   </div>
 </div>
 
@@ -616,17 +704,27 @@
 <div id="dataModal" class="modal-backdrop" onclick="if(event.target===this) closeModal('dataModal')">
   <div class="modal">
     <div class="modal-header">
-      <h3 style="color: var(--green);">📦 マスタデータ管理（JSON / Firebase同期）</h3>
+      <h3 style="color: var(--green);">📦 マスタデータ管理（JSON / Firebase一括配信）</h3>
       <button class="btn-secondary" onclick="closeModal('dataModal')">閉じる</button>
     </div>
     <div class="modal-body">
-      <p>現在の全英雄マスタ・集結主リストをJSON形式で書き出したり、新世代（S9以降）の更新データを一括反映できます。</p>
-      <div style="margin: 10px 0; display: flex; gap: 8px; flex-wrap: wrap;">
-        <button class="btn-blue" onclick="exportMasterJson()">📤 現在のマスタJSONをコピー</button>
+      <div class="guide-box">
+        <strong>📖 新世代（S9以降）実装時のマスターデータ更新手順</strong>
+        <ol>
+          <li>下の<strong>「🤖 AI更新用プロンプト＋現行JSONをコピー」</strong>ボタンを押します（アルテマから新キャラ・スキル数値を抽出し、Redditの考察を反映した最新JSONを作らせる指示文と現在データがセットでコピーされます）。</li>
+          <li>Gemini等のAIチャットにそのまま貼り付けて送信し、出力された<strong>更新済みJSON</strong>をコピーします。</li>
+          <li>下の「マスタJSONデータ」欄へ貼り付け（スマートマージON推奨）、管理者パスコードを入力して<strong>「☁️ Firebaseへ保存して全員に配信」</strong>を押すと、全英雄データと<strong>環境Tier表</strong>が同盟メンバー全員へ即時反映されます。</li>
+        </ol>
       </div>
+
+      <div style="margin: 10px 0; display: flex; gap: 8px; flex-wrap: wrap;">
+        <button class="btn-purple" onclick="copyAiUpdatePrompt()">🤖 AI更新用プロンプト＋現行JSONをコピー</button>
+        <button class="btn-blue" onclick="exportMasterJson()">📤 現行JSONのみコピー</button>
+      </div>
+
       <label class="field" style="margin-top: 10px;">
-        マスタJSONデータ（貼り付け・編集用）
-        <textarea id="jsonArea" rows="7" placeholder="ここにマスタJSONを貼り付け..."></textarea>
+        マスタJSONデータ（英雄データ・集結主リスト・環境Tier表を一括管理）
+        <textarea id="jsonArea" rows="8" placeholder="ここにマスタJSONを貼り付け..."></textarea>
       </label>
       <div style="margin-top: 10px;">
         <label style="display: flex; align-items: center; gap: 8px; font-size: 0.84rem;">
@@ -637,6 +735,7 @@
       <div style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
         <button class="btn-secondary" onclick="importLocalJson()">📥 自分の端末だけに反映</button>
       </div>
+
       <hr style="border: 0; border-top: 1px solid var(--border); margin: 16px 0;" />
       <h4 style="margin-top: 0;">🔐 管理者用：Firebaseへ保存して同盟全員へ配信</h4>
       <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 8px;">
@@ -651,8 +750,13 @@
 
 <script>
   // ==========================================
-  // 1. Firebase 接続設定（kingshot-rbn-map 連携）
+  // 1. 外部ツールリンク＆Firebase接続設定
   // ==========================================
+  const EXTERNAL_LINKS = {
+    mapUrl: "./index.html",      // 都市マップのURL（同じリポジトリなら "./index.html"）
+    noticeUrl: "./notice.html"   // 同盟通知ジェネレーターのURL（公開URLに合わせて変更可）
+  };
+
   const FIREBASE_CONFIG = {
     apiKey: "AIzaSyCeqmlkZZNDhMJA1RZc8t93OqqJ4f8xfT8",
     authDomain: "kingshot-rbn-map.firebaseapp.com",
@@ -665,20 +769,47 @@
   };
   const ADMIN_PASSCODE = "rbn2011";
   const DB_NODE = "bear_master";
-  const STORAGE_KEY = "rbn_bear_sim_user_v1";
+  const STORAGE_KEY = "rbn_bear_sim_user_v3";
 
   let db = null;
-  let isFirebaseConnected = false;
 
   // ==========================================
-  // 2. S1〜S8 初期マスタデータ
+  // 2. S1〜S8 初期マスタデータ（Tier表含む）
   // ==========================================
   const DEFAULT_MASTER = {
-    version: "S8-2026.11",
+    version: "S1〜S8完全対応",
     rallyPools: {
       inf: ["アマデウス (S1)", "ヘルガ (S1)", "ゾーイ (S2)", "ディエゴ (S8)", "アルカ (S4)", "ロンフェイ (S5)", "トライトン (S6)", "チャールズ (S7)"],
       cav: ["アイヴァ (S7)", "ペーラ (S3)", "スルード (S5)", "ソフィア (S6)", "ヒルデ (S3)", "チェンコ (SR)"],
       arc: ["ルナ (S8)", "ヤン (S6)", "レン&ロン (S7)", "ローザ (S4)", "ビビアン (S5)", "マリン (S2)", "あまね (SR)"]
+    },
+    tierGuide: {
+      title: "🏆 S1〜S8 巨熊狩猟 環境Tier・詳細仕様解説",
+      sections: [
+        {
+          heading: "1. 集結主（自集結）の世代別優先度",
+          items: [
+            "弓兵（最重要）： ルナ(S8) ＞ ヤン(S6) ＞ レン&ロン(S7) ＞ ローザ(S4) ＞ ビビアン(S5) ＞ マリン(S2)",
+            "騎兵： アイヴァ(S7) ＞ ペーラ(S3) ＞ スルード(S5)",
+            "歩兵： アマデウス(S1) ＞ ヘルガ(S1) ＞ ゾーイ(S2) ＞ ディエゴ(S8) ＞ アルカ(S4)"
+          ]
+        },
+        {
+          heading: "2. 乗り手（参加者・左端）Sランク＆Aランク基準",
+          items: [
+            "Sランク（常時発動・高倍率）： チェンコ（殺傷+25%）、インウー（殺傷+25%）、あまね（攻撃+25%）、マーゴ（攻撃+25%）、レン&ロン(S7)、リズ(S8 ※重複不可)、アイヴァ(S7)、ルナ(S8)、アマデウス(S1)",
+            "Aランク（確率発動・重複不可デバフ）： ヤン(S6)、マリン(S2・40%1T=期待値4.00T)、ローザ(S4)、イェーガー(S3・20%3T=上書き/10T打ち切り込み期待値3.82T)、ビビアン(S5・重複不可)、スルード(S5)、ヒルデ(S3)"
+          ]
+        },
+        {
+          heading: "3. 10ターン戦闘の仕様・Reddit検証考察",
+          items: [
+            "10ターン制限と周期ロス： 巨熊戦は10ターンで終了するため、終盤（9〜10ターン目）に発動した3ターン持続バフは残りターンが切り捨てられます。",
+            "重複不可デバフ： ペーラ・リズ・ビビアンの「敵被ダメージ増加」系は集結内で1人しか有効にならないため、同盟内で被らないよう調整が必要です。",
+            "無課金〜微課金の育成定石： S5はルーレット歩兵ロンフェイのみ回収して欠片を温存し、S6ヤン・S7レン&ロン（ルーレット）・S8ルナへ集中投資するのが最高効率です。"
+          ]
+        }
+      ]
     },
     heroes: [
       { id: "amane", name: "あまね (SR)", type: "arc", tier: "S", buffType: "atk", unique: false, chance: 100, dur: 10, lv: {1:5, 2:10, 3:15, 4:20, 5:25}, defaultOwned: true, defaultLv: 5, rallyAlias: "あまね (SR)" },
@@ -706,8 +837,8 @@
     infTotal: 150000,
     cavTotal: 180000,
     arcTotal: 450000,
-    squadCount: 6,
-    marchCap: 125000,
+    squadCount: 7,
+    marchCaps: [140000, 125000, 125000, 125000, 125000, 125000, 125000],
     minTroop: 5000,
     stance: "mid",
     rallyInf: "アルカ (S4)",
@@ -722,9 +853,20 @@
   // 3. 初期化・Firebase同期ロジック
   // ==========================================
   function initApp() {
+    document.getElementById("linkMap").href = EXTERNAL_LINKS.mapUrl || "#";
+    document.getElementById("linkNotice").href = EXTERNAL_LINKS.noticeUrl || "#";
     loadUserState();
     initFirebase();
     renderAll();
+  }
+
+  function checkNavUrl(el, name) {
+    const href = el.getAttribute("href");
+    if (!href || href === "#") {
+      alert(`${name}のURLが未設定です。HTML内の EXTERNAL_LINKS にURLを設定してください。`);
+      return false;
+    }
+    return true;
   }
 
   function initFirebase() {
@@ -736,7 +878,6 @@
         db = firebase.database();
         db.ref(DB_NODE).on("value", (snapshot) => {
           const val = snapshot.val();
-          isFirebaseConnected = true;
           updateSyncBadge(true);
           if (val && val.heroes) {
             applyMasterUpdate(val, true);
@@ -765,14 +906,18 @@
   }
 
   function loadUserState() {
-    const saved = localStorage.getItem(STORAGE_KEY);
+    const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem("rbn_bear_sim_user_v2");
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         userState = { ...userState, ...parsed };
+        if (!Array.isArray(userState.marchCaps) || userState.marchCaps.length < 7) {
+          const fallback = parsed.marchCap || 125000;
+          userState.marchCaps = [140000, fallback, fallback, fallback, fallback, fallback, fallback];
+        }
       } catch (e) {}
     }
-    // 未設定英雄にデフォルト値補完
+
     masterData.heroes.forEach(h => {
       if (userState.ownedMap[h.id] === undefined) userState.ownedMap[h.id] = !!h.defaultOwned;
       if (userState.lvMap[h.id] === undefined) userState.lvMap[h.id] = h.defaultLv || 5;
@@ -782,20 +927,45 @@
     document.getElementById("cavTotal").value = userState.cavTotal;
     document.getElementById("arcTotal").value = userState.arcTotal;
     document.getElementById("squadCount").value = userState.squadCount;
-    document.getElementById("marchCap").value = userState.marchCap;
     document.getElementById("minTroop").value = userState.minTroop;
+    for (let i = 0; i < 7; i++) {
+      document.getElementById(`cap${i}`).value = userState.marchCaps[i] || 125000;
+    }
     document.getElementById("preferAtkBuff").checked = userState.preferAtkBuff;
     const r = document.querySelector(`input[name="stance"][value="${userState.stance}"]`);
     if (r) r.checked = true;
+    updateCapBoxes();
+  }
+
+  function updateCapBoxes() {
+    const count = Number(document.getElementById("squadCount").value) || 7;
+    for (let i = 0; i < 7; i++) {
+      const box = document.getElementById(`capBox${i}`);
+      if (box) {
+        if (i < count) box.classList.remove("inactive-cap");
+        else box.classList.add("inactive-cap");
+      }
+    }
+  }
+
+  function syncJoinCaps() {
+    const val = Math.max(1000, Number(document.getElementById("cap1").value) || 125000);
+    for (let i = 2; i < 7; i++) {
+      document.getElementById(`cap${i}`).value = val;
+    }
+    recalc();
+    showToast("乗り1軍の定員を2〜6軍へ反映しました");
   }
 
   function saveUserState() {
     userState.infTotal = Math.max(0, Number(document.getElementById("infTotal").value) || 0);
     userState.cavTotal = Math.max(0, Number(document.getElementById("cavTotal").value) || 0);
     userState.arcTotal = Math.max(0, Number(document.getElementById("arcTotal").value) || 0);
-    userState.squadCount = Number(document.getElementById("squadCount").value) || 6;
-    userState.marchCap = Math.max(1000, Number(document.getElementById("marchCap").value) || 100000);
+    userState.squadCount = Number(document.getElementById("squadCount").value) || 7;
     userState.minTroop = Math.max(0, Number(document.getElementById("minTroop").value) || 0);
+    for (let i = 0; i < 7; i++) {
+      userState.marchCaps[i] = Math.max(1000, Number(document.getElementById(`cap${i}`).value) || 100000);
+    }
     userState.rallyInf = document.getElementById("rallyInf").value;
     userState.rallyCav = document.getElementById("rallyCav").value;
     userState.rallyArc = document.getElementById("rallyArc").value;
@@ -807,18 +977,44 @@
   }
 
   function resetLocalUser() {
-    if (!confirm("入力した兵士数や所持英雄のチェックを初期値に戻しますか？")) return;
+    if (!confirm("入力した兵士数・各部隊定員・所持英雄のチェックを初期値に戻しますか？")) return;
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem("rbn_bear_sim_user_v2");
     location.reload();
   }
 
   // ==========================================
-  // 4. UI描画・プルダウン構築
+  // 4. UI描画・プルダウン・Tier表動的描画
   // ==========================================
   function renderAll() {
+    if (masterData.version) {
+      document.getElementById("masterVersionLabel").textContent = masterData.version;
+    }
     renderRallySelects();
     renderHeroCards();
+    renderTierModalContent();
     recalc();
+  }
+
+  function renderTierModalContent() {
+    const guide = masterData.tierGuide || DEFAULT_MASTER.tierGuide;
+    document.getElementById("tierModalTitle").textContent = guide.title || "🏆 巨熊狩猟 環境Tier・詳細仕様解説";
+    const bodyEl = document.getElementById("tierModalBody");
+    bodyEl.innerHTML = (guide.sections || []).map(sec => {
+      const lis = (sec.items || []).map(item => {
+        const parts = item.split("：");
+        if (parts.length > 1) {
+          return `<li><strong>${parts[0]}：</strong>${parts.slice(1).join("：")}</li>`;
+        }
+        return `<li>${item}</li>`;
+      }).join("");
+      return `<h4>${sec.heading}</h4><ul>${lis}</ul>`;
+    }).join("");
+  }
+
+  function openTierModal() {
+    renderTierModalContent();
+    openModal("tierModal");
   }
 
   function renderRallySelects() {
@@ -892,25 +1088,22 @@
   }
 
   // ==========================================
-  // 5. 期待値計算（10ターンマルコフモデル）＆兵力配分
+  // 5. 期待値計算（10ターンマルコフモデル）＆部隊別定員対応兵力配分
   // ==========================================
   function calcEffectiveTurns(chancePct, duration) {
     if (chancePct >= 100) return 10.0;
     const p = chancePct / 100;
     if (duration <= 1) return 10 * p;
-    // 10ターン精密シミュレーション（上書き損失＆終盤打ち切り反映）
     let activeTurns = 0;
     let stateProb = new Array(duration + 1).fill(0);
-    stateProb[0] = 1.0; // index = 残り持続ターン
+    stateProb[0] = 1.0;
     for (let t = 1; t <= 10; t++) {
       let nextProb = new Array(duration + 1).fill(0);
       for (let rem = 0; rem <= duration; rem++) {
         const prob = stateProb[rem];
         if (prob === 0) continue;
-        // 発動した場合：残りターンは duration にセットされ、このターン有効
         nextProb[duration] += prob * p;
         activeTurns += prob * p;
-        // 不発の場合
         if (rem > 1) {
           nextProb[rem - 1] += prob * (1 - p);
           activeTurns += prob * (1 - p);
@@ -928,13 +1121,10 @@
     const lv = userState.lvMap[h.id] || 5;
     const mag = h.lv[lv] || h.lv[5] || 0;
     const effTurns = calcEffectiveTurns(h.chance, h.dur);
-    // 10ターン平均期待ダメージ上昇率(%)
     let ev = mag * (effTurns / 10);
-    // 攻撃力バフ優遇補正（殺傷バフ過多環境での乗算効率加味）
     if (preferAtk && h.buffType === "atk") {
       ev *= 1.06;
     }
-    // Tier S 同率時の安定性微補正
     if (h.chance === 100) ev += 0.05;
     return ev;
   }
@@ -942,7 +1132,6 @@
   function recalc() {
     saveUserState();
 
-    // 1. ペーラ × ゾーイ干渉警告判定
     const rInf = userState.rallyInf;
     const rCav = userState.rallyCav;
     const rArc = userState.rallyArc;
@@ -953,7 +1142,6 @@
       warnEl.classList.remove("active");
     }
 
-    // 2. 乗り手候補の抽出（自集結で使用中の英雄は除外）
     const usedInRally = [rInf, rCav, rArc];
     const candidates = masterData.heroes
       .filter(h => userState.ownedMap[h.id] && h.buffType !== "invalid")
@@ -961,15 +1149,13 @@
       .map(h => ({ ...h, score: getHeroScore(h, userState.preferAtkBuff) }))
       .sort((a, b) => b.score - a.score);
 
-    // 3. 兵力配分計算
     const n = userState.squadCount;
-    const cap = userState.marchCap;
+    const caps = userState.marchCaps;
     const minT = userState.minTroop;
     let remInf = userState.infTotal;
     let remCav = userState.cavTotal;
     let remArc = userState.arcTotal;
 
-    // 立ち位置別の弓兵目標比率（index 0 = 自集結, index 1..n-1 = 乗り1..n-1軍）
     const arcRatios = [];
     if (userState.stance === "top") {
       arcRatios.push(0.80);
@@ -985,15 +1171,14 @@
     }
 
     const squads = [];
-    // Step A: 全隊に最低確保数を割り当て
     for (let i = 0; i < n; i++) {
-      const aInf = Math.min(remInf, minT); remInf -= aInf;
-      const aCav = Math.min(remCav, minT); remCav -= aCav;
-      const aArc = Math.min(remArc, minT); remArc -= aArc;
-      squads.push({ inf: aInf, cav: aCav, arc: aArc });
+      let capLeft = caps[i];
+      const aInf = Math.min(remInf, minT, capLeft); remInf -= aInf; capLeft -= aInf;
+      const aCav = Math.min(remCav, minT, capLeft); remCav -= aCav; capLeft -= aCav;
+      const aArc = Math.min(remArc, minT, capLeft); remArc -= aArc; capLeft -= aArc;
+      squads.push({ inf: aInf, cav: aCav, arc: aArc, cap: caps[i] });
     }
 
-    // Step B: 目標弓兵比率まで弓兵を優先充填（バランス型・乗り特化型は強者乗り1軍→自集結の順で弓を優先）
     const fillOrder = userState.stance === "top"
       ? [...Array(n).keys()]
       : [1, 2, 0, 3, 4, 5, 6].filter(idx => idx < n);
@@ -1001,17 +1186,16 @@
     fillOrder.forEach(idx => {
       const s = squads[idx];
       const currentTotal = s.inf + s.cav + s.arc;
-      const room = cap - currentTotal;
-      const targetArc = Math.floor(cap * arcRatios[idx]);
+      const room = Math.max(0, s.cap - currentTotal);
+      const targetArc = Math.floor(s.cap * arcRatios[idx]);
       const needArc = Math.max(0, Math.min(room, targetArc - s.arc, remArc));
       s.arc += needArc;
       remArc -= needArc;
     });
 
-    // Step C: 余剰の弓兵 → 騎兵 → 歩兵の順で定員いっぱいまで充填
     fillOrder.forEach(idx => {
       const s = squads[idx];
-      let room = cap - (s.inf + s.cav + s.arc);
+      let room = Math.max(0, s.cap - (s.inf + s.cav + s.arc));
       if (room > 0 && remArc > 0) {
         const add = Math.min(room, remArc);
         s.arc += add; remArc -= add; room -= add;
@@ -1026,7 +1210,6 @@
       }
     });
 
-    // 4. テーブル描画
     const tbody = document.getElementById("resultBody");
     let rowsHtml = "";
     window._lastExportLines = [];
@@ -1047,7 +1230,7 @@
             <td>${s.cav.toLocaleString()}</td>
             <td><strong style="color:var(--accent);">${s.arc.toLocaleString()}</strong></td>
             <td>
-              <strong>${total.toLocaleString()}</strong>
+              <strong>${total.toLocaleString()}</strong> <span style="font-size:0.75rem; color:var(--muted);">/ ${s.cap.toLocaleString()}</span>
               <div style="font-size:0.75rem; color:var(--muted);">${pInf}% / ${pCav}% / ${pArc}%</div>
               <div class="ratio-bar">
                 <div class="r-inf" style="width:${pInf}%"></div>
@@ -1075,7 +1258,7 @@
             <td>${s.cav.toLocaleString()}</td>
             <td><strong>${s.arc.toLocaleString()}</strong></td>
             <td>
-              <strong>${total.toLocaleString()}</strong>
+              <strong>${total.toLocaleString()}</strong> <span style="font-size:0.75rem; color:var(--muted);">/ ${s.cap.toLocaleString()}</span>
               <div style="font-size:0.75rem; color:var(--muted);">${pInf}% / ${pCav}% / ${pArc}%</div>
               <div class="ratio-bar">
                 <div class="r-inf" style="width:${pInf}%"></div>
@@ -1169,7 +1352,6 @@
       masterData.heroes.push(obj);
       userState.ownedMap[id] = true;
       userState.lvMap[id] = 5;
-      // 集結主プールにも自動追加
       if (!masterData.rallyPools[obj.type].includes(name)) {
         masterData.rallyPools[obj.type].unshift(name);
       }
@@ -1188,7 +1370,7 @@
   }
 
   // ==========================================
-  // 7. マスタデータ JSON / Firebase 一括更新
+  // 7. マスタデータ JSON / AIプロンプト / Firebase 一括更新
   // ==========================================
   function openDataModal() {
     document.getElementById("jsonArea").value = JSON.stringify(masterData, null, 2);
@@ -1201,11 +1383,38 @@
     navigator.clipboard.writeText(str).then(() => showToast("マスタJSONをコピーしました！"));
   }
 
+  function copyAiUpdatePrompt() {
+    const currentJson = JSON.stringify(masterData, null, 2);
+    const promptText = `あなたはスマホゲーム「キングショット（KingShot）」の巨熊狩猟（Bear Trap）データアナリストです。
+以下の手順とルールに従って、既存の「マスターデータJSON」を最新世代までアップデートした新しいJSONを作成してください。
+
+【調査・データ抽出ルール】
+1. キャラクター情報・スキル数値の取得：
+   - 日本の攻略サイト「アルテマ（altema.jp/kingshot）」の最新英雄一覧・スキルページを参照し、新世代キャラクターの名前・兵種（inf/cav/arc）・第1遠征スキルのLv.1〜Lv.5倍率・発動確率・持続ターンを正確に取得してください。
+2. 評価・考察の反映：
+   - 海外コミュニティ「Reddit（r/KingShot）」の最新考察を分析し、集結主（rallyPools）の優先順位、乗り手Tier（S/A）、重複不可（unique: true/false）、状態異常などの熊無効スキル（buffType: "invalid"）の判定を反映してください。
+3. 環境Tier表（tierGuide）の同時更新：
+   - JSON内の "version" および "tierGuide"（集結主優先度・乗り手S/A基準・10ターン仕様とReddit考察）も、新世代の評価を含めた最新内容へ書き換えてください。
+4. 出力形式の厳守：
+   - 既存キャラクターの "id" は変更しないでください（ユーザーの個人保存データとスマートマージするため）。
+   - 解説は最小限にし、そのままツールへ貼り付けられる完全なJSONコードブロックのみを出力してください。
+
+【現在のマスターデータJSON】
+${currentJson}`;
+
+    navigator.clipboard.writeText(promptText).then(() => {
+      showToast("🤖 AI更新用プロンプト＋現行JSONをコピーしました！");
+    });
+  }
+
   function applyMasterUpdate(incoming, smartMerge) {
     if (!incoming || !Array.isArray(incoming.heroes)) {
       throw new Error("不正なJSON形式です（heroes配列が必要です）");
     }
     masterData = incoming;
+    if (!masterData.tierGuide) {
+      masterData.tierGuide = JSON.parse(JSON.stringify(DEFAULT_MASTER.tierGuide));
+    }
     masterData.heroes.forEach(h => {
       if (!smartMerge || userState.ownedMap[h.id] === undefined) {
         userState.ownedMap[h.id] = !!h.defaultOwned;
@@ -1224,7 +1433,7 @@
       applyMasterUpdate(parsed, smart);
       closeModal("dataModal");
       renderAll();
-      showToast("端末内のマスタデータを更新しました！");
+      showToast("端末内のマスタデータとTier表を更新しました！");
     } catch (e) {
       alert("JSONの読み込みに失敗しました: " + e.message);
     }
@@ -1244,7 +1453,7 @@
         applyMasterUpdate(parsed, true);
         closeModal("dataModal");
         renderAll();
-        showToast("☁️ Firebaseへ保存し、全メンバーへ配信しました！");
+        showToast("☁️ Firebaseへ保存し、全メンバーの英雄・Tier表を更新しました！");
       }).catch(err => {
         alert("Firebase書き込みエラー（Realtime Databaseのルールを確認してください）: " + err.message);
       });
