@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RBN 同盟通知ジェネレーター v6.8</title>
+  <title>RBN 同盟通知ジェネレーター v6.9</title>
   <style>
     :root {
       --bg-color: #0f172a;
@@ -34,11 +34,26 @@
       color: var(--text-main);
       line-height: 1.55;
       padding: 14px 16px;
+      transition: padding 0.2s;
     }
 
     .container {
-      max-width: 780px;
+      max-width: 820px;
       margin: 0 auto;
+      transition: max-width 0.2s;
+    }
+
+    /* PC / スマホ表示モード別のコンテナ幅制御 */
+    body.view-pc .container {
+      max-width: 960px;
+    }
+
+    body.view-mobile .container {
+      max-width: 480px;
+    }
+
+    body.view-mobile {
+      padding: 8px 10px 28px;
     }
 
     header {
@@ -54,6 +69,12 @@
       border-radius: 10px;
     }
 
+    body.view-mobile header {
+      padding: 10px 12px;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
     header h1 {
       font-size: 1.15rem;
       font-weight: 700;
@@ -61,6 +82,10 @@
       align-items: center;
       gap: 8px;
       color: var(--accent);
+    }
+
+    body.view-mobile header h1 {
+      font-size: 1.02rem;
     }
 
     .ver-badge {
@@ -80,14 +105,71 @@
       flex-wrap: wrap;
     }
 
-    .sync-badge {
+    body.view-mobile .header-right {
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    /* 表示モード切替スイッチ */
+    .view-toggle-group {
+      display: inline-flex;
+      background: var(--bg-color);
+      border: 1px solid var(--border-color);
+      border-radius: 999px;
+      padding: 2px;
+      gap: 2px;
+    }
+
+    .view-toggle-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 4px 10px;
+      border-radius: 999px;
       font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .view-toggle-btn.active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .quick-header-links {
+      display: inline-flex;
+      gap: 5px;
+      align-items: center;
+    }
+
+    .header-link-pill {
+      font-size: 0.74rem;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: var(--card-sub);
+      color: #e2e8f0;
+      border: 1px solid var(--border-color);
+      text-decoration: none;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .header-link-pill:hover {
+      border-color: var(--blue);
+      color: var(--blue);
+    }
+
+    .sync-badge {
+      font-size: 0.74rem;
       padding: 4px 10px;
       border-radius: 999px;
       background: rgba(16, 185, 129, 0.15);
       color: #6ee7b7;
       border: 1px solid rgba(16, 185, 129, 0.45);
       font-weight: 600;
+      white-space: nowrap;
     }
 
     .sync-badge.warn {
@@ -111,13 +193,18 @@
       background: transparent;
       border: none;
       color: var(--text-muted);
-      padding: 8px 4px;
+      padding: 9px 4px;
       border-radius: 7px;
       font-size: 0.8rem;
       font-weight: 700;
       cursor: pointer;
       transition: all 0.15s;
       white-space: nowrap;
+    }
+
+    body.view-mobile .nav-tab {
+      padding: 10px 2px;
+      font-size: 0.76rem;
     }
 
     .nav-tab:hover {
@@ -138,12 +225,29 @@
       display: block;
     }
 
+    /* PC表示時の2カラムレイアウト（作成タブ） */
+    body.view-pc .create-grid-layout {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 14px;
+      align-items: start;
+    }
+
+    body.view-pc .create-grid-layout .card {
+      margin-bottom: 0;
+    }
+
     .card {
       background-color: var(--card-bg);
       border: 1px solid var(--border-color);
       border-radius: 10px;
       padding: 16px;
       margin-bottom: 14px;
+    }
+
+    body.view-mobile .card {
+      padding: 12px;
+      margin-bottom: 12px;
     }
 
     .card-title {
@@ -156,6 +260,11 @@
       align-items: center;
       flex-wrap: wrap;
       gap: 8px;
+    }
+
+    body.view-mobile .card-title {
+      font-size: 0.92rem;
+      margin-bottom: 10px;
     }
 
     .settings-box {
@@ -184,8 +293,8 @@
       color: #e2e8f0;
       border: 1px solid var(--border-color);
       border-radius: 6px;
-      padding: 8px 10px;
-      font-size: 0.8rem;
+      padding: 9px 11px;
+      font-size: 0.82rem;
       text-decoration: none;
       white-space: nowrap;
       font-weight: 600;
@@ -229,6 +338,17 @@
       font-family: inherit;
     }
 
+    /* スマホ表示時の入力ズーム防止＆タップ最適化 */
+    body.view-mobile input[type="password"],
+    body.view-mobile input[type="text"],
+    body.view-mobile input[type="number"],
+    body.view-mobile input[type="date"],
+    body.view-mobile select,
+    body.view-mobile textarea {
+      font-size: 16px;
+      padding: 10px 12px;
+    }
+
     input:focus, textarea:focus, select:focus {
       outline: none;
       border-color: var(--blue);
@@ -261,6 +381,10 @@
       color-scheme: dark;
     }
 
+    body.view-mobile .date-selector-bar input[type="date"] {
+      padding: 8px 10px;
+    }
+
     .date-quick-btns {
       display: flex;
       gap: 4px;
@@ -277,6 +401,11 @@
       font-weight: 600;
     }
 
+    body.view-mobile .date-quick-btn {
+      padding: 9px 12px;
+      font-size: 0.84rem;
+    }
+
     .date-quick-btn.active {
       background: var(--primary);
       border-color: var(--blue);
@@ -285,9 +414,14 @@
 
     .quick-controls {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
       gap: 10px;
       margin-bottom: 12px;
+    }
+
+    body.view-mobile .quick-controls {
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
     }
 
     .control-box {
@@ -297,12 +431,20 @@
       padding: 10px;
     }
 
+    body.view-mobile .control-box {
+      padding: 8px;
+    }
+
     .control-label {
       font-size: 0.78rem;
       color: var(--text-muted);
       margin-bottom: 6px;
       display: block;
       font-weight: 600;
+    }
+
+    body.view-mobile .control-label {
+      font-size: 0.74rem;
     }
 
     .segmented-btn {
@@ -323,6 +465,11 @@
       cursor: pointer;
       transition: all 0.15s;
       font-weight: 600;
+    }
+
+    body.view-mobile .segmented-btn button {
+      padding: 9px 2px;
+      font-size: 0.76rem;
     }
 
     .segmented-btn button.active {
@@ -359,6 +506,11 @@
       transition: all 0.15s;
     }
 
+    body.view-mobile .mode-switch-btn {
+      padding: 10px 4px;
+      font-size: 0.8rem;
+    }
+
     .mode-switch-btn.active {
       background: var(--card-sub);
       color: var(--blue);
@@ -379,6 +531,10 @@
       border-radius: 8px;
       padding: 12px;
       margin-bottom: 10px;
+    }
+
+    body.view-mobile .manual-section {
+      padding: 10px;
     }
 
     .manual-section-title {
@@ -402,6 +558,11 @@
       padding-right: 2px;
     }
 
+    body.view-mobile .chip-grid {
+      max-height: 280px;
+      gap: 7px;
+    }
+
     .event-chip {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
@@ -415,6 +576,11 @@
       display: inline-flex;
       align-items: center;
       gap: 5px;
+    }
+
+    body.view-mobile .event-chip {
+      padding: 8px 11px;
+      font-size: 0.85rem;
     }
 
     .event-chip:hover {
@@ -447,8 +613,8 @@
 
     .chip-edit-actions {
       display: inline-flex;
-      gap: 3px;
-      margin-left: 4px;
+      gap: 4px;
+      margin-left: 5px;
     }
 
     .chip-action-btn {
@@ -456,9 +622,14 @@
       border: none;
       color: #e5e7eb;
       border-radius: 4px;
-      padding: 1px 5px;
-      font-size: 0.72rem;
+      padding: 2px 6px;
+      font-size: 0.74rem;
       cursor: pointer;
+    }
+
+    body.view-mobile .chip-action-btn {
+      padding: 5px 9px;
+      font-size: 0.82rem;
     }
 
     .chip-action-btn:hover {
@@ -483,6 +654,11 @@
       gap: 4px;
     }
 
+    body.view-mobile .phase-chip {
+      padding: 8px 12px;
+      font-size: 0.84rem;
+    }
+
     .phase-chip.checked {
       background: rgba(16, 185, 129, 0.22);
       border-color: var(--success);
@@ -501,12 +677,21 @@
       font-size: 0.84rem;
     }
 
+    body.view-mobile .custom-event-row input {
+      font-size: 16px;
+      padding: 9px 10px;
+    }
+
     .chart-box {
       background: var(--bg-color);
       border: 1px solid var(--border-color);
       border-radius: 8px;
       padding: 12px;
       margin-bottom: 12px;
+    }
+
+    body.view-mobile .chart-box {
+      padding: 10px;
     }
 
     .chart-header {
@@ -536,6 +721,7 @@
       border-radius: 6px;
       border: 1px solid var(--border-color);
       padding: 8px;
+      -webkit-overflow-scrolling: touch;
     }
 
     .pretty-chart-banner {
@@ -553,11 +739,20 @@
       text-align: center;
     }
 
+    body.view-mobile .pretty-chart-table {
+      font-size: 0.76rem;
+    }
+
     .pretty-chart-table th,
     .pretty-chart-table td {
       border: 1px solid var(--border-color);
       padding: 5px 4px;
       white-space: nowrap;
+    }
+
+    body.view-mobile .pretty-chart-table th,
+    body.view-mobile .pretty-chart-table td {
+      padding: 6px 4px;
     }
 
     .pretty-chart-table th {
@@ -572,7 +767,10 @@
       padding-left: 8px;
       font-weight: 600;
       color: #e5e7eb;
-      background: rgba(38, 51, 73, 0.5);
+      background: rgba(38, 51, 73, 0.85);
+      position: sticky;
+      left: 0;
+      z-index: 1;
     }
 
     .mark-double {
@@ -607,6 +805,7 @@
       border-radius: 6px;
       color: #e5e7eb;
       border: 1px solid var(--border-color);
+      -webkit-overflow-scrolling: touch;
     }
 
     .chart-editor {
@@ -650,6 +849,11 @@
       margin-top: 12px;
     }
 
+    body.view-mobile #preview-grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
     .preview-item {
       position: relative;
       border-radius: 6px;
@@ -673,10 +877,10 @@
       color: #fff;
       border: none;
       border-radius: 50%;
-      width: 22px;
-      height: 22px;
+      width: 24px;
+      height: 24px;
       cursor: pointer;
-      font-size: 12px;
+      font-size: 13px;
       line-height: 1;
     }
 
@@ -693,6 +897,11 @@
       justify-content: center;
       align-items: center;
       gap: 8px;
+    }
+
+    body.view-mobile .btn {
+      padding: 13px 10px;
+      font-size: 0.95rem;
     }
 
     .btn-primary {
@@ -736,6 +945,15 @@
 
     .icon-btn:hover {
       background: #334155;
+    }
+
+    #result-text {
+      line-height: 1.65;
+    }
+
+    body.view-mobile #result-text {
+      min-height: 270px;
+      font-size: 16px;
     }
 
     .counter-bar {
@@ -848,6 +1066,11 @@
       cursor: pointer;
     }
 
+    body.view-mobile .mini-btn {
+      padding: 7px 11px;
+      font-size: 0.8rem;
+    }
+
     .mini-btn:hover {
       background: #334155;
       border-color: #64748b;
@@ -876,6 +1099,17 @@
 
     .mini-btn.danger {
       color: #fca5a5;
+    }
+
+    .settings-two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    body.view-mobile .settings-two-col {
+      grid-template-columns: 1fr;
+      gap: 0;
     }
 
     .ratio-table {
@@ -914,9 +1148,17 @@
 <div class="container">
   <header>
     <div>
-      <h1>📢 RBN 同盟通知ジェネレーター <span class="ver-badge">v6.8</span></h1>
+      <h1>📢 RBN 同盟通知ジェネレーター <span class="ver-badge">v6.9</span></h1>
     </div>
     <div class="header-right">
+      <div class="view-toggle-group" title="表示レイアウトの切り替え">
+        <button type="button" class="view-toggle-btn" id="btn-view-mobile" data-view="mobile">📱 スマホ</button>
+        <button type="button" class="view-toggle-btn" id="btn-view-pc" data-view="pc">💻 PC</button>
+      </div>
+      <div class="quick-header-links">
+        <a id="header-city-map-link" href="./index.html" target="_blank" rel="noopener noreferrer" class="header-link-pill">🗺️ 都市マップ</a>
+        <a id="header-bear-sim-link" href="./rbn-bear.html" target="_blank" rel="noopener noreferrer" class="header-link-pill">🐻 熊編成</a>
+      </div>
       <span class="sync-badge warn" id="sync-status-badge">クラウド同期確認中...</span>
     </div>
   </header>
@@ -931,166 +1173,168 @@
 
   <!-- 1. 通知作成タブ -->
   <div id="tab-create" class="tab-pane active">
-    <div class="card">
-      <div class="card-title">
-        <span>1. 通知の対象日・方針切替</span>
-        <span class="badge-bear" id="date-bear-badge"></span>
-      </div>
-
-      <div class="date-selector-bar">
-        <label for="target-date-input">📅 通知対象日:</label>
-        <input type="date" id="target-date-input">
-        <div class="date-quick-btns">
-          <button type="button" class="date-quick-btn" id="btn-set-today">今日</button>
-          <button type="button" class="date-quick-btn active" id="btn-set-tomorrow">翌日(既定)</button>
+    <div class="create-grid-layout">
+      <div class="card">
+        <div class="card-title">
+          <span>1. 通知の対象日・方針切替</span>
+          <span class="badge-bear" id="date-bear-badge"></span>
         </div>
-      </div>
 
-      <div class="quick-controls">
-        <div class="control-box">
-          <span class="control-label">🌅 朝パーン（情報イベント）</span>
-          <div class="segmented-btn" id="asapan-group">
-            <button type="button" data-val="auto" class="active">AI判定</button>
-            <button type="button" data-val="ok">OK！</button>
-            <button type="button" data-val="ng">温存(NG)</button>
+        <div class="date-selector-bar">
+          <label for="target-date-input">📅 通知対象日:</label>
+          <input type="date" id="target-date-input">
+          <div class="date-quick-btns">
+            <button type="button" class="date-quick-btn" id="btn-set-today">今日</button>
+            <button type="button" class="date-quick-btn active" id="btn-set-tomorrow">翌日(既定)</button>
           </div>
         </div>
 
-        <div class="control-box">
-          <span class="control-label">🐻 対象日の熊罠</span>
-          <div class="segmented-btn" id="bear-group">
-            <button type="button" data-val="auto" class="active">自動計算</button>
-            <button type="button" data-val="yes">あり</button>
-            <button type="button" data-val="no">なし</button>
-          </div>
-        </div>
-
-        <div class="control-box">
-          <span class="control-label">🌾 翌日採集（寝る前仕込み）</span>
-          <div class="segmented-btn" id="gather-group">
-            <button type="button" data-val="auto" class="active">AI判定</button>
-            <button type="button" data-val="yes">案内あり</button>
-            <button type="button" data-val="no">なし</button>
-          </div>
-        </div>
-
-        <div class="control-box">
-          <span class="control-label">⚔️ 翌日訓練（寝る前仕込み）</span>
-          <div class="segmented-btn" id="train-group">
-            <button type="button" data-val="auto" class="active">AI判定</button>
-            <button type="button" data-val="yes">案内あり</button>
-            <button type="button" data-val="no">なし</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="mode-switch">
-        <button type="button" class="mode-switch-btn active" data-mode="manual">☑️ 手動ビルダー（API不要・即作成）</button>
-        <button type="button" class="mode-switch-btn" data-mode="screenshot">📸 スクショAI解析（自動読取）</button>
-      </div>
-
-      <!-- パネルA：手動イベントビルダー -->
-      <div id="panel-manual" class="builder-panel active">
-        <div class="manual-section">
-          <div class="manual-section-title">
-            <span>① 開催イベントを選択（自動補足辞書も連動）</span>
-            <div style="display: flex; gap: 4px;">
-              <button type="button" class="mini-btn" id="toggle-edit-events-btn">✏️ 項目編集・削除</button>
-              <button type="button" class="mini-btn" id="clear-manual-checks-btn">選択解除</button>
+        <div class="quick-controls">
+          <div class="control-box">
+            <span class="control-label">🌅 朝パーン（情報イベント）</span>
+            <div class="segmented-btn" id="asapan-group">
+              <button type="button" data-val="auto" class="active">AI判定</button>
+              <button type="button" data-val="ok">OK！</button>
+              <button type="button" data-val="ng">温存(NG)</button>
             </div>
           </div>
-          <div id="edit-mode-hint" style="display: none; font-size: 0.76rem; color: #fbbf24; margin-bottom: 6px;">
-            ※イベント編集モード中：「✎」で名前変更、「×」で削除できます。
-            <button type="button" class="mini-btn" id="reset-events-default-btn" style="margin-left: 6px;">初期リストに戻す</button>
-          </div>
-          <div class="chip-grid" id="manual-event-chips"></div>
 
-          <div class="custom-event-row">
-            <input type="text" id="custom-event-input" placeholder="新しいイベント名を追加してリストに保存...">
-            <button type="button" class="mini-btn" id="add-custom-event-btn" style="white-space: nowrap; padding: 0 12px;">＋ リストに追加</button>
-          </div>
-        </div>
-
-        <div class="manual-section">
-          <div class="manual-section-title">
-            <span>② ポイント対象項目（早見表の全項目・編集追加可）</span>
-            <div style="display: flex; gap: 4px;">
-              <button type="button" class="mini-btn" id="toggle-edit-phases-btn">✏️ 項目編集・削除</button>
-              <button type="button" class="mini-btn" id="clear-phase-checks-btn">選択解除</button>
+          <div class="control-box">
+            <span class="control-label">🐻 対象日の熊罠</span>
+            <div class="segmented-btn" id="bear-group">
+              <button type="button" data-val="auto" class="active">自動計算</button>
+              <button type="button" data-val="yes">あり</button>
+              <button type="button" data-val="no">なし</button>
             </div>
           </div>
-          <div id="phase-edit-mode-hint" style="display: none; font-size: 0.76rem; color: #fbbf24; margin-bottom: 6px;">
-            ※ポイント項目編集モード中：「✎」で名前変更、「×」で削除できます。
-            <button type="button" class="mini-btn" id="reset-phases-default-btn" style="margin-left: 6px;">初期リストに戻す</button>
+
+          <div class="control-box">
+            <span class="control-label">🌾 翌日採集（寝る前仕込み）</span>
+            <div class="segmented-btn" id="gather-group">
+              <button type="button" data-val="auto" class="active">AI判定</button>
+              <button type="button" data-val="yes">案内あり</button>
+              <button type="button" data-val="no">なし</button>
+            </div>
           </div>
-          <div class="chip-grid" id="manual-phase-chips"></div>
 
-          <div class="custom-event-row">
-            <input type="text" id="custom-phase-input" placeholder="新しいポイント対象項目を追加...">
-            <button type="button" class="mini-btn" id="add-custom-phase-btn" style="white-space: nowrap; padding: 0 12px;">＋ リストに追加</button>
+          <div class="control-box">
+            <span class="control-label">⚔️ 翌日訓練（寝る前仕込み）</span>
+            <div class="segmented-btn" id="train-group">
+              <button type="button" data-val="auto" class="active">AI判定</button>
+              <button type="button" data-val="yes">案内あり</button>
+              <button type="button" data-val="no">なし</button>
+            </div>
           </div>
         </div>
 
-        <div class="manual-section">
-          <div class="manual-section-title">
-            <span>③ 締めのひとこと（選択後に下の枠で自由編集も可）</span>
+        <div class="mode-switch">
+          <button type="button" class="mode-switch-btn active" data-mode="manual">☑️ 手動ビルダー（即作成）</button>
+          <button type="button" class="mode-switch-btn" data-mode="screenshot">📸 スクショAI解析</button>
+        </div>
+
+        <!-- パネルA：手動イベントビルダー -->
+        <div id="panel-manual" class="builder-panel active">
+          <div class="manual-section">
+            <div class="manual-section-title">
+              <span>① 開催イベントを選択（自動補足辞書も連動）</span>
+              <div style="display: flex; gap: 4px;">
+                <button type="button" class="mini-btn" id="toggle-edit-events-btn">✏️ 編集・削除</button>
+                <button type="button" class="mini-btn" id="clear-manual-checks-btn">解除</button>
+              </div>
+            </div>
+            <div id="edit-mode-hint" style="display: none; font-size: 0.76rem; color: #fbbf24; margin-bottom: 6px;">
+              ※イベント編集モード中：「✎」で名前変更、「×」で削除できます。
+              <button type="button" class="mini-btn" id="reset-events-default-btn" style="margin-left: 6px;">初期リストに戻す</button>
+            </div>
+            <div class="chip-grid" id="manual-event-chips"></div>
+
+            <div class="custom-event-row">
+              <input type="text" id="custom-event-input" placeholder="新しいイベント名を追加して保存...">
+              <button type="button" class="mini-btn" id="add-custom-event-btn" style="white-space: nowrap; padding: 0 12px;">＋ 追加</button>
+            </div>
           </div>
-          <select id="manual-closing-select" style="margin-bottom: 6px;">
-            <option value="">（なし）</option>
-            <option value="同盟総動員みんなで力を&#10;合わせてがんばろー(٩・∀・ง)ｵｰ!">同盟総動員みんなで力を合わせてがんばろー(٩・∀・ง)ｵｰ!</option>
-            <option value="無理のない範囲でポイント稼いでいきましょー！">無理のない範囲でポイント稼いでいきましょー！</option>
-            <option value="報酬取り忘れのないよう受け取りお忘れなくー！">報酬取り忘れのないよう受け取りお忘れなくー！</option>
-            <option value="最終日なのでラストスパートよろしくお願いします！">最終日なのでラストスパートよろしくお願いします！</option>
-            <option value="エントリー漏れのないよう早めの登録お願いします！">エントリー漏れのないよう早めの登録お願いします！</option>
-            <option value="時間合う方はぜひ参加よろしくお願いします！">時間合う方はぜひ参加よろしくお願いします！</option>
-            <option value="本日もマイペースに楽しんでいきましょー！">本日もマイペースに楽しんでいきましょー！</option>
-          </select>
-          <textarea id="manual-closing-text" rows="2" placeholder="プルダウンから選ぶか、ここに直接締めのひと言を入力できます..."></textarea>
+
+          <div class="manual-section">
+            <div class="manual-section-title">
+              <span>② ポイント対象項目（早見表の全項目・編集追加可）</span>
+              <div style="display: flex; gap: 4px;">
+                <button type="button" class="mini-btn" id="toggle-edit-phases-btn">✏️ 編集・削除</button>
+                <button type="button" class="mini-btn" id="clear-phase-checks-btn">解除</button>
+              </div>
+            </div>
+            <div id="phase-edit-mode-hint" style="display: none; font-size: 0.76rem; color: #fbbf24; margin-bottom: 6px;">
+              ※ポイント項目編集モード中：「✎」で名前変更、「×」で削除できます。
+              <button type="button" class="mini-btn" id="reset-phases-default-btn" style="margin-left: 6px;">初期リストに戻す</button>
+            </div>
+            <div class="chip-grid" id="manual-phase-chips"></div>
+
+            <div class="custom-event-row">
+              <input type="text" id="custom-phase-input" placeholder="新しいポイント対象項目を追加...">
+              <button type="button" class="mini-btn" id="add-custom-phase-btn" style="white-space: nowrap; padding: 0 12px;">＋ 追加</button>
+            </div>
+          </div>
+
+          <div class="manual-section">
+            <div class="manual-section-title">
+              <span>③ 締めのひとこと（選択後に下の枠で自由編集も可）</span>
+            </div>
+            <select id="manual-closing-select" style="margin-bottom: 6px;">
+              <option value="">（なし）</option>
+              <option value="同盟総動員みんなで力を&#10;合わせてがんばろー(٩・∀・ง)ｵｰ!">同盟総動員みんなで力を合わせてがんばろー(٩・∀・ง)ｵｰ!</option>
+              <option value="無理のない範囲でポイント稼いでいきましょー！">無理のない範囲でポイント稼いでいきましょー！</option>
+              <option value="報酬取り忘れのないよう受け取りお忘れなくー！">報酬取り忘れのないよう受け取りお忘れなくー！</option>
+              <option value="最終日なのでラストスパートよろしくお願いします！">最終日なのでラストスパートよろしくお願いします！</option>
+              <option value="エントリー漏れのないよう早めの登録お願いします！">エントリー漏れのないよう早めの登録お願いします！</option>
+              <option value="時間合う方はぜひ参加よろしくお願いします！">時間合う方はぜひ参加よろしくお願いします！</option>
+              <option value="本日もマイペースに楽しんでいきましょー！">本日もマイペースに楽しんでいきましょー！</option>
+            </select>
+            <textarea id="manual-closing-text" rows="2" placeholder="プルダウンから選ぶか、ここに直接締めのひと言を入力できます..."></textarea>
+          </div>
+
+          <button type="button" class="btn btn-primary" id="build-manual-btn">📝 選択した項目で通知文を組み立てる（API不要）</button>
         </div>
 
-        <button type="button" class="btn btn-primary" id="build-manual-btn">📝 選択した項目で通知文を組み立てる（API不要）</button>
-      </div>
+        <!-- パネルB：スクショAI解析 -->
+        <div id="panel-screenshot" class="builder-panel">
+          <div id="paste-zone">
+            <div class="paste-icon">📋</div>
+            <div><strong>Ctrl + V</strong> でスクショ貼り付け / タップで画像選択</div>
+            <div class="paste-hint">対象日（翌日など）のイベント一覧・カレンダー等のスクショを貼ってください</div>
+            <input type="file" id="file-input" accept="image/*" multiple style="display:none;">
+          </div>
 
-      <!-- パネルB：スクショAI解析 -->
-      <div id="panel-screenshot" class="builder-panel">
-        <div id="paste-zone">
-          <div class="paste-icon">📋</div>
-          <div><strong>Ctrl + V</strong> でスクショ貼り付け / タップで画像選択</div>
-          <div class="paste-hint">対象日（翌日など）のイベント一覧・カレンダー等のスクショを貼ってください</div>
-          <input type="file" id="file-input" accept="image/*" multiple style="display:none;">
+          <div id="preview-grid"></div>
+
+          <div style="margin-top: 14px; display: flex; gap: 8px;">
+            <button class="btn btn-primary" id="generate-btn" disabled>
+              <span class="spinner" id="loading-spinner"></span>
+              <span id="generate-btn-text">✨ スクショから通知文を生成</span>
+            </button>
+            <button class="icon-btn" id="clear-images-btn" style="display:none; white-space: nowrap;">🗑️ クリア</button>
+          </div>
         </div>
 
-        <div id="preview-grid"></div>
+        <div class="status-msg" id="status-msg"></div>
+      </div>
 
-        <div style="margin-top: 14px; display: flex; gap: 8px;">
-          <button class="btn btn-primary" id="generate-btn" disabled>
-            <span class="spinner" id="loading-spinner"></span>
-            <span id="generate-btn-text">✨ スクショから通知文を生成</span>
-          </button>
-          <button class="icon-btn" id="clear-images-btn" style="display:none; white-space: nowrap;">🗑️ クリア</button>
+      <div class="card">
+        <div class="card-title">
+          <span>2. 通知文エディタ（手直し後に確定保存＆コピー）</span>
+          <span style="font-size: 0.78rem; color: var(--blue);" id="history-count-label">学習履歴: 0件</span>
         </div>
-      </div>
 
-      <div class="status-msg" id="status-msg"></div>
-    </div>
+        <textarea id="result-text" rows="14" placeholder="上の「手動ビルダー」でイベントを選ぶか、「スクショAI解析」で通知文を作成してください..."></textarea>
 
-    <div class="card">
-      <div class="card-title">
-        <span>2. 通知文エディタ（手直し後に確定保存＆コピー）</span>
-        <span style="font-size: 0.78rem; color: var(--blue);" id="history-count-label">学習履歴: 0件</span>
-      </div>
-
-      <textarea id="result-text" rows="13" placeholder="上の「手動ビルダー」でイベントを選ぶか、「スクショAI解析」で通知文を作成してください..."></textarea>
-
-      <div class="counter-bar">
-        <div class="char-count" id="char-count">0 / 300 文字</div>
-        <div class="limit-setting">
-          <label for="char-limit-input">上限目安:</label>
-          <input type="number" id="char-limit-input" value="300" min="50" max="2000">
+        <div class="counter-bar">
+          <div class="char-count" id="char-count">0 / 300 文字</div>
+          <div class="limit-setting">
+            <label for="char-limit-input">上限目安:</label>
+            <input type="number" id="char-limit-input" value="300" min="50" max="2000">
+          </div>
         </div>
-      </div>
 
-      <button class="btn btn-success" id="save-copy-btn">📋 確定保存（学習蓄積）＆コピー</button>
+        <button class="btn btn-success" id="save-copy-btn">📋 確定保存（学習蓄積）＆コピー</button>
+      </div>
     </div>
   </div>
 
@@ -1135,37 +1379,39 @@
       <p style="font-size: 0.84rem; color: var(--text-muted); margin-bottom: 10px;">
         同盟争覇戦は<strong>「兵力固定・最大2〜3連戦の勝ち抜き方式（途中治療なし）」</strong>のため、1戦目で前衛（歩兵）を消耗しすぎない比率が重要です（表記は <strong>歩兵：騎兵：弓兵</strong>）。
       </p>
-      <table class="ratio-table">
-        <thead>
-          <tr>
-            <th style="width: 24%;">比率</th>
-            <th style="width: 26%;">役割タイプ</th>
-            <th>有効な場面・配置レーン</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><span class="ratio-tag">6 : 1 : 3</span></td>
-            <td><strong>連戦エース型<br>（基本・王道）</strong></td>
-            <td><strong>主力レーン（左・中央）の基本編成。</strong><br>歩兵6割で2〜3戦目まで前線を維持し、弓兵3割で火力を出し続ける最も事故りにくい鉄板比率です。</td>
-          </tr>
-          <tr>
-            <td><span class="ratio-tag">5 : 1 : 4</span></td>
-            <td><strong>格下殲滅・先鋒型</strong></td>
-            <td><strong>主力レーンの先頭付近・格下相手。</strong><br>瞬間火力を高めて相手の1〜2番手を素早く溶かしたい場面向け。格上相手だと2戦目まで歩兵が持ちません。</td>
-          </tr>
-          <tr>
-            <td><span class="ratio-tag">7 : 1 : 2</span></td>
-            <td><strong>削り・足止め型<br>（肉壁・盾特化）</strong></td>
-            <td><strong>捨てレーン（右）や格上エースと当たる枠。</strong><br>勝てない格上に対し、粘り強く相手の歩兵を削って後続の味方にトドメを刺させる役割に最適です。</td>
-          </tr>
-          <tr>
-            <td><span class="ratio-tag">5 : 2 : 3</span></td>
-            <td><strong>騎兵バフ特化型</strong></td>
-            <td><strong>騎兵特化の強力な英雄・領主装備を持つ人向け。</strong><br>騎兵バフが他兵種より突出している場合のみ総合火力が上回ります。</td>
-          </tr>
-        </tbody>
-      </table>
+      <div style="overflow-x: auto;">
+        <table class="ratio-table">
+          <thead>
+            <tr>
+              <th style="width: 24%;">比率</th>
+              <th style="width: 26%;">役割タイプ</th>
+              <th>有効な場面・配置レーン</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="ratio-tag">6 : 1 : 3</span></td>
+              <td><strong>連戦エース型<br>（基本・王道）</strong></td>
+              <td><strong>主力レーン（左・中央）の基本編成。</strong><br>歩兵6割で2〜3戦目まで前線を維持し、弓兵3割で火力を出し続ける最も事故りにくい鉄板比率です。</td>
+            </tr>
+            <tr>
+              <td><span class="ratio-tag">5 : 1 : 4</span></td>
+              <td><strong>格下殲滅・先鋒型</strong></td>
+              <td><strong>主力レーンの先頭付近・格下相手。</strong><br>瞬間火力を高めて相手の1〜2番手を素早く溶かしたい場面向け。格上相手だと2戦目まで歩兵が持ちません。</td>
+            </tr>
+            <tr>
+              <td><span class="ratio-tag">7 : 1 : 2</span></td>
+              <td><strong>削り・足止め型<br>（肉壁・盾特化）</strong></td>
+              <td><strong>捨てレーン（右）や格上エースと当たる枠。</strong><br>勝てない格上に対し、粘り強く相手の歩兵を削って後続の味方にトドメを刺させる役割に最適です。</td>
+            </tr>
+            <tr>
+              <td><span class="ratio-tag">5 : 2 : 3</span></td>
+              <td><strong>騎兵バフ特化型</strong></td>
+              <td><strong>騎兵特化の強力な英雄・領主装備を持つ人向け。</strong><br>騎兵バフが他兵種より突出している場合のみ総合火力が上回ります。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
       <div style="margin-top: 12px; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; font-size: 0.82rem; color: #d1d5db;">
         <strong>💡 同盟メンバー向け補足メモ：</strong><br>
         ・エントリー時の戦力は<strong>「登録ボタンを押した瞬間」</strong>で固定されるため、登録前に部隊容量バフを入れておくと連戦突破率が上がります。<br>
@@ -1209,8 +1455,8 @@
 
         <div class="input-group">
           <label for="model-select">使用AIモデル（APIキーで利用可能なモデル一覧を自動取得可能）</label>
-          <div style="display: flex; gap: 6px; margin-bottom: 6px;">
-            <select id="model-select" style="flex: 1;">
+          <div style="display: flex; gap: 6px; margin-bottom: 6px; flex-wrap: wrap;">
+            <select id="model-select" style="flex: 1; min-width: 180px;">
               <option value="gemini-flash-preview">gemini-flash-preview（推奨・動作確認済み）</option>
               <option value="gemini-flash-lite-latest">gemini-flash-lite-latest（高速・軽量）</option>
             </select>
@@ -1222,7 +1468,7 @@
         <div class="input-group" style="margin-bottom: 0;">
           <label for="firebase-url-input">Firebase Realtime Database URL（現行 <code>kingshot_notice_history</code> 維持）</label>
           <input type="text" id="firebase-url-input" value="https://kingshot-rbn-map-default-rtdb.firebaseio.com/kingshot_notice_history">
-          <div style="margin-top: 6px; display: flex; gap: 8px; align-items: center;">
+          <div style="margin-top: 6px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
             <button type="button" class="mini-btn" id="test-firebase-btn">🔌 Firebase接続テスト＆再同期</button>
             <span id="firebase-test-msg" style="font-size: 0.8rem;"></span>
           </div>
@@ -1238,7 +1484,7 @@
         </div>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+      <div class="settings-two-col">
         <div class="input-group">
           <label for="bear-base-date">熊罠の基準日（「あり」だった日）</label>
           <input type="date" id="bear-base-date" style="color-scheme: dark;">
@@ -1262,6 +1508,7 @@
 </div>
 
 <script>
+  const VIEW_MODE_STORAGE_KEY = 'rbn_notice_view_mode_v1';
   const SHARED_SETTINGS_KEY = 'rbn_suite_shared_settings_v1';
   const EMBEDDED_FIREBASE_URL = 'https://kingshot-rbn-map-default-rtdb.firebaseio.com/kingshot_notice_history';
   const DEFAULT_CITY_MAP_URL = './index.html';
@@ -1426,6 +1673,10 @@
 ・チェーザレ討伐
 `;
 
+  const btnViewMobile = document.getElementById('btn-view-mobile');
+  const btnViewPc = document.getElementById('btn-view-pc');
+  const headerCityMapLink = document.getElementById('header-city-map-link');
+  const headerBearSimLink = document.getElementById('header-bear-sim-link');
   const syncStatusBadge = document.getElementById('sync-status-badge');
   const openCityMapLink = document.getElementById('open-city-map-link');
   const openBearSimLink = document.getElementById('open-bear-sim-link');
@@ -1522,6 +1773,29 @@
     train: 'auto'
   };
 
+  /* スマホ / PC 表示モード切り替え制御 */
+  function applyViewMode(mode) {
+    const targetMode = mode === 'mobile' ? 'mobile' : 'pc';
+    document.body.classList.remove('view-mobile', 'view-pc');
+    document.body.classList.add(`view-${targetMode}`);
+    btnViewMobile.classList.toggle('active', targetMode === 'mobile');
+    btnViewPc.classList.toggle('active', targetMode === 'pc');
+    localStorage.setItem(VIEW_MODE_STORAGE_KEY, targetMode);
+  }
+
+  btnViewMobile.addEventListener('click', () => applyViewMode('mobile'));
+  btnViewPc.addEventListener('click', () => applyViewMode('pc'));
+
+  function initViewMode() {
+    const savedMode = localStorage.getItem(VIEW_MODE_STORAGE_KEY);
+    if (savedMode === 'mobile' || savedMode === 'pc') {
+      applyViewMode(savedMode);
+    } else {
+      const isNarrow = window.innerWidth <= 768;
+      applyViewMode(isNarrow ? 'mobile' : 'pc');
+    }
+  }
+
   function getSharedConfigPayload() {
     const rawDb = (firebaseUrlInput.value || localStorage.getItem('ks_firebase_url') || EMBEDDED_FIREBASE_URL).trim();
     const rootDbUrl = rawDb.replace(/\/kingshot_notice_history\/?$/, '').replace(/\/+$/, '');
@@ -1541,10 +1815,12 @@
   }
 
   function syncSharedStorageAndLinks() {
-    const mapUrl = (cityMapUrlInput.value || localStorage.getItem('ks_city_map_url') || DEFAULT_CITY_MAP_URL).trim();
-    const bearUrl = (bearSimUrlInput.value || localStorage.getItem('ks_bear_sim_url') || DEFAULT_BEAR_SIM_URL).trim();
-    openCityMapLink.href = mapUrl || DEFAULT_CITY_MAP_URL;
-    openBearSimLink.href = bearUrl || DEFAULT_BEAR_SIM_URL;
+    const mapUrl = (cityMapUrlInput.value || localStorage.getItem('ks_city_map_url') || DEFAULT_CITY_MAP_URL).trim() || DEFAULT_CITY_MAP_URL;
+    const bearUrl = (bearSimUrlInput.value || localStorage.getItem('ks_bear_sim_url') || DEFAULT_BEAR_SIM_URL).trim() || DEFAULT_BEAR_SIM_URL;
+    openCityMapLink.href = mapUrl;
+    openBearSimLink.href = bearUrl;
+    if (headerCityMapLink) headerCityMapLink.href = mapUrl;
+    if (headerBearSimLink) headerBearSimLink.href = bearUrl;
 
     const payload = getSharedConfigPayload();
     localStorage.setItem(SHARED_SETTINGS_KEY, JSON.stringify(payload));
@@ -1644,7 +1920,7 @@
   toggleEditEventsBtn.addEventListener('click', () => {
     isEventEditMode = !isEventEditMode;
     toggleEditEventsBtn.classList.toggle('active-edit', isEventEditMode);
-    toggleEditEventsBtn.textContent = isEventEditMode ? '✅ 編集完了' : '✏️ 項目編集・削除';
+    toggleEditEventsBtn.textContent = isEventEditMode ? '✅ 編集完了' : '✏️ 編集・削除';
     editModeHint.style.display = isEventEditMode ? 'block' : 'none';
     renderManualChips();
   });
@@ -1660,7 +1936,7 @@
   toggleEditPhasesBtn.addEventListener('click', () => {
     isPhaseEditMode = !isPhaseEditMode;
     toggleEditPhasesBtn.classList.toggle('active-edit', isPhaseEditMode);
-    toggleEditPhasesBtn.textContent = isPhaseEditMode ? '✅ 編集完了' : '✏️ 項目編集・削除';
+    toggleEditPhasesBtn.textContent = isPhaseEditMode ? '✅ 編集完了' : '✏️ 編集・削除';
     phaseEditModeHint.style.display = isPhaseEditMode ? 'block' : 'none';
     renderManualChips();
   });
@@ -1953,7 +2229,7 @@
           </div>
           <div style="font-size: 0.75rem; color: #fbbf24; margin-bottom: 4px;">※ゲーム内チャット用のスペース・改行のまま編集・保存されます</div>
           <textarea class="chart-editor" rows="16"></textarea>
-          <div style="display: flex; justify-content: space-between; gap: 6px;">
+          <div style="display: flex; justify-content: space-between; gap: 6px; flex-wrap: wrap;">
             <button type="button" class="mini-btn danger del-chart-btn">🗑️ この表を削除</button>
             <div style="display: flex; gap: 6px;">
               <button type="button" class="mini-btn cancel-chart-btn">キャンセル</button>
@@ -2125,6 +2401,11 @@
     resultText.value = lines.join('\n');
     updateCharCounter();
     showStatus(`「${targetStr}」の通知文を手動ビルダーから組み立てました！必要に応じて微調整して「確定保存＆コピー」を押してください。`, 'ok');
+
+    // スマホ表示時は作成後に通知文エディタへスムーズにスクロール
+    if (document.body.classList.contains('view-mobile')) {
+      resultText.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   });
 
   function populateModelDropdown(modelsArray, preferredModel) {
@@ -2593,6 +2874,8 @@
   }
 
   async function init() {
+    initViewMode();
+
     const now = new Date();
     const tmr = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
     targetDateInput.value = toDateInputString(tmr);
@@ -3004,6 +3287,10 @@ ${learnedExamples}`;
       updateCharCounter();
       const modelNote = usedModel !== primaryModel ? `（混雑回避のため ${usedModel} を自動使用）` : `（${usedModel}）`;
       showStatus(`「${targetDateStr}」の通知文を生成しました${modelNote}！手直し後に「確定保存＆コピー」を押すと学習蓄積されます。`, 'ok');
+
+      if (document.body.classList.contains('view-mobile')) {
+        resultText.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
 
     } catch (err) {
       console.error(err);
