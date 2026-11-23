@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>キングショット 同盟通知ジェネレーター v6.2</title>
+  <title>キングショット 同盟通知ジェネレーター v6.3</title>
   <style>
     :root {
       --bg-color: #12151c;
@@ -455,6 +455,7 @@
 
     .status-error { color: var(--danger); }
     .status-ok { color: var(--success); }
+    .status-warn { color: var(--warning); }
 
     .badge-bear {
       font-size: 0.78rem;
@@ -551,7 +552,7 @@
 
 <div class="container">
   <header>
-    <h1>📢 同盟通知ジェネレーター <span class="ver-badge">v6.2</span></h1>
+    <h1>📢 同盟通知ジェネレーター <span class="ver-badge">v6.3</span></h1>
     <span class="sync-badge warn" id="sync-status-badge">クラウド同期確認中...</span>
   </header>
 
@@ -735,11 +736,13 @@
       </div>
 
       <div class="input-group">
-        <label for="model-select">2. 使用AIモデル</label>
+        <label for="model-select">2. 使用AIモデル（混雑時は自動リトライ＆代替モデルへ自動切替）</label>
         <select id="model-select">
-          <option value="gemini-3.8-flash">gemini-3.8-flash（推奨・最新・無料枠）</option>
-          <option value="gemini-2.5-flash">gemini-2.5-flash（旧モデル）</option>
+          <option value="gemini-3.8-flash">gemini-3.8-flash（推奨・高精度・無料枠）</option>
+          <option value="gemini-3.8-flash-lite">gemini-3.8-flash-lite（高速・軽量・混雑回避用）</option>
+          <option value="gemini-3.5-flash">gemini-3.5-flash（安定代替モデル）</option>
         </select>
+        <div class="input-hint">※需要急増エラー時は自動で最大3回リトライし、それでも混雑している場合は自動的に他モデルへ切り替えて生成を続行します。</div>
       </div>
 
       <div class="input-group">
@@ -777,6 +780,7 @@
 <script>
   const EMBEDDED_FIREBASE_URL = 'https://kingshot-rbn-map-default-rtdb.firebaseio.com/kingshot_notice_history';
   const DEFAULT_MODEL = 'gemini-3.8-flash';
+  const AVAILABLE_MODELS = ['gemini-3.8-flash', 'gemini-3.8-flash-lite', 'gemini-3.5-flash'];
   const DEFAULT_EVENT_DICT = `同盟争覇戦：左寄せ、比率613
 調合ショップ：アイテム交換忘れずにー
 全軍出撃：(領地外採集注意⚠
@@ -882,6 +886,11 @@
     }
   }
 
+  function normalizeModelName(m) {
+    if (AVAILABLE_MODELS.includes(m)) return m;
+    return DEFAULT_MODEL;
+  }
+
   async function syncFromCloud() {
     const baseUrl = getFirebaseBaseUrl();
     if (!baseUrl) {
@@ -903,7 +912,7 @@
             localStorage.setItem('ks_gemini_api_key', cfg.apiKey);
           }
           if (cfg.model) {
-            const validModel = cfg.model === 'gemini-2.5-flash' ? DEFAULT_MODEL : cfg.model;
+            const validModel = normalizeModelName(cfg.model);
             modelSelect.value = validModel;
             localStorage.setItem('ks_gemini_model', validModel);
           }
@@ -1163,7 +1172,6 @@
       text = text.replace(/^・熊罠.*$/m, newBearLine);
     }
 
-    // 翌日仕込み行（採集・訓練の統合処理）
     const prepRegex = /\n?※翌日(?:採取|訓練)(?:・(?:採取|訓練))?なので寝る前に仕込む人はお忘れなく〜/g;
     const hasGatherInText = /※翌日.*採取/.test(text);
     const hasTrainInText = /※翌日.*訓練/.test(text);
@@ -1230,11 +1238,9 @@
     targetDateInput.value = toDateInputString(tmr);
 
     const savedKey = localStorage.getItem('ks_gemini_api_key') || '';
-    let savedModel = localStorage.getItem('ks_gemini_model') || DEFAULT_MODEL;
-    if (savedModel === 'gemini-2.5-flash') {
-      savedModel = DEFAULT_MODEL;
-      localStorage.setItem('ks_gemini_model', DEFAULT_MODEL);
-    }
+    const savedModel = normalizeModelName(localStorage.getItem('ks_gemini_model') || DEFAULT_MODEL);
+    localStorage.setItem('ks_gemini_model', savedModel);
+
     const savedUrl = localStorage.getItem('ks_firebase_url') || EMBEDDED_FIREBASE_URL;
     const savedBearDate = localStorage.getItem('ks_bear_base_date') || '2026-11-22';
     const savedBearText = localStorage.getItem('ks_bear_text') || '熊罠 21時 22時';
@@ -1278,7 +1284,7 @@
 
   saveSettingsBtn.addEventListener('click', async () => {
     const key = apiKeyInput.value.trim();
-    const model = modelSelect.value || DEFAULT_MODEL;
+    const model = normalizeModelName(modelSelect.value);
     const fbUrl = firebaseUrlInput.value.trim() || EMBEDDED_FIREBASE_URL;
     const bearDate = bearBaseDateInput.value || '2026-11-22';
     const bearText = bearTextInput.value.trim() || '熊罠 21時 22時';
@@ -1452,6 +1458,79 @@ ${bearLine}
     showStatus(`「${targetStr}」のサンプル通知文を生成しました！手直しして「確定保存＆コピー」を押すと学習データに蓄積されます。`, 'ok');
   });
 
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  function isHighDemandError(status, message) {
+    const msg = (message || '').toLowerCase();
+    return status === 503 || status === 429 || msg.includes('high demand') || msg.includes('overloaded') || msg.includes('unavailable') || msg.includes('resource exhausted');
+  }
+
+  async function callGeminiSingleAttempt(apiKey, modelName, parts) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(apiKey)}`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts }],
+        generationConfig: {
+          temperature: 0.2
+        }
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      const errMsg = data.error?.message || `APIエラー (${response.status})`;
+      const err = new Error(errMsg);
+      err.status = response.status;
+      throw err;
+    }
+
+    const generated = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!generated) {
+      throw new Error('AIからの応答が空でした。');
+    }
+    return generated.trim();
+  }
+
+  async function callGeminiWithAutoRetryAndFallback(apiKey, primaryModel, parts) {
+    const fallbackChain = [primaryModel, ...AVAILABLE_MODELS.filter(m => m !== primaryModel)];
+    let lastError = null;
+
+    for (let mIdx = 0; mIdx < fallbackChain.length; mIdx++) {
+      const currentModel = fallbackChain[mIdx];
+      const maxRetries = mIdx === 0 ? 3 : 2;
+
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          if (mIdx > 0 || attempt > 1) {
+            generateBtnText.textContent = `${currentModel} で再試行中 (${attempt}/${maxRetries})...`;
+          }
+          const text = await callGeminiSingleAttempt(apiKey, currentModel, parts);
+          return { text, usedModel: currentModel };
+        } catch (err) {
+          lastError = err;
+          if (!isHighDemandError(err.status, err.message)) {
+            throw err;
+          }
+          if (attempt < maxRetries) {
+            const waitSec = attempt * 2;
+            showStatus(`サーバー混雑検知（${currentModel}）。${waitSec}秒後に自動リトライします (${attempt}/${maxRetries})...`, 'warn');
+            await sleep(waitSec * 1000);
+          } else if (mIdx + 1 < fallbackChain.length) {
+            const nextModel = fallbackChain[mIdx + 1];
+            showStatus(`${currentModel} が混雑しているため、代替モデル（${nextModel}）へ自動切り替えします...`, 'warn');
+            await sleep(1000);
+          }
+        }
+      }
+    }
+
+    throw lastError || new Error('すべてのモデルが混雑しています。少し時間を置いてお試しください。');
+  }
+
   generateBtn.addEventListener('click', async () => {
     const apiKey = (apiKeyInput.value || localStorage.getItem('ks_gemini_api_key') || '').trim();
     if (!apiKey) {
@@ -1462,7 +1541,7 @@ ${bearLine}
 
     if (uploadedImages.length === 0) return;
 
-    const model = modelSelect.value || localStorage.getItem('ks_gemini_model') || DEFAULT_MODEL;
+    const primaryModel = normalizeModelName(modelSelect.value || localStorage.getItem('ks_gemini_model') || DEFAULT_MODEL);
     const eventDict = eventDictInput.value || localStorage.getItem('ks_event_dict') || DEFAULT_EVENT_DICT;
     const charLimit = charLimitInput.value || 300;
     const targetDateStr = getTargetDateFormatted();
@@ -1513,8 +1592,6 @@ ${learnedExamples}`;
     statusMsg.textContent = '';
 
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
-
       const parts = [{ text: systemPrompt }];
       uploadedImages.forEach(img => {
         parts.push({
@@ -1525,32 +1602,12 @@ ${learnedExamples}`;
         });
       });
 
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts }],
-          generationConfig: {
-            temperature: 0.2
-          }
-        })
-      });
+      const { text: generated, usedModel } = await callGeminiWithAutoRetryAndFallback(apiKey, primaryModel, parts);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        const errMsg = data.error?.message || `APIエラー (${response.status})`;
-        throw new Error(errMsg);
-      }
-
-      const generated = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!generated) {
-        throw new Error('AIからの応答が空でした。');
-      }
-
-      resultText.value = generated.trim();
+      resultText.value = generated;
       updateCharCounter();
-      showStatus(`「${targetDateStr}」の通知文を生成しました！手直し後に「確定保存＆コピー」を押すと学習蓄積されます。`, 'ok');
+      const modelNote = usedModel !== primaryModel ? `（混雑回避のため ${usedModel} を自動使用）` : `（${usedModel}）`;
+      showStatus(`「${targetDateStr}」の通知文を生成しました${modelNote}！手直し後に「確定保存＆コピー」を押すと学習蓄積されます。`, 'ok');
 
     } catch (err) {
       console.error(err);
