@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>キングショット 同盟通知ジェネレーター v6.1</title>
+  <title>キングショット 同盟通知ジェネレーター v6.2</title>
   <style>
     :root {
       --bg-color: #12151c;
@@ -223,7 +223,7 @@
 
     .quick-controls {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 10px;
       margin-bottom: 12px;
     }
@@ -551,7 +551,7 @@
 
 <div class="container">
   <header>
-    <h1>📢 同盟通知ジェネレーター <span class="ver-badge">v6.1</span></h1>
+    <h1>📢 同盟通知ジェネレーター <span class="ver-badge">v6.2</span></h1>
     <span class="sync-badge warn" id="sync-status-badge">クラウド同期確認中...</span>
   </header>
 
@@ -601,6 +601,15 @@
         <div class="control-box">
           <span class="control-label">🌾 翌日採集（寝る前仕込み）</span>
           <div class="segmented-btn" id="gather-group">
+            <button type="button" data-val="auto" class="active">AI判定</button>
+            <button type="button" data-val="yes">案内あり</button>
+            <button type="button" data-val="no">なし</button>
+          </div>
+        </div>
+
+        <div class="control-box">
+          <span class="control-label">⚔️ 翌日訓練（寝る前仕込み）</span>
+          <div class="segmented-btn" id="train-group">
             <button type="button" data-val="auto" class="active">AI判定</button>
             <button type="button" data-val="yes">案内あり</button>
             <button type="button" data-val="no">なし</button>
@@ -843,7 +852,8 @@
   let controlState = {
     asapan: 'auto',
     bear: 'auto',
-    gather: 'auto'
+    gather: 'auto',
+    train: 'auto'
   };
 
   navTabs.forEach(tab => {
@@ -888,10 +898,7 @@
       if (data && typeof data === 'object') {
         if (data._shared_config) {
           const cfg = data._shared_config;
-          if (cfg.apiKey && !apiKeyInput.value) {
-            apiKeyInput.value = cfg.apiKey;
-            localStorage.setItem('ks_gemini_api_key', cfg.apiKey);
-          } else if (cfg.apiKey) {
+          if (cfg.apiKey) {
             apiKeyInput.value = cfg.apiKey;
             localStorage.setItem('ks_gemini_api_key', cfg.apiKey);
           }
@@ -1156,11 +1163,22 @@
       text = text.replace(/^・熊罠.*$/m, newBearLine);
     }
 
-    const gatherNote = '※翌日採取なので寝る前に仕込む人はお忘れなく〜';
-    if (controlState.gather === 'yes' && !text.includes('翌日採取')) {
-      text = text.trimEnd() + '\n' + gatherNote;
-    } else if (controlState.gather === 'no' && text.includes(gatherNote)) {
-      text = text.replace('\n' + gatherNote, '').replace(gatherNote, '');
+    // 翌日仕込み行（採集・訓練の統合処理）
+    const prepRegex = /\n?※翌日(?:採取|訓練)(?:・(?:採取|訓練))?なので寝る前に仕込む人はお忘れなく〜/g;
+    const hasGatherInText = /※翌日.*採取/.test(text);
+    const hasTrainInText = /※翌日.*訓練/.test(text);
+
+    const wantGather = controlState.gather === 'yes' ? true : (controlState.gather === 'no' ? false : hasGatherInText);
+    const wantTrain = controlState.train === 'yes' ? true : (controlState.train === 'no' ? false : hasTrainInText);
+
+    text = text.replace(prepRegex, '').trimEnd();
+
+    const prepItems = [];
+    if (wantGather) prepItems.push('採取');
+    if (wantTrain) prepItems.push('訓練');
+
+    if (prepItems.length > 0) {
+      text += `\n※翌日${prepItems.join('・')}なので寝る前に仕込む人はお忘れなく〜`;
     }
 
     resultText.value = text;
@@ -1195,7 +1213,7 @@
         buttons.forEach(b => b.classList.remove('active', 'active-warn'));
         const val = btn.dataset.val;
         controlState[stateKey] = val;
-        if (val === 'ng' || (val === 'yes' && stateKey === 'gather')) {
+        if (val === 'ng' || (val === 'yes' && (stateKey === 'gather' || stateKey === 'train'))) {
           btn.classList.add('active-warn');
         } else {
           btn.classList.add('active');
@@ -1234,6 +1252,7 @@
     setupSegmentedControl('asapan-group', 'asapan');
     setupSegmentedControl('bear-group', 'bear');
     setupSegmentedControl('gather-group', 'gather');
+    setupSegmentedControl('train-group', 'train');
 
     updateDateUI();
     updateCharCounter();
@@ -1410,8 +1429,12 @@
     const asapanLine = controlState.asapan === 'ng'
       ? '朝パーン温存（NG）※翌日ポイント対象のため待機推奨'
       : '朝パーンOK！';
-    const gatherLine = controlState.gather === 'yes'
-      ? '\n※翌日採取なので寝る前に仕込む人はお忘れなく〜'
+
+    const prepItems = [];
+    if (controlState.gather === 'yes') prepItems.push('採取');
+    if (controlState.train === 'yes') prepItems.push('訓練');
+    const prepLine = prepItems.length > 0
+      ? `\n※翌日${prepItems.join('・')}なので寝る前に仕込む人はお忘れなく〜`
       : '';
 
     resultText.value = `${targetStr}
@@ -1423,7 +1446,7 @@ ${bearLine}
 左寄せ、比率613
 
 同盟総動員みんなで力を
-合わせてがんばろー(٩・∀・ง)ｵｰ!${gatherLine}`;
+合わせてがんばろー(٩・∀・ง)ｵｰ!${prepLine}`;
 
     updateCharCounter();
     showStatus(`「${targetStr}」のサンプル通知文を生成しました！手直しして「確定保存＆コピー」を押すと学習データに蓄積されます。`, 'ok');
@@ -1453,11 +1476,14 @@ ${bearLine}
       asapanInstruction = '2行目は必ず「朝パーン温存（NG）※翌日ポイント対象のため待機推奨」と出力すること。';
     }
 
-    let gatherInstruction = '画像に翌日のポイント項目として「採集（採取）」が写っている場合は、末尾に「※翌日採取なので寝る前に仕込む人はお忘れなく〜」を追記すること。写っていなければ書かないこと。';
-    if (controlState.gather === 'yes') {
-      gatherInstruction = '末尾に必ず「※翌日採取なので寝る前に仕込む人はお忘れなく〜」を追記すること。';
-    } else if (controlState.gather === 'no') {
-      gatherInstruction = '「※翌日採取〜」の文言は出力しないこと。';
+    let prepInstruction = '';
+    if (controlState.gather === 'auto' && controlState.train === 'auto') {
+      prepInstruction = '画像に翌日のポイント項目として「採集（採取）」や「兵士訓練（訓練・昇格）」が写っている場合は、該当項目に応じて末尾に「※翌日採取なので寝る前に仕込む人はお忘れなく〜」「※翌日訓練なので寝る前に仕込む人はお忘れなく〜」、両方ある場合は「※翌日採取・訓練なので寝る前に仕込む人はお忘れなく〜」を1行で追記すること。どちらもなければ書かないこと。';
+    } else {
+      prepInstruction = `翌日の寝る前仕込み案内について：
+      ・採集（採取）の指定: ${controlState.gather === 'yes' ? '必ず含める' : (controlState.gather === 'no' ? '絶対に含めない' : '画像に翌日の採集ポイントがあれば含める')}
+      ・訓練（兵士訓練）の指定: ${controlState.train === 'yes' ? '必ず含める' : (controlState.train === 'no' ? '絶対に含めない' : '画像に翌日の訓練ポイントがあれば含める')}
+      含める項目が1つなら「※翌日（項目名）なので寝る前に仕込む人はお忘れなく〜」、2つなら「※翌日採取・訓練なので寝る前に仕込む人はお忘れなく〜」を末尾に1行で出力し、0個なら出力しないこと。`;
     }
 
     const systemPrompt = `あなたは戦略ゲーム「キングショット」の同盟幹部（R4）です。
@@ -1467,7 +1493,7 @@ ${bearLine}
 ・1行目の日付は必ず「${targetDateStr}」とすること。
 ・${asapanInstruction}
 ・イベントリストの1つ目は必ず「${bearLine}」とすること。
-・${gatherInstruction}
+・${prepInstruction}
 
 【イベント別・自動補足辞書】
 画像から読み取ったイベント名に以下のキーワードが含まれる場合、そのイベント行の直後（または括弧書き）に指定の補足文を必ず添えること：
