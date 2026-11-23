@@ -1340,6 +1340,24 @@
   // ==========================================
   // 2. S1〜S8 初期マスタデータ（兵種別全キャラ網羅・Tier表含む）
   // ==========================================
+  const HERO_TYPE_REGISTRY = {
+    inf: [
+      "アマデウス (S1)", "ヘルガ (S1)", "ゾーイ (S2)", "ディエゴ (S8)", "アルカ (S4)",
+      "ロンフェイ (S5)", "トライトン (S6)", "チャールズ (S7)",
+      "イェーガー (S3)", "インウー (SR)", "ハワード (SR)", "セス (R)", "エドウィン (R)"
+    ],
+    cav: [
+      "アイヴァ (S7)", "ペーラ (S3)", "スルード (S5)",
+      "リズ (S8)", "ソフィア (S6)", "ヒルデ (S3)", "ジェベル (S1)",
+      "チェンコ (SR)", "ゴードン (SR)", "ファーディ (SR)", "オリーブ (R)"
+    ],
+    arc: [
+      "ルナ (S8)", "ヤン (S6)", "レン&ロン (S7)", "ローザ (S4)", "ビビアン (S5)", "マリン (S2)",
+      "マーゴ (S4)", "サロ (S1)",
+      "あまね (SR)", "クイン (SR)", "ダイアナ (SR)", "パトリック (SR)", "フォレスト (R)"
+    ]
+  };
+
   const RALLY_RECOMMENDED = {
     inf: ["アマデウス (S1)", "ヘルガ (S1)", "ゾーイ (S2)", "ディエゴ (S8)", "アルカ (S4)"],
     cav: ["アイヴァ (S7)", "ペーラ (S3)", "スルード (S5)"],
@@ -1352,7 +1370,7 @@
       inf: [
         "アマデウス (S1)", "ヘルガ (S1)", "ゾーイ (S2)", "ディエゴ (S8)", "アルカ (S4)",
         "ロンフェイ (S5)", "トライトン (S6)", "チャールズ (S7)",
-        "イェーガー (S3)", "インウー (SR)", "ハワード (SR)", "クイン (SR)", "セス (R)", "エドウィン (R)"
+        "イェーガー (S3)", "インウー (SR)", "ハワード (SR)", "セス (R)", "エドウィン (R)"
       ],
       cav: [
         "アイヴァ (S7)", "ペーラ (S3)", "スルード (S5)",
@@ -1362,7 +1380,7 @@
       arc: [
         "ルナ (S8)", "ヤン (S6)", "レン&ロン (S7)", "ローザ (S4)", "ビビアン (S5)", "マリン (S2)",
         "マーゴ (S4)", "サロ (S1)",
-        "あまね (SR)", "ダイアナ (SR)", "パトリック (SR)", "フォレスト (R)"
+        "あまね (SR)", "クイン (SR)", "ダイアナ (SR)", "パトリック (SR)", "フォレスト (R)"
       ]
     },
     tierGuide: {
@@ -1447,14 +1465,30 @@
         .map((h) => (h.rallyAlias || h.name || "").trim())
         .filter(Boolean);
 
+      const otherTypes = ["inf", "cav", "arc"].filter((other) => other !== t);
+      const otherHeroNames = new Set();
+      (targetMaster.heroes || []).forEach((h) => {
+        if (h && otherTypes.includes(h.type)) {
+          if (h.name) otherHeroNames.add(String(h.name).trim());
+          if (h.rallyAlias) otherHeroNames.add(String(h.rallyAlias).trim());
+        }
+      });
+      const otherDefaultNames = new Set();
+      otherTypes.forEach((other) => {
+        ((HERO_TYPE_REGISTRY && HERO_TYPE_REGISTRY[other]) || (DEFAULT_MASTER.rallyPools && DEFAULT_MASTER.rallyPools[other]) || []).forEach((n) => {
+          otherDefaultNames.add(String(n).trim());
+        });
+      });
+
       const merged = [];
       const seen = new Set();
       [...existingPool, ...baseDefaults, ...fromHeroes].forEach((name) => {
         const clean = String(name || "").trim();
-        if (clean && !seen.has(clean)) {
-          seen.add(clean);
-          merged.push(clean);
-        }
+        if (!clean || seen.has(clean)) return;
+        // 他の兵種として定義されているキャラを誤って混ぜない
+        if (otherHeroNames.has(clean) || otherDefaultNames.has(clean)) return;
+        seen.add(clean);
+        merged.push(clean);
       });
       targetMaster.rallyPools[t] = merged;
     });
@@ -1669,25 +1703,76 @@
     openModal("tierModal");
   }
 
+  function getAllowedNamesForType(typeKey) {
+    const allowed = new Set();
+    // 1. HERO_TYPE_REGISTRY で該当兵種（inf / cav / arc）と定義されたキャラ
+    const regList = HERO_TYPE_REGISTRY[typeKey] || [];
+    regList.forEach((n) => allowed.add(String(n).trim()));
+    // 2. heroes配列で該当兵種（inf / cav / arc）と明示されたキャラ
+    (masterData.heroes || []).forEach((h) => {
+      if (h && h.type === typeKey) {
+        if (h.name) allowed.add(String(h.name).trim());
+        if (h.rallyAlias) allowed.add(String(h.rallyAlias).trim());
+      }
+    });
+    return allowed;
+  }
+
+  function isNameAllowedForType(name, typeKey) {
+    const clean = String(name || "").trim();
+    if (!clean) return false;
+    const allowedSet = getAllowedNamesForType(typeKey);
+    if (allowedSet.has(clean)) return true;
+
+    // 他の兵種（inf / cav / arc）に明示所属している場合は他兵種として除外
+    const otherTypes = ["inf", "cav", "arc"].filter((t) => t !== typeKey);
+    const inOtherHeroList = (masterData.heroes || []).some(
+      (h) => h && otherTypes.includes(h.type) && (String(h.name || "").trim() === clean || String(h.rallyAlias || "").trim() === clean)
+    );
+    if (inOtherHeroList) return false;
+
+    const inOtherDefaultPool = otherTypes.some((t) =>
+      ((HERO_TYPE_REGISTRY && HERO_TYPE_REGISTRY[t]) || (DEFAULT_MASTER.rallyPools && DEFAULT_MASTER.rallyPools[t]) || []).includes(clean)
+    );
+    if (inOtherDefaultPool) return false;
+
+    // カスタム追加キャラは masterData.rallyPools[typeKey] にある場合のみ許可
+    const pool = (masterData.rallyPools && masterData.rallyPools[typeKey]) || [];
+    return pool.includes(clean);
+  }
+
   function renderRallySelects() {
-    const pools = masterData.rallyPools;
+    const pools = masterData.rallyPools || { inf: [], cav: [], arc: [] };
 
     const buildTypeOptions = (selectId, typeKey, savedVal) => {
       const sel = document.getElementById(selectId);
-      const typePool = Array.isArray(pools[typeKey]) ? pools[typeKey] : [];
-      const recSeed = RALLY_RECOMMENDED[typeKey] || [];
+      const rawPool = Array.isArray(pools[typeKey]) ? pools[typeKey] : [];
+      const heroNamesOfType = (masterData.heroes || [])
+        .filter((h) => h && h.type === typeKey)
+        .map((h) => String(h.rallyAlias || h.name || "").trim())
+        .filter(Boolean);
 
-      // 推奨上位（該当兵種プール内の推奨順）と、その他（該当兵種の残り全キャラ）に完全分離
+      // 該当兵種のキャラのみを厳格抽出（他兵種の混入を完全排除）
+      const filteredPool = [];
+      const poolSeen = new Set();
+      [...rawPool, ...heroNamesOfType].forEach((name) => {
+        const clean = String(name || "").trim();
+        if (!clean || poolSeen.has(clean)) return;
+        if (!isNameAllowedForType(clean, typeKey)) return;
+        poolSeen.add(clean);
+        filteredPool.push(clean);
+      });
+
+      const recSeed = RALLY_RECOMMENDED[typeKey] || [];
       const recommendedList = [];
       const seen = new Set();
       recSeed.forEach((name) => {
-        if (typePool.includes(name) && !seen.has(name)) {
+        if (filteredPool.includes(name) && !seen.has(name)) {
           seen.add(name);
           recommendedList.push(name);
         }
       });
-      // マスタ側で新規に先頭追加されたキャラも推奨側または同兵種リストに表示
-      const otherSameTypeList = typePool.filter((name) => !seen.has(name));
+      const otherSameTypeList = filteredPool.filter((name) => !seen.has(name));
 
       const typeLabelMap = { inf: "歩兵", cav: "騎兵", arc: "弓兵" };
       const tLabel = typeLabelMap[typeKey] || "";
@@ -1696,14 +1781,14 @@
       recommendedList.forEach(name => {
         html += `<option value="${name}">${name}</option>`;
       });
-      html += `</optgroup><optgroup label="${tLabel} その他全キャラ">`;
+      html += `</optgroup><optgroup label="${tLabel} その他（${tLabel}全キャラ）">`;
       otherSameTypeList.forEach(name => {
         html += `<option value="${name}">${name}</option>`;
       });
       html += `</optgroup>`;
       sel.innerHTML = html;
 
-      if (typePool.includes(savedVal)) {
+      if (filteredPool.includes(savedVal)) {
         sel.value = savedVal;
       } else if (recommendedList.length > 0) {
         sel.value = recommendedList[0];
@@ -1715,6 +1800,11 @@
     buildTypeOptions("rallyInf", "inf", userState.rallyInf);
     buildTypeOptions("rallyCav", "cav", userState.rallyCav);
     buildTypeOptions("rallyArc", "arc", userState.rallyArc);
+
+    // 不正な他兵種が保存されていた場合は正しい兵種値へ補正
+    userState.rallyInf = document.getElementById("rallyInf").value;
+    userState.rallyCav = document.getElementById("rallyCav").value;
+    userState.rallyArc = document.getElementById("rallyArc").value;
   }
 
   function renderHeroCards() {
