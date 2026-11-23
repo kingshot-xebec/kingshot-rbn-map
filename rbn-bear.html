@@ -1360,6 +1360,33 @@
   const ADMIN_PASSCODE = "rbn2011";
   const DB_NODE = "bear_master";
   const STORAGE_KEY = "rbn_bear_sim_user_v6";
+  const MASTER_CACHE_KEY = "rbn_bear_master_cache_v1";
+
+  function saveMasterCache(dataObj) {
+    try {
+      if (!dataObj || !Array.isArray(dataObj.heroes)) return;
+      const toStore = {
+        ...dataObj,
+        _trustedManual: true,
+        updatedAt: Number(dataObj.updatedAt) || Date.now()
+      };
+      localStorage.setItem(MASTER_CACHE_KEY, JSON.stringify(toStore));
+    } catch (e) {}
+  }
+
+  function loadMasterCache() {
+    try {
+      const raw = localStorage.getItem(MASTER_CACHE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || !Array.isArray(parsed.heroes)) return null;
+      parsed._trustedManual = true;
+      parsed.updatedAt = Number(parsed.updatedAt) || 0;
+      return parsed;
+    } catch (e) {
+      return null;
+    }
+  }
 
   function normalizeDatabaseUrl(raw) {
     return (raw || "")
@@ -1670,6 +1697,10 @@
 
   function initApp() {
     applyViewMode();
+    const cachedMaster = loadMasterCache();
+    if (cachedMaster) {
+      masterData = normalizeMasterConsistency(cachedMaster, true);
+    }
     loadUserState();
     syncSettingsModalUI();
     initFirebase();
@@ -1706,7 +1737,22 @@
         const val = snapshot.val();
         updateSyncBadge(true);
         if (val && val.heroes) {
-          applyMasterUpdate(val, true);
+          const cached = loadMasterCache();
+          const remoteUpdatedAt = Number(val.updatedAt) || 0;
+          const cachedUpdatedAt = cached ? (Number(cached.updatedAt) || 0) : 0;
+          if (cached && cachedUpdatedAt > 0 && remoteUpdatedAt > 0 && remoteUpdatedAt < cachedUpdatedAt) {
+            return;
+          }
+          if (cached && cachedUpdatedAt > 0 && remoteUpdatedAt === 0 && Date.now() - cachedUpdatedAt < 30000) {
+            return;
+          }
+          const incoming = {
+            ...val,
+            _trustedManual: true,
+            updatedAt: remoteUpdatedAt || cachedUpdatedAt || Date.now()
+          };
+          applyMasterUpdate(incoming, true);
+          saveMasterCache(masterData);
           renderAll();
         }
       }, (err) => {
@@ -2414,7 +2460,10 @@ ${currentJson}`;
     if (!incoming || !Array.isArray(incoming.heroes)) {
       throw new Error("不正なJSON形式です（heroes配列が必要です）");
     }
-    masterData = normalizeMasterConsistency(incoming, !!incoming._trustedManual);
+    const normalized = normalizeMasterConsistency(incoming, !!incoming._trustedManual);
+    normalized._trustedManual = true;
+    normalized.updatedAt = Number(incoming.updatedAt) || Date.now();
+    masterData = normalized;
     if (!masterData.tierGuide) {
       masterData.tierGuide = JSON.parse(JSON.stringify(DEFAULT_MASTER.tierGuide));
     }
@@ -2426,6 +2475,7 @@ ${currentJson}`;
         userState.lvMap[h.id] = h.defaultLv || 5;
       }
     });
+    saveMasterCache(masterData);
     saveUserState();
   }
 
@@ -2457,7 +2507,11 @@ ${currentJson}`;
     try {
       const rawParsed = JSON.parse(document.getElementById("jsonArea").value);
       rawParsed._trustedManual = true;
+      rawParsed.updatedAt = Date.now();
       const parsed = normalizeMasterConsistency(rawParsed, true);
+      parsed._trustedManual = true;
+      parsed.updatedAt = rawParsed.updatedAt;
+      saveMasterCache(parsed);
       db.ref(DB_NODE).set(parsed).then(() => {
         applyMasterUpdate(parsed, true);
         closeModal("dataModal");
@@ -2698,8 +2752,13 @@ ${currentJson}`;
     if (!db) {
       return alert("Firebaseが初期化されていません。設定を確認してください。");
     }
+    const nowTs = Date.now();
     masterData._trustedManual = true;
+    masterData.updatedAt = nowTs;
     const cleaned = normalizeMasterConsistency(JSON.parse(JSON.stringify(masterData)), true);
+    cleaned._trustedManual = true;
+    cleaned.updatedAt = nowTs;
+    saveMasterCache(cleaned);
     db.ref(DB_NODE).set(cleaned).then(() => {
       applyMasterUpdate(cleaned, true);
       renderAll();
