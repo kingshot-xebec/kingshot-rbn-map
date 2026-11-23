@@ -3,19 +3,35 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>ひし形グリッド（40×40・中心基準可変・クラウド共有・座標ポップアップ対応）</title>
+  <title>RBN 都市マップ（40×40・中心基準可変・クラウド共有）</title>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
   <style>
+    :root {
+      --bg: #0f172a;
+      --surface: #182032;
+      --surface-2: #1e293b;
+      --surface-3: #263349;
+      --border: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #f59e0b;
+      --accent-hover: #d97706;
+      --blue: #38bdf8;
+      --blue-strong: #0284c7;
+      --green: #10b981;
+      --red: #ef4444;
+      --purple: #818cf8;
+    }
     * {
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
     }
     body {
       margin: 0;
-      background: #181a20;
-      color: #f0f2f5;
-      font-family: sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans JP", sans-serif;
       height: 100vh;
       height: 100dvh;
       overflow: hidden;
@@ -48,49 +64,81 @@
       cursor: grabbing;
     }
 
-    .header, .toolbar {
+    .app-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: linear-gradient(135deg, var(--surface-2) 0%, var(--bg) 100%);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      flex-shrink: 0;
+    }
+    .brand-block {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .brand-title {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .header-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .toolbar {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       gap: 6px;
       flex-shrink: 0;
     }
-    .header h3 {
-      margin: 0;
-      font-size: 14px;
-    }
     .info {
       font-size: 11.5px;
-      background: #252a36;
+      background: var(--surface-2);
+      color: #e2e8f0;
       padding: 4px 9px;
       border-radius: 6px;
-      border: 1px solid #3a4052;
+      border: 1px solid var(--border);
     }
     .mode-badge {
-      font-size: 11.5px;
-      font-weight: bold;
+      font-size: 11px;
+      font-weight: 700;
       padding: 4px 9px;
-      border-radius: 6px;
-      border: 1px solid #f59e0b;
-      background: #452707;
+      border-radius: 999px;
+      border: 1px solid rgba(245, 158, 11, 0.5);
+      background: rgba(245, 158, 11, 0.14);
       color: #fde68a;
     }
     body:not(.view-only) .mode-badge {
-      border-color: #10b981;
-      background: #06392b;
+      border-color: rgba(16, 185, 129, 0.5);
+      background: rgba(16, 185, 129, 0.15);
       color: #6ee7b7;
     }
     .cloud-badge {
       font-size: 11px;
-      padding: 4px 8px;
-      border-radius: 6px;
-      border: 1px solid #475569;
-      background: #1e2433;
-      color: #cbd5e1;
+      font-weight: 600;
+      padding: 4px 9px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
     }
     .cloud-badge.online {
-      border-color: #38bdf8;
-      background: #0c2d48;
+      border-color: rgba(56, 189, 248, 0.5);
+      background: rgba(56, 189, 248, 0.14);
       color: #7dd3fc;
     }
     .status-msg {
@@ -102,13 +150,19 @@
     .status-msg.ok {
       color: #6ee7b7;
     }
+
     select, input[type="text"], input[type="number"], input[type="password"], textarea {
-      background: #1e222d;
-      color: #f8fafc;
-      border: 1px solid #475569;
-      border-radius: 5px;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 6px;
       padding: 4px 8px;
       font-size: 12px;
+      font-family: inherit;
+    }
+    select:focus, input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--blue);
     }
     input[type="text"] {
       width: 125px;
@@ -129,70 +183,98 @@
       text-align: right;
       padding: 4px 5px;
     }
+
     button {
-      background: #334155;
-      color: #f8fafc;
-      border: 1px solid #475569;
-      border-radius: 5px;
+      background: var(--surface-3);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 6px;
       padding: 4px 9px;
       font-size: 12px;
+      font-weight: 600;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      line-height: 1.25;
+      transition: background 0.15s, border-color 0.15s;
     }
     button:hover:not(:disabled) {
-      background: #475569;
+      background: #334155;
+      border-color: #64748b;
     }
     button:disabled {
       opacity: 0.4;
       cursor: not-allowed;
     }
     button.primary {
-      background: #0284c7;
-      border-color: #38bdf8;
+      background: var(--blue-strong);
+      border-color: var(--blue);
+      color: #fff;
     }
     button.primary:hover:not(:disabled) {
       background: #0369a1;
     }
+    button.accent-btn {
+      background: var(--accent);
+      border-color: #fbbf24;
+      color: #0f172a;
+    }
+    button.accent-btn:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
     button.success {
-      background: #047857;
-      border-color: #34d399;
+      background: rgba(16, 185, 129, 0.2);
+      border-color: rgba(16, 185, 129, 0.5);
+      color: #6ee7b7;
     }
     button.success:hover:not(:disabled) {
-      background: #065f46;
+      background: rgba(16, 185, 129, 0.3);
     }
     button.danger {
-      background: #991b1b;
-      border-color: #f87171;
+      background: rgba(239, 68, 68, 0.18);
+      border-color: rgba(248, 113, 113, 0.5);
+      color: #fca5a5;
     }
     button.danger:hover:not(:disabled) {
-      background: #b91c1c;
+      background: rgba(239, 68, 68, 0.28);
     }
     button.active-mode {
       background: #b45309;
       border-color: #fbbf24;
+      color: #fff;
     }
     button.edit-toggle-btn {
-      background: #d97706;
+      background: rgba(245, 158, 11, 0.2);
       border-color: #fbbf24;
-      color: #fff;
-      font-weight: bold;
+      color: #fde68a;
     }
-    button.edit-toggle-btn:hover {
-      background: #b45309;
+    button.edit-toggle-btn:hover:not(:disabled) {
+      background: rgba(245, 158, 11, 0.32);
     }
     body:not(.view-only) button.edit-toggle-btn {
-      background: #059669;
+      background: rgba(16, 185, 129, 0.22);
       border-color: #34d399;
+      color: #6ee7b7;
     }
-    body:not(.view-only) button.edit-toggle-btn:hover {
-      background: #047857;
+    body:not(.view-only) button.edit-toggle-btn:hover:not(:disabled) {
+      background: rgba(16, 185, 129, 0.34);
     }
     button.ui-switch-btn {
-      background: #4338ca;
-      border-color: #818cf8;
-      font-weight: bold;
+      background: rgba(129, 140, 248, 0.18);
+      border-color: var(--purple);
+      color: #c7d2fe;
     }
-    button.ui-switch-btn:hover {
-      background: #3730a3;
+    button.ui-switch-btn:hover:not(:disabled) {
+      background: rgba(129, 140, 248, 0.28);
+    }
+    button.settings-btn {
+      background: var(--surface-2);
+      border-color: var(--blue);
+      color: #7dd3fc;
+    }
+    button.settings-btn:hover:not(:disabled) {
+      background: rgba(56, 189, 248, 0.16);
     }
 
     .mobile-view-tabs {
@@ -202,14 +284,14 @@
     }
     .mobile-view-tabs button {
       flex: 1;
+      justify-content: center;
       padding: 6px 8px;
       font-size: 12px;
-      font-weight: bold;
-      background: #252a36;
+      background: var(--surface-2);
     }
     .mobile-view-tabs button.active {
-      background: #0284c7;
-      border-color: #38bdf8;
+      background: var(--blue-strong);
+      border-color: var(--blue);
       color: #fff;
     }
 
@@ -229,9 +311,9 @@
       position: relative;
     }
     canvas {
-      border: 1px solid #3a4052;
-      background: #222631;
-      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      border-radius: 10px;
       cursor: pointer;
       touch-action: none;
     }
@@ -240,7 +322,7 @@
       width: 10px;
       margin: 0 4px;
       border-radius: 5px;
-      background: #2a3040;
+      background: var(--surface-3);
       cursor: col-resize;
       flex-shrink: 0;
       position: relative;
@@ -261,7 +343,7 @@
     .splitter:hover,
     body.resizing-split .splitter,
     body.resizing-split-v .splitter {
-      background: #0284c7;
+      background: var(--blue-strong);
     }
     .splitter:hover::after,
     body.resizing-split .splitter::after,
@@ -273,23 +355,23 @@
       width: 470px;
       min-width: 330px;
       min-height: 110px;
-      background: #20242f;
-      border: 1px solid #3a4052;
-      border-radius: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
       display: flex;
       flex-direction: column;
       flex-shrink: 0;
     }
     .roster-header {
       padding: 7px 10px;
-      border-bottom: 1px solid #333a4b;
+      border-bottom: 1px solid var(--border);
       display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
       gap: 6px;
       font-size: 12px;
-      font-weight: bold;
+      font-weight: 700;
       flex-shrink: 0;
     }
     .roster-actions {
@@ -304,9 +386,9 @@
       gap: 5px;
       padding: 5px 8px;
       font-size: 11px;
-      color: #94a3b8;
-      border-bottom: 1px solid #2e3546;
-      background: #1b1f29;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
       flex-shrink: 0;
     }
     .roster-list {
@@ -321,38 +403,38 @@
       margin: 6px 2px 3px;
       padding: 4px 8px;
       font-size: 11px;
-      font-weight: bold;
+      font-weight: 700;
       color: #fbbf24;
-      background: #2b261d;
-      border: 1px solid #785519;
-      border-radius: 5px;
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      border-radius: 6px;
     }
     .member-row {
       display: grid;
       grid-template-columns: 34px minmax(85px, 1.35fr) minmax(72px, 0.95fr) minmax(105px, 1.25fr) 28px;
       gap: 5px;
       align-items: center;
-      padding: 4px 4px;
-      border-radius: 5px;
-      background: #262b38;
+      padding: 4px;
+      border-radius: 6px;
+      background: var(--surface-2);
       border: 1px solid transparent;
       font-size: 12px;
     }
     .member-row.facility-row {
-      background: #282534;
+      background: var(--surface-3);
     }
     .member-row.selected {
-      background: #2e3a52;
-      border-color: #38bdf8;
+      background: #223552;
+      border-color: var(--blue);
     }
     .member-row.placed .rank-badge {
       color: #34d399;
     }
     .rank-badge {
       text-align: center;
-      font-weight: bold;
+      font-weight: 700;
       font-size: 11px;
-      color: #94a3b8;
+      color: var(--muted);
     }
     .coord-pair {
       display: grid;
@@ -364,13 +446,14 @@
     }
     .coord-pair span {
       font-size: 11px;
-      color: #94a3b8;
+      color: var(--muted);
     }
     .clear-coord-btn {
       padding: 2px 5px;
       font-size: 10.5px;
       line-height: 1.2;
       width: 100%;
+      justify-content: center;
     }
 
     .coord-popup {
@@ -379,8 +462,8 @@
       pointer-events: none;
       display: none;
       background: rgba(15, 23, 42, 0.96);
-      color: #f8fafc;
-      border: 1px solid #38bdf8;
+      color: var(--text);
+      border: 1px solid var(--blue);
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
       border-radius: 8px;
       padding: 7px 11px;
@@ -399,7 +482,7 @@
       border-color: #f87171;
     }
     .coord-popup .popup-main {
-      font-weight: bold;
+      font-weight: 700;
       color: #fef08a;
       font-size: 12.5px;
     }
@@ -426,13 +509,6 @@
     body.mobile-mode {
       padding: 6px 8px;
       gap: 4px;
-    }
-    body.mobile-mode .header {
-      justify-content: space-between;
-      gap: 4px;
-    }
-    body.mobile-mode .header h3 {
-      font-size: 13px;
     }
     body.mobile-mode .hide-on-mobile {
       display: none !important;
@@ -517,7 +593,7 @@
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(10, 13, 18, 0.75);
+      background: rgba(2, 6, 23, 0.78);
       display: none;
       align-items: center;
       justify-content: center;
@@ -528,37 +604,52 @@
       display: flex;
     }
     .modal-box {
-      width: 660px;
+      width: 680px;
       max-width: 100%;
       max-height: 88vh;
-      background: #222733;
-      border: 1px solid #475569;
-      border-radius: 8px;
-      padding: 14px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
       display: flex;
       flex-direction: column;
       gap: 10px;
-      overflow: hidden;
+      overflow-y: auto;
     }
     .modal-box.small-modal {
-      width: 420px;
+      width: 430px;
     }
     .modal-box h4 {
       margin: 0;
       font-size: 14px;
+      color: var(--accent);
+    }
+    .settings-section {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .settings-section-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--blue);
     }
     .modal-hint {
       font-size: 11.5px;
       color: #cbd5e1;
       line-height: 1.5;
-      background: #191d26;
+      background: var(--bg);
       padding: 8px 10px;
       border-radius: 6px;
-      border: 1px solid #334155;
+      border: 1px solid var(--border);
     }
     .modal-box textarea {
       width: 100%;
-      height: 220px;
+      height: 180px;
       resize: vertical;
       font-family: monospace;
       font-size: 12px;
@@ -567,20 +658,19 @@
     .modal-footer {
       display: flex;
       justify-content: flex-end;
+      flex-wrap: wrap;
       gap: 8px;
       flex-shrink: 0;
+      margin-top: 4px;
     }
     .backup-sections {
-      flex: 1;
-      overflow-y: auto;
       display: flex;
       flex-direction: column;
       gap: 12px;
-      padding-right: 2px;
     }
     .backup-group-title {
       font-size: 12.5px;
-      font-weight: bold;
+      font-weight: 700;
       color: #93c5fd;
       margin-bottom: 6px;
     }
@@ -595,8 +685,8 @@
       justify-content: space-between;
       align-items: center;
       gap: 8px;
-      background: #191d26;
-      border: 1px solid #334155;
+      background: var(--bg);
+      border: 1px solid var(--border);
       border-radius: 6px;
       padding: 8px 10px;
       font-size: 12px;
@@ -607,12 +697,12 @@
       gap: 2px;
     }
     .backup-time {
-      font-weight: bold;
-      color: #f8fafc;
+      font-weight: 700;
+      color: var(--text);
     }
     .backup-sub {
       font-size: 11px;
-      color: #94a3b8;
+      color: var(--muted);
     }
     .backup-btns {
       display: flex;
@@ -640,23 +730,50 @@
       padding: 7px 10px;
       font-size: 13px;
     }
+    .link-row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .link-row input {
+      flex: 1;
+      width: auto;
+    }
+    .open-link-btn {
+      background: var(--surface-3);
+      color: #e2e8f0;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 8px;
+      font-size: 11.5px;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .open-link-btn:hover {
+      border-color: var(--blue);
+      color: var(--blue);
+    }
   </style>
 </head>
 <body class="view-only">
-  <div class="header">
-    <h3>40×40 マップ</h3>
-    <div id="centerBaseBadge" class="info">中心基準 X:386, Y:792</div>
-    <button id="openCenterModalBtn" class="edit-only" type="button" title="他同盟や別マップ用に中心基準座標を変更">中心基準設定</button>
-    <div id="modeBadge" class="mode-badge">🔒 閲覧モード</div>
-    <div id="cloudBadge" class="cloud-badge hide-on-mobile">☁️ ローカル保存</div>
-    <button id="toggleEditModeBtn" class="edit-toggle-btn" type="button">編集モードへ切替</button>
-    <button id="openBackupModalBtn" type="button">バックアップ（5件/3日）</button>
-    <div id="coordInfo" class="info hide-on-mobile">選択座標：なし</div>
-    <div id="zoomInfo" class="info hide-on-mobile">倍率：100%</div>
-    <button id="resetBtn" type="button">リセット</button>
-    <button id="exportPngBtn" class="success" type="button">PNG保存</button>
-    <button id="uiModeToggleBtn" class="ui-switch-btn" type="button" title="PC表示とスマホ表示を手動切り替え">スマホUIへ切替</button>
-  </div>
+  <header class="app-header">
+    <div class="brand-block">
+      <h3 class="brand-title">🗺️ RBN 都市マップ（40×40）</h3>
+      <div id="centerBaseBadge" class="info">中心基準 X:386, Y:792</div>
+      <div id="modeBadge" class="mode-badge">🔒 閲覧モード</div>
+      <div id="cloudBadge" class="cloud-badge hide-on-mobile">☁️ ローカル保存</div>
+    </div>
+
+    <div class="header-actions">
+      <button id="toggleEditModeBtn" class="edit-toggle-btn" type="button">編集モードへ切替</button>
+      <div id="coordInfo" class="info hide-on-mobile">選択座標：なし</div>
+      <div id="zoomInfo" class="info hide-on-mobile">倍率：100%</div>
+      <button id="resetBtn" type="button">表示リセット</button>
+      <button id="exportPngBtn" class="success" type="button">PNG保存</button>
+      <button id="uiModeToggleBtn" class="ui-switch-btn" type="button" title="PC表示とスマホ表示を手動切り替え">スマホUIへ切替</button>
+      <button id="openSettingsModalBtn" class="settings-btn" type="button">⚙️ 設定</button>
+    </div>
+  </header>
 
   <div class="toolbar edit-only">
     <label class="info" style="padding: 3px 7px;">
@@ -719,6 +836,79 @@
   <div id="coordPopup" class="coord-popup" role="tooltip">
     <div id="popupMain" class="popup-main"></div>
     <div id="popupSub" class="popup-sub"></div>
+  </div>
+
+  <!-- 統合設定モーダル（リンク設定・Firebase・AI Studio API・マップ基準/バックアップ） -->
+  <div id="settingsModal" class="modal-backdrop">
+    <div class="modal-box">
+      <h4>⚙️ 共通設定・リンク設定・マップ管理</h4>
+
+      <div class="settings-section">
+        <div class="settings-section-title">🔗 外部リンク設定（3アプリ共通）</div>
+        <label class="center-form-field">
+          <span>🗺️ 都市マップ URL</span>
+          <div class="link-row">
+            <input id="settingCityMapUrl" type="text" placeholder="./index.html" />
+            <a id="previewCityMapLink" class="open-link-btn" href="./index.html" target="_blank" rel="noopener noreferrer">開く ↗</a>
+          </div>
+        </label>
+        <label class="center-form-field">
+          <span>🐻 熊編成ナビ URL</span>
+          <div class="link-row">
+            <input id="settingBearNavUrl" type="text" placeholder="./rbn-bear.html" />
+            <a id="previewBearNavLink" class="open-link-btn" href="./rbn-bear.html" target="_blank" rel="noopener noreferrer">開く ↗</a>
+          </div>
+        </label>
+        <label class="center-form-field">
+          <span>📣 同盟通知ジェネレーター URL</span>
+          <div class="link-row">
+            <input id="settingNoticeGenUrl" type="text" placeholder="./rbn-notice.html" />
+            <a id="previewNoticeGenLink" class="open-link-btn" href="./rbn-notice.html" target="_blank" rel="noopener noreferrer">開く ↗</a>
+          </div>
+        </label>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">☁️ Firebase / AI Studio API 共通設定</div>
+        <label class="center-form-field">
+          <span>Firebase Realtime Database URL</span>
+          <input id="settingFirebaseDbUrl" type="text" placeholder="https://...firebaseio.com" />
+        </label>
+        <label class="center-form-field">
+          <span>AI Studio API キー（共通保持）</span>
+          <input id="settingAiStudioApiKey" type="password" placeholder="AIzaSy..." />
+        </label>
+        <div class="modal-hint" style="margin:0;">
+          ※ 都市マップのクラウド同期は現行のFirebase設定・パス（<code>alliances/main_map_40x40</code>）を維持します。共通設定は <code>localStorage</code>（<code>rbn_suite_shared_settings_v1</code>）で3アプリ共通保存されます。
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">📐 都市マップ個別設定・バックアップ</div>
+        <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between;">
+          <span style="font-size:12px; color:#cbd5e1;">現在の中心基準：<strong>X:<span id="modalCenterXLabel">386</span>, Y:<span id="modalCenterYLabel">792</span></strong></span>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button id="openCenterModalBtn" class="edit-only" type="button">中心基準座標を変更</button>
+            <button id="openBackupModalBtn" type="button">バックアップ管理（5件/3日）</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">📋 共通設定JSON（一括コピー・反映）</div>
+        <textarea id="sharedConfigJsonArea" style="height: 110px;"></textarea>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button id="exportSharedJsonBtn" type="button">共通JSONをコピー</button>
+          <button id="importSharedJsonBtn" type="button">貼り付けJSONを反映</button>
+        </div>
+      </div>
+
+      <div id="settingsModalMsg" class="pin-error" style="color:#6ee7b7;"></div>
+      <div class="modal-footer">
+        <button id="closeSettingsModalBtn" type="button">閉じる</button>
+        <button id="saveSettingsModalBtn" class="primary" type="button">設定を保存</button>
+      </div>
+    </div>
   </div>
 
   <!-- 中心基準座標 設定モーダル -->
@@ -809,7 +999,22 @@
   </div>
 
   <script>
-    // ==================== Firebase クラウド共有設定 ====================
+    // ==================== 共通設定・Firebase クラウド共有設定 ====================
+    const SHARED_SETTINGS_KEY = "rbn_suite_shared_settings_v1";
+    const DEFAULT_SHARED_SETTINGS = {
+      links: {
+        cityMapUrl: "./index.html",
+        bearNavUrl: "./rbn-bear.html",
+        noticeGenUrl: "./rbn-notice.html"
+      },
+      firebase: {
+        databaseUrl: "https://kingshot-rbn-map-default-rtdb.firebaseio.com"
+      },
+      ai: {
+        studioApiKey: ""
+      }
+    };
+
     const firebaseConfig = {
       apiKey: "AIzaSyCeqmlkZZNDhMJA1RZc8t93OqqJ4f8xfT8",
       authDomain: "kingshot-rbn-map.firebaseapp.com",
@@ -821,6 +1026,55 @@
       measurementId: "G-4VWDX8BCKN"
     };
 
+    function loadSharedSettings() {
+      let base = JSON.parse(JSON.stringify(DEFAULT_SHARED_SETTINGS));
+      try {
+        const raw = localStorage.getItem(SHARED_SETTINGS_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          base = {
+            links: { ...base.links, ...(parsed.links || {}) },
+            firebase: { ...base.firebase, ...(parsed.firebase || {}) },
+            ai: { ...base.ai, ...(parsed.ai || {}) }
+          };
+        }
+      } catch (_) {}
+
+      // 既存個別ストレージとの後方互換
+      const legacyKey = localStorage.getItem("ks_gemini_api_key");
+      if (!base.ai.studioApiKey && legacyKey) {
+        base.ai.studioApiKey = legacyKey;
+      }
+      return base;
+    }
+
+    let sharedSettings = loadSharedSettings();
+    if (sharedSettings.firebase.databaseUrl) {
+      firebaseConfig.databaseURL = sharedSettings.firebase.databaseUrl.trim().replace(/\/+$/, "");
+    }
+
+    function saveSharedSettingsToStorage(nextSettings) {
+      sharedSettings = {
+        links: {
+          cityMapUrl: (nextSettings.links?.cityMapUrl || "./index.html").trim(),
+          bearNavUrl: (nextSettings.links?.bearNavUrl || "./rbn-bear.html").trim(),
+          noticeGenUrl: (nextSettings.links?.noticeGenUrl || "./rbn-notice.html").trim()
+        },
+        firebase: {
+          databaseUrl: (nextSettings.firebase?.databaseUrl || firebaseConfig.databaseURL).trim().replace(/\/+$/, "")
+        },
+        ai: {
+          studioApiKey: (nextSettings.ai?.studioApiKey || "").trim()
+        }
+      };
+      try {
+        localStorage.setItem(SHARED_SETTINGS_KEY, JSON.stringify(sharedSettings));
+        if (sharedSettings.ai.studioApiKey) {
+          localStorage.setItem("ks_gemini_api_key", sharedSettings.ai.studioApiKey);
+        }
+      } catch (_) {}
+    }
+
     const EDIT_PIN = "rbn2011";
     const CLOUD_ROOM_PATH = "alliances/main_map_40x40";
 
@@ -829,12 +1083,15 @@
     let lastCloudWriteAt = 0;
 
     function initFirebaseCloud() {
+      const dbUrl = (sharedSettings.firebase?.databaseUrl || firebaseConfig.databaseURL || "").trim().replace(/\/+$/, "");
+      firebaseConfig.databaseURL = dbUrl;
+
       const hasConfig =
         firebaseConfig &&
         typeof firebaseConfig.apiKey === "string" &&
         !firebaseConfig.apiKey.startsWith("YOUR_") &&
-        typeof firebaseConfig.databaseURL === "string" &&
-        !firebaseConfig.databaseURL.startsWith("YOUR_");
+        typeof dbUrl === "string" &&
+        dbUrl.startsWith("http");
 
       if (!hasConfig || typeof firebase === "undefined") {
         cloudBadge.textContent = "☁️ ローカル保存";
@@ -846,7 +1103,10 @@
         if (!firebase.apps.length) {
           firebase.initializeApp(firebaseConfig);
         }
-        const db = firebase.database();
+        const db = firebase.database(dbUrl);
+        if (cloudRoomRef) {
+          cloudRoomRef.off();
+        }
         cloudRoomRef = db.ref(CLOUD_ROOM_PATH);
         isCloudEnabled = true;
         cloudBadge.textContent = "☁️ クラウド同期ON";
@@ -1051,6 +1311,26 @@
     const splitter = document.getElementById("splitter");
     const rosterPanel = document.getElementById("rosterPanel");
     const centerBaseBadge = document.getElementById("centerBaseBadge");
+
+    const openSettingsModalBtn = document.getElementById("openSettingsModalBtn");
+    const settingsModal = document.getElementById("settingsModal");
+    const closeSettingsModalBtn = document.getElementById("closeSettingsModalBtn");
+    const saveSettingsModalBtn = document.getElementById("saveSettingsModalBtn");
+    const settingsModalMsg = document.getElementById("settingsModalMsg");
+    const settingCityMapUrl = document.getElementById("settingCityMapUrl");
+    const settingBearNavUrl = document.getElementById("settingBearNavUrl");
+    const settingNoticeGenUrl = document.getElementById("settingNoticeGenUrl");
+    const previewCityMapLink = document.getElementById("previewCityMapLink");
+    const previewBearNavLink = document.getElementById("previewBearNavLink");
+    const previewNoticeGenLink = document.getElementById("previewNoticeGenLink");
+    const settingFirebaseDbUrl = document.getElementById("settingFirebaseDbUrl");
+    const settingAiStudioApiKey = document.getElementById("settingAiStudioApiKey");
+    const modalCenterXLabel = document.getElementById("modalCenterXLabel");
+    const modalCenterYLabel = document.getElementById("modalCenterYLabel");
+    const sharedConfigJsonArea = document.getElementById("sharedConfigJsonArea");
+    const exportSharedJsonBtn = document.getElementById("exportSharedJsonBtn");
+    const importSharedJsonBtn = document.getElementById("importSharedJsonBtn");
+
     const openCenterModalBtn = document.getElementById("openCenterModalBtn");
     const centerModal = document.getElementById("centerModal");
     const centerXInput = document.getElementById("centerXInput");
@@ -1106,6 +1386,128 @@
     const closeImportBtn = document.getElementById("closeImportBtn");
     const applyImportBtn = document.getElementById("applyImportBtn");
 
+    function syncSettingsModalInputs() {
+      settingCityMapUrl.value = sharedSettings.links.cityMapUrl || "./index.html";
+      settingBearNavUrl.value = sharedSettings.links.bearNavUrl || "./rbn-bear.html";
+      settingNoticeGenUrl.value = sharedSettings.links.noticeGenUrl || "./rbn-notice.html";
+      previewCityMapLink.href = settingCityMapUrl.value || "#";
+      previewBearNavLink.href = settingBearNavUrl.value || "#";
+      previewNoticeGenLink.href = settingNoticeGenUrl.value || "#";
+
+      settingFirebaseDbUrl.value = sharedSettings.firebase.databaseUrl || firebaseConfig.databaseURL;
+      settingAiStudioApiKey.value = sharedSettings.ai.studioApiKey || "";
+      modalCenterXLabel.textContent = String(CENTER_GAME_BASE.x);
+      modalCenterYLabel.textContent = String(CENTER_GAME_BASE.y);
+      sharedConfigJsonArea.value = JSON.stringify({
+        links: {
+          cityMapUrl: settingCityMapUrl.value,
+          bearNavUrl: settingBearNavUrl.value,
+          noticeGenUrl: settingNoticeGenUrl.value
+        },
+        firebase: {
+          databaseUrl: settingFirebaseDbUrl.value
+        },
+        ai: {
+          studioApiKey: settingAiStudioApiKey.value
+        }
+      }, null, 2);
+    }
+
+    openSettingsModalBtn.addEventListener("click", () => {
+      settingsModalMsg.textContent = "";
+      syncSettingsModalInputs();
+      settingsModal.classList.add("open");
+    });
+
+    closeSettingsModalBtn.addEventListener("click", () => {
+      settingsModal.classList.remove("open");
+    });
+
+    settingsModal.addEventListener("click", (e) => {
+      if (e.target === settingsModal) {
+        settingsModal.classList.remove("open");
+      }
+    });
+
+    [settingCityMapUrl, settingBearNavUrl, settingNoticeGenUrl].forEach((inp) => {
+      inp.addEventListener("input", () => {
+        previewCityMapLink.href = settingCityMapUrl.value.trim() || "#";
+        previewBearNavLink.href = settingBearNavUrl.value.trim() || "#";
+        previewNoticeGenLink.href = settingNoticeGenUrl.value.trim() || "#";
+      });
+    });
+
+    saveSettingsModalBtn.addEventListener("click", () => {
+      const prevDbUrl = sharedSettings.firebase.databaseUrl;
+      saveSharedSettingsToStorage({
+        links: {
+          cityMapUrl: settingCityMapUrl.value,
+          bearNavUrl: settingBearNavUrl.value,
+          noticeGenUrl: settingNoticeGenUrl.value
+        },
+        firebase: {
+          databaseUrl: settingFirebaseDbUrl.value
+        },
+        ai: {
+          studioApiKey: settingAiStudioApiKey.value
+        }
+      });
+      syncSettingsModalInputs();
+      if (prevDbUrl !== sharedSettings.firebase.databaseUrl) {
+        initFirebaseCloud();
+      }
+      settingsModalMsg.textContent = "✅ 共通設定を保存しました。";
+      statusMsg.classList.add("ok");
+      statusMsg.textContent = "共通設定（リンク・Firebase・AI API）を保存しました。";
+    });
+
+    exportSharedJsonBtn.addEventListener("click", async () => {
+      const text = JSON.stringify({
+        links: {
+          cityMapUrl: settingCityMapUrl.value.trim(),
+          bearNavUrl: settingBearNavUrl.value.trim(),
+          noticeGenUrl: settingNoticeGenUrl.value.trim()
+        },
+        firebase: {
+          databaseUrl: settingFirebaseDbUrl.value.trim()
+        },
+        ai: {
+          studioApiKey: settingAiStudioApiKey.value.trim()
+        }
+      }, null, 2);
+      sharedConfigJsonArea.value = text;
+      try {
+        await navigator.clipboard.writeText(text);
+        settingsModalMsg.textContent = "✅ 共通設定JSONをクリップボードにコピーしました。";
+      } catch (_) {
+        settingsModalMsg.textContent = "テキスト欄のJSONをコピーしてください。";
+      }
+    });
+
+    importSharedJsonBtn.addEventListener("click", () => {
+      try {
+        const parsed = JSON.parse(sharedConfigJsonArea.value);
+        saveSharedSettingsToStorage({
+          links: {
+            cityMapUrl: parsed.links?.cityMapUrl ?? settingCityMapUrl.value,
+            bearNavUrl: parsed.links?.bearNavUrl ?? settingBearNavUrl.value,
+            noticeGenUrl: parsed.links?.noticeGenUrl ?? settingNoticeGenUrl.value
+          },
+          firebase: {
+            databaseUrl: parsed.firebase?.databaseUrl ?? settingFirebaseDbUrl.value
+          },
+          ai: {
+            studioApiKey: parsed.ai?.studioApiKey ?? settingAiStudioApiKey.value
+          }
+        });
+        syncSettingsModalInputs();
+        initFirebaseCloud();
+        settingsModalMsg.textContent = "✅ 共通設定JSONを反映・保存しました。";
+      } catch (err) {
+        settingsModalMsg.textContent = "JSONの形式が正しくありません：" + err.message;
+      }
+    });
+
     let isEditable = false;
 
     let baseTileW = 24;
@@ -1143,7 +1545,6 @@
     let currentUiMode = "pc";
     let mobileTab = "split";
 
-    // ==================== 座標ポップアップ制御（PC停止ホバー / スマホタップ / ドラッグ移動予定座標） ====================
     const PC_HOVER_DELAY_MS = 450;
     const MOBILE_POPUP_DURATION_MS = 2800;
     let hoverTimerId = null;
@@ -1262,6 +1663,8 @@
 
     function updateCenterBaseBadge() {
       centerBaseBadge.textContent = `中心基準 X:${CENTER_GAME_BASE.x}, Y:${CENTER_GAME_BASE.y}`;
+      modalCenterXLabel.textContent = String(CENTER_GAME_BASE.x);
+      modalCenterYLabel.textContent = String(CENTER_GAME_BASE.y);
     }
 
     openCenterModalBtn.addEventListener("click", () => {
@@ -2802,7 +3205,6 @@
       persistChanges();
     });
 
-    // スプリッター操作（PC横幅調整 / スマホ上下高さ調整）
     splitter.addEventListener("mousedown", (e) => {
       if (e.button !== 0) return;
       hideCoordPopup();
@@ -3312,6 +3714,7 @@
       resortByPower();
     }
 
+    syncSettingsModalInputs();
     updateCenterBaseBadge();
     applyUiMode(detectInitialUiMode(), false);
     renderRoster();
