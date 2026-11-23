@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>キングショット 同盟通知ジェネレーター v5</title>
+  <title>キングショット 同盟通知ジェネレーター v6</title>
   <!-- Tailwind CSS の読み込み -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Google Fonts (Inter & Noto Sans JP) -->
@@ -37,14 +37,14 @@
   <div class="max-w-2xl mx-auto">
     <!-- ヘッダー & ナビゲーションタブ -->
     <header class="mb-4 pb-3 border-b border-borderCol">
-      <div class="flex justify-between items-center mb-3">
+      <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
         <h1 class="text-lg sm:text-xl font-bold flex items-center gap-2 text-white">
           <span>📢</span>
           <span>同盟通知ジェネレーター</span>
-          <span class="text-xs font-normal bg-primary/20 text-primary border border-primary/30 px-2 py-0.5 rounded-full">v5</span>
+          <span class="text-xs font-normal bg-primary/20 text-primary border border-primary/30 px-2 py-0.5 rounded-full">v6</span>
         </h1>
         <span id="sync-status-badge" class="text-[11px] font-medium px-2.5 py-1 rounded-full bg-cardBg text-gray-400 border border-borderCol">
-          💾 ローカル保存モード
+          ☁️ Firebase接続準備中...
         </span>
       </div>
 
@@ -327,17 +327,25 @@
     <!-- ========================================== -->
     <div id="view-settings" class="tab-view hidden space-y-4">
       <section class="bg-cardBg border border-borderCol rounded-xl p-4 space-y-4">
-        <h2 class="text-base font-bold text-white flex items-center gap-2 border-b border-borderCol pb-2.5">
-          <span>⚙️</span>
-          <span>API・Firebase同期・同盟ルール設定</span>
-        </h2>
+        <div class="flex flex-wrap justify-between items-center gap-2 border-b border-borderCol pb-2.5">
+          <h2 class="text-base font-bold text-white flex items-center gap-2">
+            <span>⚙️</span>
+            <span>API・Firebase自動共有・同盟ルール設定</span>
+          </h2>
+          <span id="config-sync-indicator" class="text-[11px] font-medium px-2 py-0.5 rounded bg-primary/20 text-primary">
+            未同期
+          </span>
+        </div>
 
         <!-- Gemini API キー -->
         <div>
           <label for="api-key-input" class="block text-xs font-medium text-gray-300 mb-1">
-            1. Gemini API キー（ブラウザ内にのみ保存）
+            1. Gemini API キー（HTMLには直書きせず、Firebase経由で自動共有）
           </label>
           <input type="password" id="api-key-input" placeholder="AIzaSy..." class="w-full bg-appBg border border-borderCol focus:border-primary focus:outline-none text-gray-100 px-3 py-2.5 rounded-lg text-sm">
+          <p class="text-[11px] text-gray-400 mt-1">
+            ※一度保存するとFirebaseの <code class="text-gray-300">/config</code> に保存されるため、他の端末や共有相手は入力不要でそのまま使えます。
+          </p>
         </div>
 
         <!-- モデル選択 -->
@@ -349,18 +357,18 @@
           </select>
         </div>
 
-        <!-- Firebase Realtime Database URL（任意・PC/スマホ同期用） -->
+        <!-- Firebase Realtime Database URL（初期値埋め込み済み） -->
         <div class="bg-appBg border border-borderCol rounded-lg p-3 space-y-2">
           <label for="firebase-url-input" class="block text-xs font-semibold text-primary">
-            3. Firebase Realtime Database URL（任意：PC・スマホ間の履歴同期用）
+            3. Firebase Realtime Database URL（初期設定埋め込み済み）
           </label>
-          <input type="text" id="firebase-url-input" placeholder="https://your-project-default-rtdb.firebaseio.com/notice_history" class="w-full bg-cardBg border border-borderCol focus:border-primary focus:outline-none text-gray-100 px-3 py-2 rounded-lg text-xs sm:text-sm">
+          <input type="text" id="firebase-url-input" class="w-full bg-cardBg border border-borderCol focus:border-primary focus:outline-none text-gray-100 px-3 py-2 rounded-lg text-xs sm:text-sm">
           <p class="text-[11px] text-gray-400 leading-relaxed">
-            ※都市マップでお使いのFirebase Realtime DatabaseのURL（例: <code class="text-gray-300">https://〇〇.firebaseio.com/notice_history</code>）を入れると、確定履歴をクラウド同期します。空欄のままでもブラウザ内（localStorage）に自動保存されます。
+            ※このURLはコード内にあらかじめ埋め込まれているため、URLを共有した他のR4メンバーも最初から自動で同期されます。
           </p>
-          <div class="flex items-center gap-2 pt-1">
+          <div class="flex flex-wrap items-center gap-2 pt-1">
             <button type="button" id="test-firebase-btn" class="bg-[#262d3b] hover:bg-[#323b4d] border border-borderCol text-gray-200 px-3 py-1.5 rounded-md text-xs font-medium cursor-pointer">
-              🔌 Firebase接続テスト＆同期
+              🔌 Firebase接続テスト＆設定・履歴を今すぐ同期
             </button>
             <span id="firebase-test-msg" class="text-xs"></span>
           </div>
@@ -387,8 +395,17 @@
           <p class="text-xs text-gray-400 mt-1">※「イベント名：補足文」の形式で1行ずつ記述。スクショに該当イベントがあると自動追記します。</p>
         </div>
 
+        <!-- Firebase共有同期チェックボックス -->
+        <label class="flex items-start gap-2.5 bg-appBg border border-borderCol rounded-lg p-3 cursor-pointer">
+          <input type="checkbox" id="sync-config-checkbox" checked class="mt-0.5 w-4 h-4 accent-primary rounded cursor-pointer">
+          <span class="text-xs text-gray-200 leading-relaxed">
+            <strong>共有設定（APIキー・辞書・熊罠基準日）をFirebaseにも保存して他端末・他メンバーと自動同期する</strong><br>
+            <span class="text-[11px] text-gray-400">※チェックを入れたまま保存すると、PC・スマホ・共有相手の画面にも同じ設定が自動反映されます。</span>
+          </span>
+        </label>
+
         <button type="button" id="save-settings-btn" class="w-full bg-primary hover:bg-primaryHover text-white font-semibold py-3 px-4 rounded-lg text-sm transition-colors cursor-pointer">
-          設定を保存する
+          設定を保存してクラウド同期する
         </button>
         <div id="settings-save-msg" class="text-xs text-center text-success min-h-[1rem]"></div>
       </section>
@@ -397,14 +414,15 @@
 
   <script>
     // ==========================================
-    // 定数・初期データ定義
+    // 定数・初期データ定義（Firebase URL埋め込み済み / APIキーは非ハードコード）
     // ==========================================
+    const DEFAULT_FIREBASE_URL = 'https://kingshot-rbn-map-default-rtdb.firebaseio.com/kingshot_notice_history';
+
     const DEFAULT_EVENT_DICT = `同盟争覇戦：左寄せ、比率613
 調合ショップ：アイテム交換忘れずにー
 全軍出撃：(領地外採集注意⚠
 チェーザレ討伐(最終日)：チェーザレボスは21時30分`;
 
-    // 初期状態（履歴が0件のとき）用のデフォルトお手本3日分
     const DEFAULT_FEW_SHOT_EXAMPLES = `
 【お手本1：11月23日（月）】
 11月23日（月）
@@ -448,7 +466,7 @@
 ※翌日採取なので寝る前に仕込む人はお忘れなく〜
 `;
 
-    const LOCAL_HISTORY_KEY = 'ks_notice_history_v5';
+    const LOCAL_HISTORY_KEY = 'ks_notice_history_v6';
     const RETENTION_DAYS = 30; // 直近30日（約1ヶ月）保持
 
     // ==========================================
@@ -463,6 +481,7 @@
     };
 
     const syncStatusBadge = document.getElementById('sync-status-badge');
+    const configSyncIndicator = document.getElementById('config-sync-indicator');
     const learnedCountMini = document.getElementById('learned-count-mini');
     const historyCountBadge = document.getElementById('history-count-badge');
     const historyListContainer = document.getElementById('history-list-container');
@@ -499,6 +518,7 @@
     const bearBaseDateInput = document.getElementById('bear-base-date');
     const bearTextInput = document.getElementById('bear-text-input');
     const eventDictInput = document.getElementById('event-dict-input');
+    const syncConfigCheckbox = document.getElementById('sync-config-checkbox');
     const saveSettingsBtn = document.getElementById('save-settings-btn');
     const settingsSaveMsg = document.getElementById('settings-save-msg');
 
@@ -539,16 +559,12 @@
     });
 
     // ==========================================
-    // 履歴の蓄積・30日保持・Firebase同期ロジック
+    // Firebase ベースURL取得＆同期ロジック（/config と /logs）
     // ==========================================
-    function getNormalizedFirebaseUrl() {
-      let url = (localStorage.getItem('ks_firebase_url') || '').trim();
-      if (!url) return '';
-      url = url.replace(/\/+$/, '');
-      if (!url.endsWith('.json')) {
-        url += '.json';
-      }
-      return url;
+    function getFirebaseBaseUrl() {
+      const stored = (localStorage.getItem('ks_firebase_url') || '').trim();
+      const base = stored || DEFAULT_FIREBASE_URL;
+      return base.replace(/\.json$/, '').replace(/\/+$/, '');
     }
 
     // 30日より古い履歴を自動パージする
@@ -559,18 +575,18 @@
 
       const pruned = {};
       Object.keys(mapObj).forEach(dateKey => {
-        if (dateKey >= cutoffStr && mapObj[dateKey] && mapObj[dateKey].text) {
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateKey) && dateKey >= cutoffStr && mapObj[dateKey] && mapObj[dateKey].text) {
           pruned[dateKey] = mapObj[dateKey];
         }
       });
       return pruned;
     }
 
-    // 履歴の読み込み（localStorage ＋ 設定されていればFirebaseから同期）
-    async function loadHistory() {
-      // まずローカルから即時読み込み
+    // 起動時・同期ボタン押下時に Firebase の /config と /logs を一括取得して反映
+    async function syncAllFromFirebase() {
+      // まずローカルの履歴をロード
       try {
-        const raw = localStorage.getItem(LOCAL_HISTORY_KEY);
+        const raw = localStorage.getItem(LOCAL_HISTORY_KEY) || localStorage.getItem('ks_notice_history_v5');
         if (raw) {
           historyMap = pruneOldHistory(JSON.parse(raw));
           localStorage.setItem(LOCAL_HISTORY_KEY, JSON.stringify(historyMap));
@@ -580,63 +596,109 @@
       }
       updateHistoryBadges();
 
-      // Firebase URLが設定されていればクラウドから取得してマージ
-      const fbUrl = getNormalizedFirebaseUrl();
-      if (fbUrl) {
-        syncStatusBadge.textContent = '☁️ Firebase同期中...';
-        try {
-          const res = await fetch(fbUrl);
-          if (res.ok) {
-            const remoteData = await res.json();
-            if (remoteData && typeof remoteData === 'object') {
-              // ローカルとリモートをマージ（updatedAtが新しい方を優先）
-              const merged = { ...historyMap };
-              Object.keys(remoteData).forEach(k => {
-                if (!merged[k] || (remoteData[k].updatedAt || 0) >= (merged[k].updatedAt || 0)) {
-                  merged[k] = remoteData[k];
-                }
-              });
-              historyMap = pruneOldHistory(merged);
-              localStorage.setItem(LOCAL_HISTORY_KEY, JSON.stringify(historyMap));
-            }
-            syncStatusBadge.textContent = '☁️ Firebase同期済';
-            syncStatusBadge.className = 'text-[11px] font-medium px-2.5 py-1 rounded-full bg-success/20 text-success border border-success/30';
-          } else {
-            throw new Error('HTTP ' + res.status);
-          }
-        } catch (err) {
-          syncStatusBadge.textContent = '⚠️ Firebase接続エラー(ローカル動作)';
-          syncStatusBadge.className = 'text-[11px] font-medium px-2.5 py-1 rounded-full bg-warning/20 text-warning border border-warning/30';
+      const baseUrl = getFirebaseBaseUrl();
+      if (!baseUrl) return false;
+
+      syncStatusBadge.textContent = '☁️ Firebase同期中...';
+      syncStatusBadge.className = 'text-[11px] font-medium px-2.5 py-1 rounded-full bg-cardBg text-gray-300 border border-borderCol';
+
+      try {
+        // ルート（config と logs を含む）を一括GET
+        const res = await fetch(`${baseUrl}.json`);
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
         }
+        const rootData = await res.json();
+
+        if (rootData && typeof rootData === 'object') {
+          // 1. 共有設定 (/config) の反映
+          if (rootData.config && typeof rootData.config === 'object') {
+            const cfg = rootData.config;
+            if (cfg.geminiApiKey) {
+              localStorage.setItem('ks_gemini_api_key', cfg.geminiApiKey);
+              apiKeyInput.value = cfg.geminiApiKey;
+            }
+            if (cfg.geminiModel) {
+              localStorage.setItem('ks_model', cfg.geminiModel);
+              modelSelect.value = cfg.geminiModel;
+            }
+            if (cfg.bearBaseDate) {
+              localStorage.setItem('ks_bear_base_date', cfg.bearBaseDate);
+              bearBaseDateInput.value = cfg.bearBaseDate;
+            }
+            if (cfg.bearText) {
+              localStorage.setItem('ks_bear_text', cfg.bearText);
+              bearTextInput.value = cfg.bearText;
+            }
+            if (cfg.eventDict) {
+              localStorage.setItem('ks_event_dict', cfg.eventDict);
+              eventDictInput.value = cfg.eventDict;
+            }
+            configSyncIndicator.textContent = '☁️ 共有設定同期済';
+            configSyncIndicator.className = 'text-[11px] font-medium px-2 py-0.5 rounded bg-success/20 text-success';
+          }
+
+          // 2. 履歴データ (/logs および旧バージョンのルート直下日付キー) のマージ
+          const remoteLogs = {};
+          if (rootData.logs && typeof rootData.logs === 'object') {
+            Object.assign(remoteLogs, rootData.logs);
+          }
+          // 後方互換：v5でルート直下に保存された日付キーがあれば取り込む
+          Object.keys(rootData).forEach(k => {
+            if (/^\d{4}-\d{2}-\d{2}$/.test(k) && rootData[k] && rootData[k].text) {
+              if (!remoteLogs[k] || (rootData[k].updatedAt || 0) > (remoteLogs[k].updatedAt || 0)) {
+                remoteLogs[k] = rootData[k];
+              }
+            }
+          });
+
+          const merged = { ...historyMap };
+          Object.keys(remoteLogs).forEach(k => {
+            if (!merged[k] || (remoteLogs[k].updatedAt || 0) >= (merged[k].updatedAt || 0)) {
+              merged[k] = remoteLogs[k];
+            }
+          });
+          historyMap = pruneOldHistory(merged);
+          localStorage.setItem(LOCAL_HISTORY_KEY, JSON.stringify(historyMap));
+        }
+
+        const hasKey = Boolean(localStorage.getItem('ks_gemini_api_key'));
+        syncStatusBadge.textContent = hasKey ? '☁️ Firebase同期済 (APIキー共有済)' : '☁️ Firebase同期済 (APIキー未登録)';
+        syncStatusBadge.className = 'text-[11px] font-medium px-2.5 py-1 rounded-full bg-success/20 text-success border border-success/30';
+
         updateHistoryBadges();
-      } else {
-        syncStatusBadge.textContent = '💾 ローカル保存モード';
-        syncStatusBadge.className = 'text-[11px] font-medium px-2.5 py-1 rounded-full bg-cardBg text-gray-400 border border-borderCol';
+        updateDateUI();
+        return true;
+      } catch (err) {
+        syncStatusBadge.textContent = '⚠️ Firebase接続エラー(ローカル動作)';
+        syncStatusBadge.className = 'text-[11px] font-medium px-2.5 py-1 rounded-full bg-warning/20 text-warning border border-warning/30';
+        return false;
       }
     }
 
-    // 確定通知を保存（直近30日保持＆Firebase同期）
+    // 確定通知を保存（直近30日保持＆Firebase /logs へ同期）
     async function saveHistoryEntry(dateKey, text) {
-      historyMap[dateKey] = {
+      const entry = {
         date: dateKey,
         text: text.trim(),
         updatedAt: Date.now()
       };
+      historyMap[dateKey] = entry;
       historyMap = pruneOldHistory(historyMap);
       localStorage.setItem(LOCAL_HISTORY_KEY, JSON.stringify(historyMap));
       updateHistoryBadges();
 
-      const fbUrl = getNormalizedFirebaseUrl();
-      if (fbUrl) {
+      const baseUrl = getFirebaseBaseUrl();
+      if (baseUrl) {
         try {
-          await fetch(fbUrl, {
+          await fetch(`${baseUrl}/logs.json`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(historyMap)
           });
-          syncStatusBadge.textContent = '☁️ Firebase同期済';
+          syncStatusBadge.textContent = '☁️ Firebase同期済 (APIキー共有済)';
         } catch (err) {
-          console.error('Firebase sync failed:', err);
+          console.error('Firebase logs sync failed:', err);
         }
       }
     }
@@ -648,13 +710,11 @@
       updateHistoryBadges();
       renderHistoryList();
 
-      const fbUrl = getNormalizedFirebaseUrl();
-      if (fbUrl) {
+      const baseUrl = getFirebaseBaseUrl();
+      if (baseUrl) {
         try {
-          await fetch(fbUrl, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(historyMap)
+          await fetch(`${baseUrl}/logs/${dateKey}.json`, {
+            method: 'DELETE'
           });
         } catch (err) {
           console.error(err);
@@ -670,7 +730,7 @@
 
     // 履歴一覧の描画
     function renderHistoryList() {
-      const keys = Object.keys(historyMap).sort((a, b) => b.localeCompare(a)); // 新しい順
+      const keys = Object.keys(historyMap).sort((a, b) => b.localeCompare(a));
       if (keys.length === 0) {
         historyListContainer.innerHTML = `
           <div class="bg-appBg border border-borderCol rounded-lg p-6 text-center text-xs sm:text-sm text-gray-400">
@@ -733,10 +793,8 @@
       const targetDow = targetDateObj.getDay();
       const selectedKeys = new Set();
 
-      // 1. 直近の確定履歴を最大6件取得（最新の文体・フォーマットを学習）
       keys.slice(0, 6).forEach(k => selectedKeys.add(k));
 
-      // 2. 同じ曜日の過去履歴（1〜4週間前）を最大3件追加（週間イベント周期を学習）
       keys.forEach(k => {
         if (selectedKeys.size < 9) {
           const d = parseLocalDate(k);
@@ -747,12 +805,11 @@
       });
 
       const sortedSelected = Array.from(selectedKeys).sort((a, b) => b.localeCompare(a));
-      let block = '【過去にあなたが確定・編集した実例履歴（直近1ヶ月データから自動学習）】\n※以下の文体、改行位置、記号の使い方、補足表現を最優先で踏襲すること：\n\n';
+      let block = '【過去に確定・編集された実例履歴（直近1ヶ月データから自動学習）】\n※以下の文体、改行位置、記号の使い方、補足表現を最優先で踏襲すること：\n\n';
       sortedSelected.forEach((k, idx) => {
         block += `--- 履歴${idx + 1}（${k}） ---\n${historyMap[k].text}\n\n`;
       });
 
-      // 履歴がまだ3件未満の場合はデフォルトお手本も補完として添える
       if (sortedSelected.length < 3) {
         block += '\n【参考：基本文体お手本】\n' + DEFAULT_FEW_SHOT_EXAMPLES;
       }
@@ -901,49 +958,82 @@
     }
 
     // ==========================================
-    // 設定・接続テスト
+    // 設定保存＆Firebase /config へのクラウド同期
     // ==========================================
     saveSettingsBtn.addEventListener('click', async () => {
       const key = apiKeyInput.value.trim();
+      const model = modelSelect.value;
+      const fbUrl = firebaseUrlInput.value.trim() || DEFAULT_FIREBASE_URL;
+      const bearDate = bearBaseDateInput.value || '2026-11-22';
+      const bearText = bearTextInput.value.trim() || '熊罠 21時 22時';
+      const eventDict = eventDictInput.value;
+
       if (key) {
         localStorage.setItem('ks_gemini_api_key', key);
       } else {
         localStorage.removeItem('ks_gemini_api_key');
       }
-      localStorage.setItem('ks_model', modelSelect.value);
-      localStorage.setItem('ks_firebase_url', firebaseUrlInput.value.trim());
-      localStorage.setItem('ks_bear_base_date', bearBaseDateInput.value || '2026-11-22');
-      localStorage.setItem('ks_bear_text', bearTextInput.value.trim() || '熊罠 21時 22時');
-      localStorage.setItem('ks_event_dict', eventDictInput.value);
+      localStorage.setItem('ks_model', model);
+      localStorage.setItem('ks_firebase_url', fbUrl);
+      localStorage.setItem('ks_bear_base_date', bearDate);
+      localStorage.setItem('ks_bear_text', bearText);
+      localStorage.setItem('ks_event_dict', eventDict);
 
       updateDateUI();
       applyRealtimeOverrides();
-      await loadHistory();
 
-      settingsSaveMsg.textContent = '✅ 設定を保存しました！';
-      setTimeout(() => { settingsSaveMsg.textContent = ''; }, 2500);
+      if (syncConfigCheckbox.checked) {
+        settingsSaveMsg.textContent = '☁️ Firebaseへ共有設定を保存中...';
+        settingsSaveMsg.className = 'text-xs text-center text-gray-300 min-h-[1rem]';
+        const baseUrl = getFirebaseBaseUrl();
+        try {
+          const res = await fetch(`${baseUrl}/config.json`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              geminiApiKey: key,
+              geminiModel: model,
+              bearBaseDate: bearDate,
+              bearText: bearText,
+              eventDict: eventDict,
+              updatedAt: Date.now()
+            })
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+          configSyncIndicator.textContent = '☁️ 共有設定同期済';
+          configSyncIndicator.className = 'text-[11px] font-medium px-2 py-0.5 rounded bg-success/20 text-success';
+          syncStatusBadge.textContent = key ? '☁️ Firebase同期済 (APIキー共有済)' : '☁️ Firebase同期済';
+          syncStatusBadge.className = 'text-[11px] font-medium px-2.5 py-1 rounded-full bg-success/20 text-success border border-success/30';
+
+          settingsSaveMsg.textContent = '✅ 設定を保存し、Firebaseへ自動共有しました！（他端末でもそのまま使えます）';
+          settingsSaveMsg.className = 'text-xs text-center text-success min-h-[1rem]';
+        } catch (err) {
+          settingsSaveMsg.textContent = `⚠️ ローカルには保存しましたがFirebase同期に失敗しました (${err.message})`;
+          settingsSaveMsg.className = 'text-xs text-center text-warning min-h-[1rem]';
+        }
+      } else {
+        settingsSaveMsg.textContent = '✅ このブラウザ内に設定を保存しました！';
+        settingsSaveMsg.className = 'text-xs text-center text-success min-h-[1rem]';
+      }
+
+      setTimeout(() => { settingsSaveMsg.textContent = ''; }, 3500);
     });
 
     testFirebaseBtn.addEventListener('click', async () => {
-      const rawUrl = firebaseUrlInput.value.trim();
-      if (!rawUrl) {
-        firebaseTestMsg.textContent = 'URLを入力してください';
-        firebaseTestMsg.className = 'text-xs text-warning';
-        return;
-      }
+      const rawUrl = firebaseUrlInput.value.trim() || DEFAULT_FIREBASE_URL;
+      firebaseUrlInput.value = rawUrl;
       localStorage.setItem('ks_firebase_url', rawUrl);
-      firebaseTestMsg.textContent = '接続確認中...';
+
+      firebaseTestMsg.textContent = '接続・設定同期中...';
       firebaseTestMsg.className = 'text-xs text-gray-400';
 
-      const fbUrl = getNormalizedFirebaseUrl();
-      try {
-        const res = await fetch(fbUrl);
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        await loadHistory();
-        firebaseTestMsg.textContent = '✅ 接続・同期成功！';
+      const ok = await syncAllFromFirebase();
+      if (ok) {
+        firebaseTestMsg.textContent = '✅ 接続＆共有設定・履歴の同期に成功しました！';
         firebaseTestMsg.className = 'text-xs text-success';
-      } catch (err) {
-        firebaseTestMsg.textContent = `❌ 接続失敗 (${err.message})`;
+      } else {
+        firebaseTestMsg.textContent = '❌ 接続失敗（URLまたはFirebaseルールを確認してください）';
         firebaseTestMsg.className = 'text-xs text-danger';
       }
     });
@@ -1115,7 +1205,8 @@ ${bearLine}
       const apiKey = localStorage.getItem('ks_gemini_api_key');
       if (!apiKey) {
         switchTab('settings');
-        settingsSaveMsg.textContent = '⚠️ 先にGemini APIキーを設定して保存してください。';
+        settingsSaveMsg.textContent = '⚠️ まだFirebase上にAPIキーが保存されていません。1度だけAPIキーを入力して保存してください。';
+        settingsSaveMsg.className = 'text-xs text-center text-warning min-h-[1rem]';
         return;
       }
 
@@ -1239,7 +1330,7 @@ ${learnedExamplesBlock}`;
 
     resultText.addEventListener('input', updateCharCounter);
 
-    // 確定保存してコピー（クリップボードコピー ＋ 日付別履歴蓄積）
+    // 確定保存してコピー
     saveAndCopyBtn.addEventListener('click', async () => {
       const text = resultText.value;
       if (!text.trim()) {
@@ -1247,7 +1338,6 @@ ${learnedExamplesBlock}`;
         return;
       }
 
-      // 1. クリップボードコピー
       resultText.select();
       resultText.setSelectionRange(0, 99999);
       try {
@@ -1258,7 +1348,6 @@ ${learnedExamplesBlock}`;
         }
       }
 
-      // 2. 選択中の対象日をキーにして確定通知を保存（直近30日保持）
       const dateKey = targetDateInput.value || toDateInputString(getSelectedTargetDate());
       await saveHistoryEntry(dateKey, text);
 
@@ -1294,9 +1383,10 @@ ${learnedExamplesBlock}`;
       const tmr = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
       targetDateInput.value = toDateInputString(tmr);
 
+      // まずローカルまたは初期埋め込み値をフォームへセット
       apiKeyInput.value = localStorage.getItem('ks_gemini_api_key') || '';
       modelSelect.value = localStorage.getItem('ks_model') || 'gemini-2.5-flash';
-      firebaseUrlInput.value = localStorage.getItem('ks_firebase_url') || '';
+      firebaseUrlInput.value = localStorage.getItem('ks_firebase_url') || DEFAULT_FIREBASE_URL;
       bearBaseDateInput.value = localStorage.getItem('ks_bear_base_date') || '2026-11-22';
       bearTextInput.value = localStorage.getItem('ks_bear_text') || '熊罠 21時 22時';
       eventDictInput.value = localStorage.getItem('ks_event_dict') || DEFAULT_EVENT_DICT;
@@ -1308,7 +1398,9 @@ ${learnedExamplesBlock}`;
 
       updateDateUI();
       updateCharCounter();
-      await loadHistory();
+
+      // 起動と同時にFirebaseから共有設定（APIキー・辞書）と30日履歴を自動同期
+      await syncAllFromFirebase();
     }
 
     init();
