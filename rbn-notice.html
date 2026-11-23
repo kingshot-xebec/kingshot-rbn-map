@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>キングショット 同盟通知ジェネレーター v6.6</title>
+  <title>キングショット 同盟通知ジェネレーター v6.8</title>
   <style>
     :root {
       --bg-color: #12151c;
@@ -63,8 +63,35 @@
       border: 1px solid var(--border-color);
     }
 
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .ext-nav-link {
+      font-size: 0.74rem;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: #262d3b;
+      color: #e5e7eb;
+      border: 1px solid var(--border-color);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s;
+    }
+
+    .ext-nav-link:hover {
+      background: #323b4d;
+      border-color: #60a5fa;
+      color: #fff;
+    }
+
     .sync-badge {
-      font-size: 0.75rem;
+      font-size: 0.74rem;
       padding: 3px 10px;
       border-radius: 999px;
       background: rgba(16, 185, 129, 0.15);
@@ -438,13 +465,12 @@
       font-size: 0.84rem;
     }
 
-    /* 早見表カード用スタイル */
     .chart-box {
       background: #12151c;
       border: 1px solid var(--border-color);
       border-radius: 8px;
       padding: 12px;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
     }
 
     .chart-header {
@@ -452,34 +478,107 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 8px;
-      gap: 8px;
+      gap: 6px;
       flex-wrap: wrap;
     }
 
     .chart-title {
-      font-size: 0.9rem;
+      font-size: 0.92rem;
       font-weight: 700;
       color: #93c5fd;
     }
 
-    .chart-content {
-      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, "Noto Sans Mono CJK JP", monospace;
+    .chart-actions {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .pretty-chart-wrap {
+      overflow-x: auto;
+      background: #181c25;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.06);
+      padding: 8px;
+    }
+
+    .pretty-chart-banner {
       font-size: 0.82rem;
-      line-height: 1.55;
+      color: #fbbf24;
+      font-weight: 600;
+      margin-bottom: 6px;
+      padding: 2px 4px;
+    }
+
+    .pretty-chart-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+      text-align: center;
+    }
+
+    .pretty-chart-table th,
+    .pretty-chart-table td {
+      border: 1px solid #2f3746;
+      padding: 5px 4px;
+      white-space: nowrap;
+    }
+
+    .pretty-chart-table th {
+      background: #232936;
+      color: #93c5fd;
+      font-weight: 700;
+    }
+
+    .pretty-chart-table td:first-child,
+    .pretty-chart-table th:first-child {
+      text-align: left;
+      padding-left: 8px;
+      font-weight: 600;
+      color: #e5e7eb;
+      background: rgba(35, 41, 54, 0.5);
+    }
+
+    .mark-double {
+      color: #34d399;
+      font-weight: 800;
+    }
+
+    .mark-single {
+      color: #60a5fa;
+      font-weight: 700;
+    }
+
+    .mark-none {
+      color: #4b5563;
+    }
+
+    .pretty-chart-note {
+      font-size: 0.78rem;
+      color: #9ca3af;
+      margin-top: 6px;
+      padding: 2px 4px;
       white-space: pre-wrap;
+    }
+
+    .raw-chart-view {
+      font-size: 0.84rem;
+      line-height: 1.5;
+      white-space: pre;
       overflow-x: auto;
       background: #181c25;
       padding: 10px;
       border-radius: 6px;
       color: #e5e7eb;
-      border: 1px solid rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.06);
     }
 
     .chart-editor {
-      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, "Noto Sans Mono CJK JP", monospace;
-      font-size: 0.82rem;
-      line-height: 1.55;
+      font-size: 0.85rem;
+      line-height: 1.5;
       margin-bottom: 8px;
+      white-space: pre;
+      overflow-x: auto;
     }
 
     #paste-zone {
@@ -725,6 +824,13 @@
       font-weight: 600;
     }
 
+    .mini-btn.success {
+      background: var(--success);
+      border-color: var(--success);
+      color: #fff;
+      font-weight: 600;
+    }
+
     .mini-btn.danger {
       color: #f87171;
     }
@@ -763,8 +869,12 @@
 
 <div class="container">
   <header>
-    <h1>📢 同盟通知ジェネレーター <span class="ver-badge">v6.6</span></h1>
-    <span class="sync-badge warn" id="sync-status-badge">クラウド同期確認中...</span>
+    <h1>📢 同盟通知ジェネレーター <span class="ver-badge">v6.8</span></h1>
+    <div class="header-right">
+      <a href="index.html" id="link-city-map" class="ext-nav-link" title="都市配置マップへ移動">🗺️ 都市マップ</a>
+      <a href="bear.html" id="link-bear-sim" class="ext-nav-link" title="熊罠シミュレーターへ移動">🐻 熊ジェネレーター</a>
+      <span class="sync-badge warn" id="sync-status-badge">クラウド同期確認中...</span>
+    </div>
   </header>
 
   <nav class="nav-tabs">
@@ -944,14 +1054,15 @@
   <div id="tab-charts" class="tab-pane">
     <div class="card">
       <div class="card-title">
-        <span>📅 イベント別ポイント早見表（閲覧・編集＆クラウド同期）</span>
-        <div style="display: flex; gap: 6px;">
+        <span>📅 イベント別ポイント早見表（ゲーム現物保持＆綺麗表示）</span>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+          <button type="button" class="mini-btn" id="toggle-raw-charts-btn">📄 ゲーム現物表示に切替</button>
           <button type="button" class="mini-btn" id="add-chart-btn">＋ 表を追加</button>
           <button type="button" class="mini-btn" id="reset-charts-btn">初期表に戻す</button>
         </div>
       </div>
       <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 12px;">
-        各イベントの日別ポイント対象早見表です。仕様変更や新イベントが追加された際は、各表の「✏️ 編集する」から内容を直接書き換えて保存すると全端末・共有メンバーにも同期されます。
+        閲覧時は見やすい表形式で表示され、<strong>「📋 コピー」や「✏️ 編集」ではゲーム内チャットで崩れない現物スペース・改行のまま</strong>扱えます（編集保存するとFirebase経由で自動同期）。
       </p>
       <div id="charts-list-container"></div>
     </div>
@@ -1036,9 +1147,8 @@
         <label for="model-select">2. 使用AIモデル（APIキーで利用可能なモデル一覧を自動取得可能）</label>
         <div style="display: flex; gap: 6px; margin-bottom: 6px;">
           <select id="model-select" style="flex: 1;">
-            <option value="gemini-3.8-flash">gemini-3.8-flash（推奨・高精度・無料枠）</option>
-            <option value="gemini-3.8-flash-lite">gemini-3.8-flash-lite（高速・軽量・混雑回避用）</option>
-            <option value="gemini-3.5-flash">gemini-3.5-flash（安定代替モデル）</option>
+            <option value="gemini-flash-preview">gemini-flash-preview（推奨・動作確認済み）</option>
+            <option value="gemini-flash-lite-latest">gemini-flash-lite-latest（高速・軽量）</option>
           </select>
           <button type="button" class="mini-btn" id="fetch-models-btn" style="white-space: nowrap; padding: 0 12px;">🔍 利用可能モデルを自動取得</button>
         </div>
@@ -1067,8 +1177,19 @@
 
       <div class="input-group">
         <label for="event-dict-input">6. イベント別・自動補足辞書（イベント名：補足テキスト）</label>
-        <textarea id="event-dict-input" rows="6"></textarea>
+        <textarea id="event-dict-input" rows="5"></textarea>
         <div class="input-hint">※「イベント名：補足文」の形式で1行ずつ記述。AI解析・手動ビルダーのどちらでも該当イベント選択時に自動追記します。</div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div class="input-group">
+          <label for="city-map-url-input">7. 🗺️ 都市マップのリンク先URL</label>
+          <input type="text" id="city-map-url-input" placeholder="index.html">
+        </div>
+        <div class="input-group">
+          <label for="bear-sim-url-input">8. 🐻 熊ジェネレーターのリンク先URL</label>
+          <input type="text" id="bear-sim-url-input" placeholder="bear.html">
+        </div>
       </div>
 
       <button class="btn btn-primary" id="save-settings-btn">設定を保存してクラウド同期する</button>
@@ -1079,8 +1200,10 @@
 
 <script>
   const EMBEDDED_FIREBASE_URL = 'https://kingshot-rbn-map-default-rtdb.firebaseio.com/kingshot_notice_history';
-  const DEFAULT_MODEL = 'gemini-3.8-flash';
-  const FALLBACK_DEFAULT_MODELS = ['gemini-3.8-flash', 'gemini-3.8-flash-lite', 'gemini-3.5-flash'];
+  const DEFAULT_CITY_MAP_URL = 'index.html';
+  const DEFAULT_BEAR_SIM_URL = 'bear.html';
+  const DEFAULT_MODEL = 'gemini-flash-preview';
+  const FALLBACK_DEFAULT_MODELS = ['gemini-flash-preview', 'gemini-flash-lite-latest'];
   const DEFAULT_EVENT_DICT = `同盟争覇戦：左寄せ、比率613
 調合ショップ：アイテム交換忘れずにー
 全軍出撃：(領地外採集注意⚠
@@ -1129,7 +1252,6 @@
     '波越えの旅'
   ];
 
-  // 提示いただいた3つの早見表から抽出したポイント対象項目一覧
   const DEFAULT_PRESET_PHASES = [
     '黄金',
     '加速',
@@ -1151,12 +1273,12 @@
     '課金'
   ];
 
-  // 早見表タブの初期データ
   const DEFAULT_REFERENCE_CHARTS = [
     {
       id: 'chart_kvk',
-      title: '【最強王国準備フェーズ】',
-      body: `日数 月 火 水 木 金土
+      title: '最強王国準備フェーズ',
+      rawText: `【最強王国準備フェーズ】
+日数 月 火 水 木  金土 
 黄金 ◎｜◯｜－｜－｜◎｜
 加速 ◎｜◎｜－｜－｜◎｜
 宝石 ◎｜－｜◯｜◯｜－｜
@@ -1171,42 +1293,45 @@
 訓練 －｜－｜－｜◎｜－｜
 採集 －｜◎｜－｜◎｜◎｜
 塔  ◎｜－｜◎｜－｜◎｜
-※◎◯：対象日 ◎：推奨日`
+◎◯：対象日 ◎：推奨日`
     },
     {
       id: 'chart_alliance_duel',
-      title: '【同盟対決 早見表】',
-      body: `同盟対決  １ ２ ３ ４ ５ ６
+      title: '同盟対決 早見表',
+      rawText: `明日から同盟対決❗🐈
+同盟対決  １ ２ ３ ４ ５ ６
 黄金加速  ◎|◎|－|－|◎|◎
 領主宝石  －|－|◎|◎|－|◎
-ハヤブサ  －|◎|－|◎|－|－
-英雄欠片  －|◎|－|－|－|◎
-資源採集  ◎|－|◎|－|－|－
-ペット   －|－|◎|－|－|◎
-専用ハンマー－|－|－|◎|－|◎
-訓練昇格  －|－|－|◎|－|－
-領主装備  －|－|－|－|◎|◎
-ミスリル  －|－|－|◎|－|◎
-野獣巨獣  －|－|－|－|◎|◎
-※ダイヤと課金は毎日`
+ハヤブサ  －|◎|－|◎|－|－ 
+英雄欠片  －|◎|－|－|－|◎ 
+資源採集  ◎|－|◎|－|－|－ 
+ペット   －|－|◎|－|－|◎ 
+専用ハンマー－|－|－|◎|－|◎ 
+訓練昇格  －|－|－|◎|－|－ 
+領主装備  －|－|－|－|◎|◎ 
+ミスリル  －|－|－|◎|－|◎ 
+野獣巨獣  －|－|－|－|◎|◎ 
+ダイヤと課金は毎日`
     },
     {
       id: 'chart_supreme_lord',
-      title: '【至高領主早見表】',
-      body: `項目   月 | 火 | 水 | 木 | 金 | 土 | 日
-黄金建設 ◎ | ◎ | － | － | ◎ | － | ◎
-領主装備 － | － | － | － | － | ◎ | ◎
-領主宝石 ◎ | － | ◎ | ◎ | － | － | －
-加速   ◎ | ◎ | － | － | ◎ | － | ◎
-欠片   － | ◎ | ◎ | － | － | － | ◎
-ﾙｰﾚｯﾄ   － | ◎ | ◎ | － | － | － | －
-マスター － | ◎ | ◎ | － | － | － | －
-ペット  － | － | ◎ | － | － | － | ◎
-兵士訓練 － | － | － | ◎ | － | ◎ | －
-英雄装備 － | ◎ | － | ◎ | ◎ | － | －
-ハンマー － | ◎ | － | ◎ | ◎ | － | －
-採集   － | － | － | － | － | － | ◎
-ミスリル － | ◎ | － | ◎ | ◎ | － | －`
+      title: '至高領主早見表',
+      rawText: `    至高領主早見表
+
+    月 | 火 | 水 | 木 | 金 | 土 | 日
+黄金建設◎ | ◎ | － | － | ◎ | － | ◎
+領主装備－ | － | － | － | － | ◎ | ◎
+領主宝石◎ | － | ◎ | ◎ | － | － | －
+加速  ◎ | ◎ | － | － | ◎ | － | ◎
+欠片  － | ◎ | ◎ | － | － | － | ◎
+ﾙｰﾚｯﾄ      － | ◎ | ◎ | － | － | － | －
+マスター－ | ◎ | ◎ | － | － | － | －
+ペット － | － | ◎ | － | － | － | ◎ 
+兵士訓練－ | － | － | ◎ | － | ◎ | － 
+英雄装備－ | ◎ | － | ◎ | ◎ | － | － 
+ハンマー－ | ◎ | － | ◎ | ◎ | － | － 
+採集     － | － | － | － | － | － | ◎ 
+ミスリル－ | ◎ | － | ◎ | ◎ | － | － `
     }
   ];
 
@@ -1238,6 +1363,8 @@
 `;
 
   const syncStatusBadge = document.getElementById('sync-status-badge');
+  const linkCityMap = document.getElementById('link-city-map');
+  const linkBearSim = document.getElementById('link-bear-sim');
   const navTabs = document.querySelectorAll('.nav-tab');
   const tabPanes = document.querySelectorAll('.tab-pane');
 
@@ -1251,6 +1378,8 @@
   const bearBaseDateInput = document.getElementById('bear-base-date');
   const bearTextInput = document.getElementById('bear-text-input');
   const eventDictInput = document.getElementById('event-dict-input');
+  const cityMapUrlInput = document.getElementById('city-map-url-input');
+  const bearSimUrlInput = document.getElementById('bear-sim-url-input');
   const saveSettingsBtn = document.getElementById('save-settings-btn');
   const settingsStatusMsg = document.getElementById('settings-status-msg');
 
@@ -1284,6 +1413,7 @@
   const buildManualBtn = document.getElementById('build-manual-btn');
 
   const chartsListContainer = document.getElementById('charts-list-container');
+  const toggleRawChartsBtn = document.getElementById('toggle-raw-charts-btn');
   const addChartBtn = document.getElementById('add-chart-btn');
   const resetChartsBtn = document.getElementById('reset-charts-btn');
 
@@ -1316,6 +1446,7 @@
   let isEventEditMode = false;
   let isPhaseEditMode = false;
   let editingChartIds = new Set();
+  let showRawChartsMode = false;
 
   let controlState = {
     asapan: 'auto',
@@ -1323,6 +1454,13 @@
     gather: 'auto',
     train: 'auto'
   };
+
+  function updateHeaderToolLinks() {
+    const mapUrl = (cityMapUrlInput.value || localStorage.getItem('ks_city_map_url') || DEFAULT_CITY_MAP_URL).trim();
+    const bearUrl = (bearSimUrlInput.value || localStorage.getItem('ks_bear_sim_url') || DEFAULT_BEAR_SIM_URL).trim();
+    linkCityMap.href = mapUrl || DEFAULT_CITY_MAP_URL;
+    linkBearSim.href = bearUrl || DEFAULT_BEAR_SIM_URL;
+  }
 
   navTabs.forEach(tab => {
     tab.addEventListener('click', () => {
@@ -1349,11 +1487,10 @@
     });
   });
 
-  // クラウド同期用ヘルパー（リスト・早見表）
   async function persistListsAndCharts() {
     localStorage.setItem('ks_custom_event_list', JSON.stringify(eventList));
     localStorage.setItem('ks_custom_phase_list', JSON.stringify(phaseList));
-    localStorage.setItem('ks_reference_charts', JSON.stringify(referenceCharts));
+    localStorage.setItem('ks_reference_charts_v2', JSON.stringify(referenceCharts));
 
     const baseUrl = getFirebaseBaseUrl();
     if (!baseUrl) return;
@@ -1373,7 +1510,6 @@
     }
   }
 
-  // ① イベント項目の編集・削除・リセット
   toggleEditEventsBtn.addEventListener('click', () => {
     isEventEditMode = !isEventEditMode;
     toggleEditEventsBtn.classList.toggle('active-edit', isEventEditMode);
@@ -1390,7 +1526,6 @@
     renderManualChips();
   });
 
-  // ② ポイント対象項目の編集・削除・リセット
   toggleEditPhasesBtn.addEventListener('click', () => {
     isPhaseEditMode = !isPhaseEditMode;
     toggleEditPhasesBtn.classList.toggle('active-edit', isPhaseEditMode);
@@ -1400,7 +1535,7 @@
   });
 
   resetPhasesDefaultBtn.addEventListener('click', async () => {
-    if (!confirm('ポイント対象項目一覧を初期リスト（早見表の全18項目）に戻しますか？')) return;
+    if (!confirm('ポイント対象項目一覧を初期リストに戻しますか？')) return;
     phaseList = [...DEFAULT_PRESET_PHASES];
     selectedPhases.clear();
     await persistListsAndCharts();
@@ -1412,7 +1547,6 @@
     renderManualChips();
   });
 
-  // 手動ビルダーのチップ描画
   function renderManualChips() {
     manualEventChipsContainer.innerHTML = '';
     eventList.forEach((evName, idx) => {
@@ -1567,10 +1701,116 @@
     manualClosingText.value = manualClosingSelect.value;
   });
 
-  // 📅 早見表タブの描画・編集機能
+  function buildPrettyChartElement(rawText) {
+    const wrap = document.createElement('div');
+    wrap.className = 'pretty-chart-wrap';
+
+    const lines = rawText.split('\n').filter(l => l.trim().length > 0);
+    const topNotes = [];
+    const bottomNotes = [];
+    const tableRows = [];
+
+    lines.forEach(line => {
+      if (line.includes('｜') || line.includes('|')) {
+        const parts = line.split(/[｜|]/).map(s => s.trim());
+        if (parts.length > 1 && parts[parts.length - 1] === '') {
+          parts.pop();
+        }
+        tableRows.push(parts);
+      } else if (tableRows.length === 0) {
+        topNotes.push(line.trim());
+      } else {
+        bottomNotes.push(line.trim());
+      }
+    });
+
+    if (topNotes.length > 0) {
+      const banner = document.createElement('div');
+      banner.className = 'pretty-chart-banner';
+      banner.textContent = topNotes.join(' / ');
+      wrap.appendChild(banner);
+    }
+
+    if (tableRows.length > 0) {
+      const table = document.createElement('table');
+      table.className = 'pretty-chart-table';
+
+      tableRows.forEach((rowCells, rIdx) => {
+        const tr = document.createElement('tr');
+        if (rIdx === 0 && rowCells.length === 1) {
+          const tokens = rowCells[0].split(/[\s ]+/).filter(Boolean);
+          tokens.forEach(tok => {
+            const th = document.createElement('th');
+            th.textContent = tok;
+            tr.appendChild(th);
+          });
+        } else if (rIdx === 0 && rowCells.length > 1 && rowCells[0] !== '') {
+          const emptyTh = document.createElement('th');
+          emptyTh.textContent = '項目';
+          tr.appendChild(emptyTh);
+          rowCells.forEach(cell => {
+            const th = document.createElement('th');
+            th.textContent = cell;
+            tr.appendChild(th);
+          });
+        } else {
+          let normalizedCells = [];
+          if (rIdx > 0 && rowCells.length > 1) {
+            const firstMatch = rowCells[0].match(/^(.+?)[\s ]*([◎◯〇－\-]+)$/);
+            if (firstMatch) {
+              normalizedCells.push(firstMatch[1].trim());
+              normalizedCells.push(firstMatch[2].trim());
+              normalizedCells.push(...rowCells.slice(1));
+            } else {
+              normalizedCells = rowCells;
+            }
+          } else {
+            normalizedCells = rowCells;
+          }
+
+          normalizedCells.forEach((cellVal, cIdx) => {
+            const cellEl = document.createElement(rIdx === 0 ? 'th' : 'td');
+            const val = cellVal || (rIdx === 0 && cIdx === 0 ? '項目' : '');
+            cellEl.textContent = val;
+            if (rIdx > 0 && cIdx > 0) {
+              if (val.includes('◎')) cellEl.className = 'mark-double';
+              else if (val.includes('◯') || val.includes('〇')) cellEl.className = 'mark-single';
+              else if (val.includes('－') || val.includes('-')) cellEl.className = 'mark-none';
+            }
+            tr.appendChild(cellEl);
+          });
+        }
+        table.appendChild(tr);
+      });
+
+      wrap.appendChild(table);
+    } else {
+      const pre = document.createElement('pre');
+      pre.className = 'raw-chart-view';
+      pre.textContent = rawText;
+      return pre;
+    }
+
+    if (bottomNotes.length > 0) {
+      const note = document.createElement('div');
+      note.className = 'pretty-chart-note';
+      note.textContent = bottomNotes.join('\n');
+      wrap.appendChild(note);
+    }
+
+    return wrap;
+  }
+
+  toggleRawChartsBtn.addEventListener('click', () => {
+    showRawChartsMode = !showRawChartsMode;
+    toggleRawChartsBtn.textContent = showRawChartsMode ? '📊 綺麗テーブル表示に戻す' : '📄 ゲーム現物表示に切替';
+    renderReferenceCharts();
+  });
+
   function renderReferenceCharts() {
     chartsListContainer.innerHTML = '';
     referenceCharts.forEach((chart, idx) => {
+      const rawContent = chart.rawText !== undefined ? chart.rawText : (chart.body || '');
       const isEditing = editingChartIds.has(chart.id);
       const box = document.createElement('div');
       box.className = 'chart-box';
@@ -1578,24 +1818,25 @@
       if (isEditing) {
         box.innerHTML = `
           <div class="chart-header">
-            <input type="text" class="chart-title-input" style="font-weight: 700; padding: 6px 10px;" placeholder="早見表のタイトル">
+            <input type="text" class="chart-title-input" style="font-weight: 700; padding: 6px 10px;" placeholder="早見表の管理タイトル">
           </div>
-          <textarea class="chart-editor" rows="15"></textarea>
+          <div style="font-size: 0.75rem; color: #fbbf24; margin-bottom: 4px;">※ゲーム内チャット用のスペース・改行のまま編集・保存されます</div>
+          <textarea class="chart-editor" rows="16"></textarea>
           <div style="display: flex; justify-content: space-between; gap: 6px;">
             <button type="button" class="mini-btn danger del-chart-btn">🗑️ この表を削除</button>
             <div style="display: flex; gap: 6px;">
               <button type="button" class="mini-btn cancel-chart-btn">キャンセル</button>
-              <button type="button" class="mini-btn primary save-chart-btn">💾 保存＆同期</button>
+              <button type="button" class="mini-btn primary save-chart-btn">💾 現物のまま保存＆同期</button>
             </div>
           </div>
         `;
         box.querySelector('.chart-title-input').value = chart.title;
-        box.querySelector('.chart-editor').value = chart.body;
+        box.querySelector('.chart-editor').value = rawContent;
 
         box.querySelector('.save-chart-btn').addEventListener('click', async () => {
           const newTitle = box.querySelector('.chart-title-input').value.trim() || '無題の早見表';
-          const newBody = box.querySelector('.chart-editor').value;
-          referenceCharts[idx] = { ...chart, title: newTitle, body: newBody };
+          const newRaw = box.querySelector('.chart-editor').value;
+          referenceCharts[idx] = { id: chart.id, title: newTitle, rawText: newRaw };
           editingChartIds.delete(chart.id);
           await persistListsAndCharts();
           renderReferenceCharts();
@@ -1617,16 +1858,46 @@
         box.innerHTML = `
           <div class="chart-header">
             <span class="chart-title"></span>
-            <button type="button" class="mini-btn edit-chart-btn">✏️ 編集する</button>
+            <div class="chart-actions">
+              <button type="button" class="mini-btn success copy-chart-btn">📋 ゲーム用現物をコピー</button>
+              <button type="button" class="mini-btn edit-chart-btn">✏️ 編集する</button>
+            </div>
           </div>
-          <pre class="chart-content"></pre>
         `;
         box.querySelector('.chart-title').textContent = chart.title;
-        box.querySelector('.chart-content').textContent = chart.body;
+
+        const copyBtn = box.querySelector('.copy-chart-btn');
+        copyBtn.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(rawContent);
+          } catch {
+            const tmp = document.createElement('textarea');
+            tmp.value = rawContent;
+            document.body.appendChild(tmp);
+            tmp.select();
+            document.execCommand('copy');
+            document.body.removeChild(tmp);
+          }
+          const orig = copyBtn.textContent;
+          copyBtn.textContent = '✅ 現物コピー完了！';
+          setTimeout(() => {
+            copyBtn.textContent = orig;
+          }, 1800);
+        });
+
         box.querySelector('.edit-chart-btn').addEventListener('click', () => {
           editingChartIds.add(chart.id);
           renderReferenceCharts();
         });
+
+        if (showRawChartsMode) {
+          const pre = document.createElement('pre');
+          pre.className = 'raw-chart-view';
+          pre.textContent = rawContent;
+          box.appendChild(pre);
+        } else {
+          box.appendChild(buildPrettyChartElement(rawContent));
+        }
       }
 
       chartsListContainer.appendChild(box);
@@ -1637,15 +1908,15 @@
     const newId = 'chart_' + Date.now();
     referenceCharts.push({
       id: newId,
-      title: '【新しいイベント早見表】',
-      body: '日数 １｜２｜３｜４｜５｜\n項目 ◎｜－｜◎｜－｜◎｜'
+      title: '新しいイベント早見表',
+      rawText: '【新しいイベント早見表】\n日数 １｜２｜３｜４｜５｜\n項目 ◎｜－｜◎｜－｜◎｜'
     });
     editingChartIds.add(newId);
     renderReferenceCharts();
   });
 
   resetChartsBtn.addEventListener('click', async () => {
-    if (!confirm('3つの早見表をすべて初期状態に戻しますか？')) return;
+    if (!confirm('3つの早見表をすべて初期状態（ご提示いただいたゲーム用現物）に戻しますか？')) return;
     referenceCharts = JSON.parse(JSON.stringify(DEFAULT_REFERENCE_CHARTS));
     editingChartIds.clear();
     await persistListsAndCharts();
@@ -1725,7 +1996,6 @@
     showStatus(`「${targetStr}」の通知文を手動ビルダーから組み立てました！必要に応じて微調整して「確定保存＆コピー」を押してください。`, 'ok');
   });
 
-  // 利用可能なAIモデルの自動取得（Models API）
   function populateModelDropdown(modelsArray, preferredModel) {
     if (!Array.isArray(modelsArray) || modelsArray.length === 0) return;
     availableModelsList = modelsArray;
@@ -1782,12 +2052,9 @@
       validGeminiModels.sort((a, b) => {
         const score = (name) => {
           let s = 0;
+          if (name === 'gemini-flash-preview') s += 30;
           if (name.includes('flash')) s += 10;
-          if (name.includes('3.8')) s += 8;
-          else if (name.includes('3.5')) s += 6;
-          else if (name.includes('3.0') || name.includes('3-')) s += 5;
-          else if (name.includes('2.5')) s += 3;
-          if (name.includes('lite')) s += 1;
+          if (name.includes('lite')) s += 3;
           return s;
         };
         return score(b) - score(a);
@@ -1867,6 +2134,14 @@
             eventDictInput.value = cfg.eventDict;
             localStorage.setItem('ks_event_dict', cfg.eventDict);
           }
+          if (cfg.cityMapUrl) {
+            cityMapUrlInput.value = cfg.cityMapUrl;
+            localStorage.setItem('ks_city_map_url', cfg.cityMapUrl);
+          }
+          if (cfg.bearSimUrl) {
+            bearSimUrlInput.value = cfg.bearSimUrl;
+            localStorage.setItem('ks_bear_sim_url', cfg.bearSimUrl);
+          }
           if (Array.isArray(cfg.eventList) && cfg.eventList.length > 0) {
             eventList = cfg.eventList;
             localStorage.setItem('ks_custom_event_list', JSON.stringify(eventList));
@@ -1877,8 +2152,9 @@
           }
           if (Array.isArray(cfg.referenceCharts) && cfg.referenceCharts.length > 0) {
             referenceCharts = cfg.referenceCharts;
-            localStorage.setItem('ks_reference_charts', JSON.stringify(referenceCharts));
+            localStorage.setItem('ks_reference_charts_v2', JSON.stringify(referenceCharts));
           }
+          updateHeaderToolLinks();
           renderManualChips();
           renderReferenceCharts();
         }
@@ -2224,7 +2500,7 @@
       } catch {}
     }
 
-    const savedChartsRaw = localStorage.getItem('ks_reference_charts');
+    const savedChartsRaw = localStorage.getItem('ks_reference_charts_v2');
     if (savedChartsRaw) {
       try {
         const parsedCharts = JSON.parse(savedChartsRaw);
@@ -2239,6 +2515,8 @@
     const savedBearText = localStorage.getItem('ks_bear_text') || '熊罠 21時 22時';
     const savedDict = localStorage.getItem('ks_event_dict') || DEFAULT_EVENT_DICT;
     const savedLimit = localStorage.getItem('ks_char_limit') || '300';
+    const savedCityMapUrl = localStorage.getItem('ks_city_map_url') || DEFAULT_CITY_MAP_URL;
+    const savedBearSimUrl = localStorage.getItem('ks_bear_sim_url') || DEFAULT_BEAR_SIM_URL;
 
     apiKeyInput.value = savedKey;
     firebaseUrlInput.value = savedUrl;
@@ -2246,7 +2524,10 @@
     bearTextInput.value = savedBearText;
     eventDictInput.value = savedDict;
     charLimitInput.value = savedLimit;
+    cityMapUrlInput.value = savedCityMapUrl;
+    bearSimUrlInput.value = savedBearSimUrl;
 
+    updateHeaderToolLinks();
     renderManualChips();
     renderReferenceCharts();
     setupSegmentedControl('asapan-group', 'asapan');
@@ -2283,6 +2564,8 @@
     const bearDate = bearBaseDateInput.value || '2026-11-22';
     const bearText = bearTextInput.value.trim() || '熊罠 21時 22時';
     const dict = eventDictInput.value;
+    const cityMapUrl = cityMapUrlInput.value.trim() || DEFAULT_CITY_MAP_URL;
+    const bearSimUrl = bearSimUrlInput.value.trim() || DEFAULT_BEAR_SIM_URL;
 
     if (key) localStorage.setItem('ks_gemini_api_key', key);
     localStorage.setItem('ks_gemini_model', model);
@@ -2290,6 +2573,10 @@
     localStorage.setItem('ks_bear_base_date', bearDate);
     localStorage.setItem('ks_bear_text', bearText);
     localStorage.setItem('ks_event_dict', dict);
+    localStorage.setItem('ks_city_map_url', cityMapUrl);
+    localStorage.setItem('ks_bear_sim_url', bearSimUrl);
+
+    updateHeaderToolLinks();
 
     const cloudOk = await pushConfigToCloud({
       apiKey: key,
@@ -2298,6 +2585,8 @@
       bearBaseDate: bearDate,
       bearText: bearText,
       eventDict: dict,
+      cityMapUrl: cityMapUrl,
+      bearSimUrl: bearSimUrl,
       eventList: eventList,
       phaseList: phaseList,
       referenceCharts: referenceCharts,
@@ -2466,7 +2755,7 @@
 
   async function callGeminiWithAutoRetryAndFallback(apiKey, primaryModel, parts) {
     const candidates = availableModelsList.length > 0 ? availableModelsList : FALLBACK_DEFAULT_MODELS;
-    const fallbackChain = [primaryModel, ...candidates.filter(m => m !== primaryModel)].slice(0, 4);
+    const fallbackChain = [primaryModel, ...candidates.filter(m => m !== primaryModel)].slice(0, 3);
     let lastError = null;
 
     for (let mIdx = 0; mIdx < fallbackChain.length; mIdx++) {
@@ -2518,7 +2807,7 @@
     const bearLine = getBearLineText();
     const learnedExamples = buildDynamicFewShotPrompt();
 
-    let asapanInstruction = '画像に翌日の情報イベント（諜報）やスタミナ・黄金の巨刃がポイント加算対象として写っている場合は「朝パーン温存（NG）※翌日ポイント対象のため待機推奨」、そうでなければ「朝パーンOK！」と出力すること。';
+    let asapanInstruction = `2行目の朝パーン判定について：原則は必ず「朝パーンOK！」と出力すること。「${targetDateStr}」の朝9:00（サーバーリセット）の時点で、『情報任務（諜報）』自体がポイント獲得対象になっているとスクショから明確に読み取れる場合のみ「朝パーン温存（NG）※翌日ポイント対象のため待機推奨」とし、別日の予定や単なる「情報」という文字だけでNGにしないこと。`;
     if (controlState.asapan === 'ok') {
       asapanInstruction = '2行目は必ず「朝パーンOK！」と出力すること。';
     } else if (controlState.asapan === 'ng') {
@@ -2527,7 +2816,7 @@
 
     let prepInstruction = '';
     if (controlState.gather === 'auto' && controlState.train === 'auto') {
-      prepInstruction = '画像に翌日のポイント項目として「採集（採取）」や「兵士訓練（訓練・昇格）」が写っている場合は、該当項目に応じて末尾に「※翌日採取なので寝る前に仕込む人はお忘れなく〜」「※翌日訓練なので寝る前に仕込む人はお忘れなく〜」、両方ある場合は「※翌日採取・訓練なので寝る前に仕込む人はお忘れなく〜」を1行で追記すること。どちらもなければ書かないこと。';
+      prepInstruction = `画像に「${targetDateStr}」のさらに翌日（次のリセット日）のポイント項目として「採集（採取）」や「兵士訓練（訓練・昇格）」が明確に写っている場合のみ、末尾に「※翌日採取なので寝る前に仕込む人はお忘れなく〜」「※翌日訓練なので寝る前に仕込む人はお忘れなく〜」、両方ある場合は「※翌日採取・訓練なので寝る前に仕込む人はお忘れなく〜」を1行で追記すること。不明確なら書かないこと。`;
     } else {
       prepInstruction = `翌日の寝る前仕込み案内について：
       ・採集（採取）の指定: ${controlState.gather === 'yes' ? '必ず含める' : (controlState.gather === 'no' ? '絶対に含めない' : '画像に翌日の採集ポイントがあれば含める')}
