@@ -1,0 +1,1741 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>キングショット 巨熊狩猟 最適編成シミュレーター（S1〜S8完全版）</title>
+  <style>
+    :root {
+      --bg: #090d16;
+      --card: #111827;
+      --card-sub: #1e293b;
+      --border: #334155;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-hover: #0284c7;
+      --gold: #fbbf24;
+      --green: #34d399;
+      --red: #f87171;
+      --orange: #fb923c;
+      --purple: #c084fc;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans JP", sans-serif;
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 940px;
+      margin: 0 auto;
+      padding: 16px 14px 96px;
+    }
+    header {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px 16px;
+      margin-bottom: 18px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.18rem;
+      color: var(--gold);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    header p {
+      margin: 4px 0 0;
+      font-size: 0.81rem;
+      color: var(--text-muted);
+    }
+    .header-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    button {
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--card-sub);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 0.81rem;
+      font-weight: 700;
+      transition: all 0.15s;
+    }
+    button:hover {
+      border-color: var(--accent);
+      background: #273549;
+    }
+    button.primary {
+      background: var(--gold);
+      color: #090d16;
+      border-color: var(--gold);
+      font-weight: 800;
+    }
+    button.primary:hover {
+      background: #f59e0b;
+    }
+    button.accent-btn {
+      background: rgba(56, 189, 248, 0.14);
+      color: var(--accent);
+      border-color: rgba(56, 189, 248, 0.45);
+    }
+    button.accent-btn:hover {
+      background: rgba(56, 189, 248, 0.25);
+    }
+    button.danger {
+      color: var(--red);
+      border-color: rgba(248, 113, 113, 0.4);
+      background: rgba(248, 113, 113, 0.08);
+    }
+    button.danger:hover {
+      background: rgba(248, 113, 113, 0.18);
+    }
+    .step-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    }
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+    }
+    .step-badge {
+      background: var(--accent);
+      color: #090d16;
+      font-weight: 900;
+      font-size: 0.74rem;
+      padding: 3px 10px;
+      border-radius: 999px;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+    .step-title {
+      font-size: 1rem;
+      font-weight: 800;
+      margin: 0;
+    }
+    .stance-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(245px, 1fr));
+      gap: 10px;
+    }
+    .stance-btn {
+      text-align: left;
+      padding: 13px;
+      border-radius: 12px;
+      background: #0f172a;
+      border: 2px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 6px;
+    }
+    .stance-btn.active {
+      border-color: var(--gold);
+      background: rgba(251, 191, 36, 0.1);
+      box-shadow: 0 4px 16px rgba(251, 191, 36, 0.12);
+    }
+    .stance-btn .st-name {
+      font-weight: 800;
+      font-size: 0.9rem;
+      color: var(--text);
+    }
+    .stance-btn.active .st-name {
+      color: var(--gold);
+    }
+    .stance-btn .st-desc {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-weight: 400;
+      line-height: 1.45;
+    }
+    .stance-btn .st-meta {
+      font-size: 0.72rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: var(--accent);
+      border-top: 1px solid rgba(51, 65, 85, 0.7);
+      padding-top: 6px;
+    }
+    .row-flex {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+    .count-btns {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .count-btn {
+      width: 48px;
+      height: 40px;
+      font-size: 0.88rem;
+      border-radius: 10px;
+      background: #0f172a;
+    }
+    .count-btn.active {
+      background: var(--gold);
+      color: #090d16;
+      border-color: var(--gold);
+      font-weight: 900;
+    }
+    .toggle-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #0f172a;
+      padding: 9px 13px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      font-size: 0.84rem;
+      cursor: pointer;
+    }
+    input[type="checkbox"] {
+      width: 17px;
+      height: 17px;
+      accent-color: var(--gold);
+      cursor: pointer;
+    }
+    .input-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+    }
+    .field label {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+    .field input, .field select {
+      background: #1e293b;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      width: 100%;
+    }
+    .field input:focus, .field select:focus {
+      outline: none;
+      border-color: var(--gold);
+    }
+    .cap-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .sub-note {
+      font-size: 0.77rem;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+    .alert-box {
+      background: rgba(248, 113, 113, 0.14);
+      border: 1px solid var(--red);
+      color: #fecaca;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 0.82rem;
+      margin-top: 10px;
+      display: none;
+    }
+
+    /* STEP 4 3行の鉄則ボックス */
+    .rules-box {
+      margin-top: 12px;
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 0.81rem;
+    }
+    .rules-box-title {
+      font-weight: 800;
+      color: var(--gold);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .rules-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .rules-list li {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 6px;
+      line-height: 1.45;
+    }
+    .rule-pill {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 5px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .rule-pill.ng {
+      background: rgba(248, 113, 113, 0.2);
+      color: var(--red);
+      border: 1px solid rgba(248, 113, 113, 0.45);
+    }
+    .rule-pill.nostack {
+      background: rgba(251, 146, 60, 0.2);
+      color: var(--orange);
+      border: 1px solid rgba(251, 146, 60, 0.45);
+    }
+    .rule-pill.ok {
+      background: rgba(52, 211, 153, 0.2);
+      color: var(--green);
+      border: 1px solid rgba(52, 211, 153, 0.45);
+    }
+    .rules-footer {
+      margin-top: 9px;
+      padding-top: 7px;
+      border-top: 1px solid rgba(51, 65, 85, 0.6);
+      font-size: 0.74rem;
+      color: var(--text-muted);
+    }
+
+    /* STEP 5 英雄リスト */
+    .hero-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 8px;
+    }
+    .hero-item {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+    .hero-item.disabled {
+      opacity: 0.45;
+    }
+    .hero-left {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      min-width: 0;
+    }
+    .hero-name {
+      font-weight: 800;
+      font-size: 0.86rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .hero-tag {
+      font-size: 0.67rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .hero-tag.tier-s {
+      background: rgba(251, 191, 36, 0.18);
+      color: var(--gold);
+    }
+    .hero-right {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+    .hero-right select {
+      background: #1e293b;
+      color: var(--gold);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+    .icon-btn {
+      padding: 4px 7px;
+      font-size: 0.75rem;
+      border-radius: 6px;
+    }
+
+    /* 結果セクション */
+    .result-card {
+      background: linear-gradient(180deg, #111827 0%, #090d16 100%);
+      border: 2px solid var(--gold);
+      border-radius: 16px;
+      padding: 18px;
+      margin-top: 22px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+    }
+    .result-top {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .result-top h2 {
+      margin: 0;
+      font-size: 1.12rem;
+      color: var(--gold);
+    }
+    .summary-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 8px;
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      margin-bottom: 12px;
+      font-size: 0.8rem;
+    }
+    .summary-cell {
+      background: #111827;
+      border: 1px solid rgba(51, 65, 85, 0.7);
+      border-radius: 8px;
+      padding: 8px 10px;
+    }
+    .summary-cell .s-lbl {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+    .summary-cell .s-val {
+      font-size: 0.96rem;
+      font-weight: 800;
+      margin-top: 2px;
+    }
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.84rem;
+      min-width: 660px;
+    }
+    th, td {
+      padding: 10px 10px;
+      border-bottom: 1px solid var(--border);
+      text-align: center;
+    }
+    th {
+      background: #090d16;
+      color: var(--text-muted);
+      font-weight: 700;
+      font-size: 0.76rem;
+    }
+    tr.rally-row {
+      background: rgba(251, 191, 36, 0.08);
+    }
+    td.left {
+      text-align: left;
+    }
+    .skill-pill {
+      display: inline-block;
+      font-size: 0.72rem;
+      padding: 2px 7px;
+      border-radius: 5px;
+      background: rgba(52, 211, 153, 0.15);
+      color: var(--green);
+      margin-top: 3px;
+      font-weight: 600;
+    }
+    .dup-warn {
+      display: inline-block;
+      font-size: 0.7rem;
+      padding: 2px 7px;
+      border-radius: 5px;
+      background: rgba(251, 146, 60, 0.2);
+      color: var(--orange);
+      border: 1px solid rgba(251, 146, 60, 0.45);
+      margin-top: 4px;
+      font-weight: 800;
+    }
+    .ratio-text {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    /* フローティングジャンプボタン */
+    #jumpBtn {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 90;
+      background: var(--gold);
+      color: #090d16;
+      border: 1px solid #fde68a;
+      border-radius: 999px;
+      padding: 11px 18px;
+      font-size: 0.88rem;
+      font-weight: 900;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    #jumpBtn:hover {
+      background: #f59e0b;
+      transform: translateY(-2px);
+    }
+    #jumpBtn.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(12px);
+    }
+
+    /* モーダル */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.78);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+      z-index: 200;
+    }
+    .modal-backdrop.open {
+      display: flex;
+    }
+    .modal {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      max-width: 740px;
+      width: 100%;
+      max-height: 86vh;
+      overflow-y: auto;
+      padding: 18px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+      margin-bottom: 14px;
+    }
+    .modal-header h3 {
+      margin: 0;
+      font-size: 1.04rem;
+      color: var(--gold);
+    }
+    .tier-box {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 13px;
+      margin-bottom: 12px;
+      font-size: 0.83rem;
+      line-height: 1.55;
+    }
+    .tier-box h4 {
+      margin: 0 0 8px;
+      color: var(--accent);
+      font-size: 0.92rem;
+    }
+    .detail-item {
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed rgba(51, 65, 85, 0.8);
+    }
+    .detail-item:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+    .detail-title {
+      font-weight: 800;
+      color: var(--gold);
+      margin-bottom: 3px;
+    }
+    .json-textarea {
+      width: 100%;
+      min-height: 170px;
+      background: #090d16;
+      color: #e2e8f0;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.76rem;
+      line-height: 1.45;
+      resize: vertical;
+    }
+    .json-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .json-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-top: 8px;
+    }
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%);
+      background: var(--green);
+      color: #090d16;
+      font-weight: 800;
+      padding: 10px 20px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      z-index: 300;
+      display: none;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>🐻 キングショット 巨熊狩猟 最適編成ツール（S1〜S8完全版）</h1>
+        <p>最新Tier表・スキル干渉・重複不可ルール対応。STEP 1〜5を入力すると一番下に最適編成が自動生成されます</p>
+      </div>
+      <div class="header-actions">
+        <button type="button" id="openTierBtn">🏆 S1〜S8環境Tier表</button>
+        <button type="button" id="openGuideBtn">📖 使い方ガイド</button>
+        <button type="button" id="openJsonBtn" class="accent-btn">📦 データ一括更新</button>
+        <button type="button" id="resetBtn" class="danger">🔄 初期値に戻す</button>
+      </div>
+    </header>
+
+    <!-- STEP 1 -->
+    <section class="step-card">
+      <div class="step-header">
+        <span class="step-badge">STEP 1</span>
+        <h2 class="step-title">あなたの立ち位置（同盟内のレベル感）を選択</h2>
+      </div>
+      <div class="stance-grid" id="stanceGrid">
+        <button type="button" class="stance-btn" data-stance="top">
+          <div>
+            <div class="st-name">👑 自身がトップ層パターン</div>
+            <div class="st-desc">自集結の火力が同盟トップクラス。自集結に弓兵(85%)を最優先投資して総スコアを稼ぎます。</div>
+          </div>
+          <div class="st-meta">目標: 自集結 弓85% ／ 乗り手バランス</div>
+        </button>
+        <button type="button" class="stance-btn active" data-stance="upper">
+          <div>
+            <div class="st-name">⚔️ 自身より強い人にも乗るパターン</div>
+            <div class="st-desc">上位〜中堅層向け。自集結(60%)とトップ層乗りの1〜3軍(77.5〜87.5%)を両立します。</div>
+          </div>
+          <div class="st-meta">目標: 自集結 弓60% ／ 1〜3軍 弓77.5〜87.5%</div>
+        </button>
+        <button type="button" class="stance-btn" data-stance="joiner">
+          <div>
+            <div class="st-name">🛡️ 殆どが自身より強い人に乗るパターン</div>
+            <div class="st-desc">育成・参加メイン層向け。強い集結に乗る1〜4軍(75〜90%)へ弓兵を集中投資します。</div>
+          </div>
+          <div class="st-meta">目標: 自集結 弓20% ／ 1〜4軍 弓75〜90%</div>
+        </button>
+      </div>
+    </section>
+
+    <!-- STEP 2 -->
+    <section class="step-card">
+      <div class="step-header">
+        <span class="step-badge">STEP 2</span>
+        <h2 class="step-title">出撃できる部隊数（行軍枠）を選択</h2>
+      </div>
+      <div class="row-flex" style="justify-content:space-between;">
+        <div>
+          <div style="font-size:0.78rem; color:var(--text-muted); margin-bottom:6px; font-weight:700;">乗り手（参加）部隊数：</div>
+          <div class="count-btns" id="marchCountBtns">
+            <button type="button" data-count="1" class="count-btn">1軍</button>
+            <button type="button" data-count="2" class="count-btn">2軍</button>
+            <button type="button" data-count="3" class="count-btn">3軍</button>
+            <button type="button" data-count="4" class="count-btn">4軍</button>
+            <button type="button" data-count="5" class="count-btn">5軍</button>
+            <button type="button" data-count="6" class="count-btn active">6軍</button>
+          </div>
+        </div>
+        <label class="toggle-box" style="margin-top:16px;">
+          <input type="checkbox" id="useRallyCheck" checked />
+          <span><strong style="color:var(--gold);">自集結（自分で集結を立てる）</strong> を使用する</span>
+        </label>
+      </div>
+    </section>
+
+    <!-- STEP 3 -->
+    <section class="step-card">
+      <div class="step-header">
+        <span class="step-badge">STEP 3</span>
+        <h2 class="step-title">最高ティアの所持兵数と、各部隊の定員を入力</h2>
+      </div>
+      <div class="input-grid-3">
+        <div class="field">
+          <label style="color:var(--accent);">歩兵（盾）所持数</label>
+          <input type="number" id="infTotal" value="447028" min="0" />
+        </div>
+        <div class="field">
+          <label style="color:var(--green);">騎兵 所持数</label>
+          <input type="number" id="cavTotal" value="333546" min="0" />
+        </div>
+        <div class="field">
+          <label style="color:var(--gold);">弓兵 所持数</label>
+          <input type="number" id="arcTotal" value="480061" min="0" />
+        </div>
+      </div>
+
+      <div style="margin-top:14px; display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px;">
+        <span style="font-size:0.84rem; font-weight:800;">各部隊の出撃上限（定員）</span>
+        <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+          <label style="font-size:0.77rem; color:var(--text-muted); background:#0f172a; border:1px solid var(--border); padding:5px 9px; border-radius:8px;">
+            最低確保人数:
+            <input type="number" id="minTroopInput" value="5000" min="0" step="500" style="width:78px; padding:3px 6px; background:#1e293b; color:var(--text); border:1px solid var(--border); border-radius:6px; font-weight:700;" />
+          </label>
+          <button type="button" id="copyCapBtn" style="color:var(--gold);">📋 1軍の定員を全軍へ一括反映</button>
+        </div>
+      </div>
+
+      <div class="cap-grid" id="capGrid"></div>
+      <p class="sub-note">※各兵種を最低5,000人以上配置するルールを自動で守って計算します。</p>
+    </section>
+
+    <!-- STEP 4 -->
+    <section class="step-card" id="step4Card">
+      <div class="step-header">
+        <span class="step-badge">STEP 4</span>
+        <h2 class="step-title">自集結の英雄3人を選択（S1〜S8全英雄対応・上ほど推奨）</h2>
+      </div>
+      <div class="input-grid-3">
+        <div class="field">
+          <label style="color:var(--accent);">歩兵枠（左）</label>
+          <select id="rallyHero1"></select>
+        </div>
+        <div class="field">
+          <label style="color:var(--green);">騎兵枠（中）</label>
+          <select id="rallyHero2"></select>
+        </div>
+        <div class="field">
+          <label style="color:var(--gold);">弓兵枠（右）</label>
+          <select id="rallyHero3"></select>
+        </div>
+      </div>
+
+      <div class="alert-box" id="rallyInterferenceAlert"></div>
+
+      <!-- スッキリ整理した「絶対に守るべき3行の鉄則」 -->
+      <div class="rules-box">
+        <div class="rules-box-title">⚠️ 集結内のスキル干渉・重複 3つの鉄則</div>
+        <ul class="rules-list">
+          <li>
+            <span class="rule-pill ng">① スキル干渉注意</span>
+            <span><strong>ペーラ × ゾーイ</strong>は同時使用NG（ペーラ使用時は歩兵に<strong>アルカ</strong>推奨）</span>
+          </li>
+          <li>
+            <span class="rule-pill nostack">② 重複不可（1集結に1人まで）</span>
+            <span><strong>ペーラ・リズ・ビビアン</strong>は自集結と参加者で被らせない</span>
+          </li>
+          <li>
+            <span class="rule-pill ok">③ 重複OK（迷ったらコレ）</span>
+            <span><strong>チェンコ・インウー・あまね・マーゴ</strong>（＆<strong>イェーガー・マリン</strong>等の確率バフ）は何人被っても100%加算</span>
+          </li>
+        </ul>
+        <div class="rules-footer">
+          ※詳しい干渉パターンの解説や世代別の交代目安は、画面上部ヘッダーの「<strong>🏆 S1〜S8環境Tier表</strong>」から確認できます。
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 5 -->
+    <section class="step-card">
+      <div class="step-header">
+        <span class="step-badge">STEP 5</span>
+        <h2 class="step-title">乗り手候補の所持英雄と「第1遠征スキルLv」を設定</h2>
+      </div>
+      <div class="row-flex" style="justify-content:space-between; margin-bottom:10px;">
+        <label class="toggle-box">
+          <input type="checkbox" id="prioritizeAtkCheck" checked />
+          <span><strong style="color:var(--gold);">攻撃バフ優先</strong>（周囲の殺傷バフ被りを回避）</span>
+        </label>
+        <button type="button" id="addHeroBtn" style="color:var(--gold);">+ 新規英雄を追加</button>
+      </div>
+      <p class="sub-note" style="margin-top:0; margin-bottom:10px;">
+        ※巨熊は状態異常（裂傷・恐怖等）が無効なため、該当する第1遠征スキルは「熊無効」として乗り手候補から自動除外されます（リストは有効なS・Aランク候補のみ表示）。
+      </p>
+      <div class="hero-list" id="heroList"></div>
+    </section>
+
+    <!-- 最終計算結果 -->
+    <section class="result-card" id="resultSection">
+      <div class="result-top">
+        <h2>📋 最適編成 リアルタイム計算結果</h2>
+        <button type="button" class="primary" id="copyResultBtn">📋 編成表をテキストコピー</button>
+      </div>
+
+      <div class="summary-bar" id="summaryBar"></div>
+      <div class="alert-box" id="warnBox"></div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>部隊枠</th>
+              <th class="left">配置英雄（左端・隊長枠）</th>
+              <th style="color:var(--accent);">歩兵（盾）</th>
+              <th style="color:var(--green);">騎兵</th>
+              <th style="color:var(--gold);">弓兵</th>
+              <th>合計人数</th>
+              <th>比率目安<br>(歩:騎:弓)</th>
+            </tr>
+          </thead>
+          <tbody id="resultTbody"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <!-- フローティングジャンプボタン -->
+  <button type="button" id="jumpBtn">結果を見る ↓</button>
+
+  <!-- S1〜S8環境Tier表＆詳細仕様解説モーダル -->
+  <div class="modal-backdrop" id="tierModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>🏆 巨熊狩猟 S1〜S8 環境Tier＆詳細仕様ルール解説</h3>
+        <button type="button" class="close-modal">閉じる ✕</button>
+      </div>
+
+      <div class="tier-box">
+        <h4>👑 集結主（発起人）優先度（左ほど優先・星3つで左と交換目安）</h4>
+        <p style="margin:4px 0;"><strong style="color:var(--accent);">歩兵：</strong> <span id="tierTextInf">アマデウス(S1) ＞ ヘルガ(S1) ＞ ゾーイ(S2) ＞ ディエゴ(S8) ＞ アルカ(S4)</span></p>
+        <p style="margin:4px 0;"><strong style="color:var(--green);">騎兵：</strong> <span id="tierTextCav">アイヴァ(S7) ＞ ペーラ(S3) ＞ スルード(S5)</span></p>
+        <p style="margin:4px 0;"><strong style="color:var(--gold);">弓兵：</strong> <span id="tierTextArc">ルナ(S8) ＞ ヤン(S6) ＞ レン&amp;ロン(S7) ＞ ローザ(S4) ＞ ビビアン(S5) ＞ マリン(S2)</span></p>
+        <p style="margin:6px 0 0; color:var(--orange); font-size:0.79rem;">
+          ※注釈：ペーラを使う場合は第3スキル干渉を避けるため、歩兵枠はゾーイではなくアルカを使用。
+        </p>
+      </div>
+
+      <div class="tier-box">
+        <h4>⚔️ 参加者（乗り手・左端英雄）優先度</h4>
+        <p style="margin:4px 0;"><strong style="color:var(--gold);">Sランク：</strong> <span id="tierTextJoinerS">チェンコ / インウー / あまね / マーゴ / レン&amp;ロン / リズ</span><br>
+        <span style="font-size:0.78rem; color:var(--text-muted);">※自集結に使っていなければ <strong id="tierTextJoinerSOpt">アマデウス / アイヴァ / ルナ / ペーラ</strong> もSランク使用可</span></p>
+        <p style="margin:6px 0 0;"><strong style="color:var(--accent);">Aランク：</strong> <span id="tierTextJoinerA">ヤン / マリン / ローザ / イェーガー / スルード / ヒルデ / ビビアン</span></p>
+      </div>
+
+      <div class="tier-box">
+        <h4>🔍 詳細なスキル干渉・重複・仕様ルール解説</h4>
+
+        <div class="detail-item">
+          <div class="detail-title">1) 被ダメージ増加デバフ枠の競合・重複不可</div>
+          <div>
+            敵（巨熊）に対して「受けるダメージを増やす」デバフは同一のデバフ枠として扱われます。<br>
+            ・<strong>ペーラ第1 × ゾーイ第3の干渉：</strong> 集結主がペーラとゾーイを同時編成すると同系統デバフが上書き・競合し期待値が低下します。<br>
+            ・<strong>ペーラ ／ リズ ／ ビビアン同士の上書き：</strong> これら3名の第1スキルはすべて同枠の被ダメージ増加デバフのため重複しません（集結主＋参加者合わせて1集結内に1人まで有効）。
+          </div>
+        </div>
+
+        <div class="detail-item">
+          <div class="detail-title">2) S7〜S8特殊倍率枠の重複注意と全世代鉄板4名</div>
+          <div>
+            第7〜8世代の<strong>アイヴァ・レン&amp;ロン・ルナ</strong>等が持つ高倍率の特殊スキルダメージ枠は、同系統枠で複数人重なると上限・上書き制限を受けるケースがあります。<br>
+            一方、<strong>チェンコ・インウー（殺傷力UP）</strong>および<strong>あまね・マーゴ（攻撃力UP）</strong>は味方への純粋なステータスバフであるため、誰の集結に乗っても何人被っても100%加算される全世代不動の鉄板枠です。
+          </div>
+        </div>
+
+        <div class="detail-item">
+          <div class="detail-title">3) 状態異常無効・10ターン制限・攻撃時発動の仕様</div>
+          <div>
+            ・<strong>状態異常レジスト：</strong> 巨熊には状態異常耐性があるため、<strong>ゾーイ第1（裂傷）</strong>や<strong>ソフィア第2（恐怖）</strong>等の状態異常付与スキルは完全に無効化されます。<br>
+            ・<strong>10ターン制限：</strong> 戦闘は最大10ターンで終了するため、<strong>ヤン第1（4ターン毎）</strong>は4・8ターン目の計2回、<strong>スルード第2（4ターン毎・2T持続）</strong>は5〜6・9〜10ターン目の計2回のみ発動します。<br>
+            ・<strong>攻撃時発動の挙動：</strong> <strong>ペーラ第1・ビビアン第1</strong>は「攻撃時」にデバフを付与する仕様のため、行動順前の1ターン目初撃には乗らず2ターン目以降からフル恩恵を受けます。
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- データ一括更新（JSONインポート/エクスポート）モーダル -->
+  <div id="jsonModal" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>📦 マスターデータ一括更新（JSONインポート / エクスポート）</h3>
+        <button type="button" class="close-modal">閉じる ✕</button>
+      </div>
+
+      <div class="tier-box">
+        <h4>1. 現在のデータを書き出す（エクスポート）</h4>
+        <p style="margin:0 0 8px; color:var(--text-muted); font-size:0.8rem;">
+          新世代（S9以降）が実装された際は、このJSONをコピーしてAIに渡し「最新世代の英雄を追加したJSONを作成して」と依頼すると、HTMLを書き換えずに一括アップデートできます。
+        </p>
+        <textarea id="exportJsonBox" class="json-textarea" readonly></textarea>
+        <div class="json-actions">
+          <button type="button" class="primary" id="copyJsonBtn">📋 現在のJSONをコピー</button>
+          <button type="button" id="downloadJsonBtn">💾 .jsonファイルとして保存</button>
+        </div>
+      </div>
+
+      <div class="tier-box" style="margin-bottom:0;">
+        <h4>2. 最新データを取り込む（インポート）</h4>
+        <p style="margin:0 0 8px; color:var(--text-muted); font-size:0.8rem;">
+          更新用のJSONテキストを下に貼り付けるか、<code>.json</code> ファイルを選択して「データを一括反映する」を押してください。
+        </p>
+        <textarea id="importJsonBox" class="json-textarea" placeholder='ここに更新用JSONを貼り付けてください...'></textarea>
+        <div class="json-actions" style="justify-content:space-between;">
+          <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+            <label style="cursor:pointer; background:#1e293b; border:1px solid var(--border); padding:7px 11px; border-radius:9px; font-size:0.8rem; font-weight:700;">
+              📂 .jsonファイルを選択
+              <input type="file" id="importJsonFile" accept=".json,application/json" style="display:none;" />
+            </label>
+            <button type="button" id="loadSampleJsonBtn">📝 S9追加サンプルを表示</button>
+          </div>
+          <button type="button" class="primary" id="applyJsonBtn">⚡ データを一括反映する</button>
+        </div>
+        <div style="margin-top:10px;">
+          <label class="toggle-box" style="padding:7px 11px; font-size:0.8rem;">
+            <input type="checkbox" id="smartMergeCheck" checked />
+            <span><strong>スマートマージ（推奨）：</strong>自分が設定した「所持チェック・スキルLv・兵士数」を維持したまま、新キャラと最新Tierデータだけを追加・更新する</span>
+          </label>
+        </div>
+        <div class="alert-box" id="jsonErrorBox"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 使い方ガイドモーダル -->
+  <div class="modal-backdrop" id="guideModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>📖 巨熊狩猟シミュレーター 使い方ガイド</h3>
+        <button type="button" class="close-modal">閉じる ✕</button>
+      </div>
+      <div style="font-size:0.85rem; color:var(--text); display:flex; flex-direction:column; gap:10px;">
+        <p style="margin:0;"><strong>1. 立ち位置を選ぶ（STEP 1）：</strong><br>自分が同盟内で集結を立てる側か、強い人の集結に乗る側かを選びます。弓兵の配分バランスが自動最適化されます。</p>
+        <p style="margin:0;"><strong>2. 部隊数と兵士数を入力（STEP 2〜3）：</strong><br>出撃できる部隊数（1〜6軍）と、最高ティアの兵士数・各軍の定員を入力します。</p>
+        <p style="margin:0;"><strong>3. 英雄とスキルLvを設定（STEP 4〜5）：</strong><br>自集結に使う3人を選び、持っている乗り手英雄にチェックを入れて<strong>「第1遠征スキルLv」</strong>を選択します。</p>
+        <p style="margin:0;"><strong>4. 結果をコピーしてプリセット登録：</strong><br>一番下の結果表の数値通りにゲームの部隊プリセットを登録してください。入力内容は端末内に自動保存されます。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 英雄追加・編集モーダル -->
+  <div id="editHeroModal" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="editModalTitle">英雄スキル編集</h3>
+        <button type="button" class="close-modal">閉じる ✕</button>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <input type="hidden" id="editHeroId" />
+        <div class="field">
+          <label>英雄名</label>
+          <input type="text" id="editHeroName" placeholder="例：新世代英雄" />
+        </div>
+        <div class="field">
+          <label>第1遠征スキル名</label>
+          <input type="text" id="editSkillName" placeholder="例：〇〇の号令" />
+        </div>
+        <div class="input-grid-3">
+          <div class="field">
+            <label>バフ種別</label>
+            <select id="editBuffType">
+              <option value="dmg">与ダメージUP（別枠）</option>
+              <option value="vuln">被ダメージUP（重複不可）</option>
+              <option value="leth">殺傷力UP</option>
+              <option value="atk">攻撃力UP</option>
+              <option value="invalid">熊無効（状態異常系）</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>発動確率（%）</label>
+            <input type="number" id="editProb" value="100" min="1" max="100" />
+          </div>
+          <div class="field">
+            <label>持続ターン数（常時は1）</label>
+            <input type="number" id="editTurns" value="1" min="1" max="10" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Lv.1 〜 Lv.5 の効果値（カンマ区切り・%）</label>
+          <input type="text" id="editLevels" placeholder="例：5,10,15,20,25" />
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:6px;">
+          <button type="button" class="close-modal">キャンセル</button>
+          <button type="button" class="primary" id="saveHeroBtn">保存する</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">コピーしました！</div>
+
+  <script>
+    (function () {
+      const STORAGE_KEY = "kingshot_bear_sim_s8_ultimate_v5";
+
+      const DEFAULT_HEROES = [
+        // Sランク常時・高倍率枠
+        { id: "amane", name: "あまね", tier: "S", skill: "戦場の鼓舞", type: "atk", prob: 100, turns: 1, levels: [5, 10, 15, 20, 25], owned: true, lv: 5 },
+        { id: "margo", name: "マーゴ", tier: "S", skill: "デストロイ", type: "atk", prob: 100, turns: 1, levels: [5, 10, 15, 20, 25], owned: true, lv: 4 },
+        { id: "chenko", name: "チェンコ", tier: "S", skill: "スタンド・アローン", type: "leth", prob: 100, turns: 1, levels: [5, 10, 15, 20, 25], owned: true, lv: 5 },
+        { id: "inwoo", name: "インウー", tier: "S", skill: "猛攻の陣", type: "leth", prob: 100, turns: 1, levels: [5, 10, 15, 20, 25], owned: true, lv: 5 },
+        { id: "renlon", name: "レン&ロン", tier: "S", skill: "双星共鳴", type: "dmg", prob: 100, turns: 1, levels: [5, 10, 15, 20, 25], owned: false, lv: 5 },
+        { id: "liz", name: "リズ", tier: "S", skill: "弱点暴露", type: "vuln", prob: 100, turns: 1, levels: [5, 10, 15, 20, 25], noStack: true, owned: false, lv: 5 },
+        // 自集結未使用時にSランク使用可の4名
+        { id: "amadeus", name: "アマデウス", tier: "S*", skill: "覇王の威光", type: "atk", prob: 100, turns: 1, levels: [5, 10, 15, 20, 25], owned: false, lv: 5 },
+        { id: "aiva", name: "アイヴァ", tier: "S*", skill: "疾風迅雷", type: "dmg", prob: 100, turns: 1, levels: [5, 10, 15, 20, 25], owned: false, lv: 5 },
+        { id: "luna", name: "ルナ", tier: "S*", skill: "月光の導き", type: "leth", prob: 100, turns: 1, levels: [5, 10, 15, 20, 25], owned: false, lv: 5 },
+        { id: "pera", name: "ペーラ", tier: "S*", skill: "破甲の一撃", type: "vuln", prob: 100, turns: 1, levels: [5, 10, 15, 20, 25], noStack: true, owned: true, lv: 5 },
+        // Aランク枠
+        { id: "hilde", name: "ヒルデ", tier: "A", skill: "聖騎士の加護", type: "atk", prob: 100, turns: 1, levels: [3, 6, 9, 12, 15], owned: true, lv: 4 },
+        { id: "jaeger", name: "イェーガー", tier: "A", skill: "ストームソング", type: "dmg", prob: 20, turns: 3, levels: [8, 16, 24, 32, 40], owned: true, lv: 3 },
+        { id: "yang", name: "ヤン", tier: "A", skill: "烈火の戦歌(4T毎)", type: "dmg", prob: 100, turns: 1, levels: [10, 15, 20, 25, 30], owned: false, lv: 5 },
+        { id: "rosa", name: "ローザ", tier: "A", skill: "狙撃の極意", type: "dmg", prob: 30, turns: 2, levels: [6, 12, 18, 24, 30], owned: true, lv: 5 },
+        { id: "thrude", name: "スルード", tier: "A", skill: "戦乙女の号令", type: "atk", prob: 30, turns: 2, levels: [6, 12, 18, 24, 30], owned: false, lv: 5 },
+        { id: "marin", name: "マリン", tier: "A", skill: "予測不能", type: "dmg", prob: 40, turns: 1, levels: [10, 20, 30, 40, 50], owned: true, lv: 3 },
+        { id: "vivian", name: "ビビアン", tier: "A", skill: "弱点看破", type: "vuln", prob: 100, turns: 1, levels: [5, 10, 15, 20, 25], noStack: true, owned: false, lv: 5 }
+      ];
+
+      const RALLY_ROSTER = {
+        inf: {
+          recommended: ["アマデウス(S1)", "ヘルガ(S1)", "ゾーイ(S2)", "ディエゴ(S8)", "アルカ(S4)"],
+          others: [
+            "ハワード", "サロ", "イェーガー", "エリック", "フレイヤ", "ベアトリス",
+            "ロス", "スミス", "セルゲイ", "ナタリア", "ジェロニモ", "フリント",
+            "ローガン", "アモス", "ヘクター", "ウコン"
+          ]
+        },
+        cav: {
+          recommended: ["アイヴァ(S7)", "ペーラ(S3)", "スルード(S5)"],
+          others: [
+            "ジェベル", "チェンコ", "ヒルデ", "リズ", "ゴードン", "ミア",
+            "パトリック", "ウォルター", "モリー", "ジャスミン", "レイナ", "ノラ", "レネ"
+          ]
+        },
+        arc: {
+          recommended: ["ルナ(S8)", "ヤン(S6)", "レン&ロン(S7)", "ローザ(S4)", "ビビアン(S5)", "マリン(S2)"],
+          others: [
+            "あまね", "マーゴ", "インウー", "ダイアナ", "マルリン", "クイン",
+            "オリバー", "ジーナ", "バヒティ", "ジンマン", "アロンゾ", "グレッグ",
+            "リン", "ウェイン", "ブラッドリー"
+          ]
+        }
+      };
+
+      const DEFAULT_TIER_NOTES = {
+        inf: "アマデウス(S1) ＞ ヘルガ(S1) ＞ ゾーイ(S2) ＞ ディエゴ(S8) ＞ アルカ(S4)",
+        cav: "アイヴァ(S7) ＞ ペーラ(S3) ＞ スルード(S5)",
+        arc: "ルナ(S8) ＞ ヤン(S6) ＞ レン&ロン(S7) ＞ ローザ(S4) ＞ ビビアン(S5) ＞ マリン(S2)",
+        joinerS: "チェンコ / インウー / あまね / マーゴ / レン&ロン / リズ",
+        joinerSOpt: "アマデウス / アイヴァ / ルナ / ペーラ",
+        joinerA: "ヤン / マリン / ローザ / イェーガー / スルード / ヒルデ / ビビアン"
+      };
+
+      function stripGen(str) {
+        return String(str || "").replace(/\(S\d+\)/g, "").trim();
+      }
+
+      function escapeHtml(str) {
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function getDefaultState() {
+        return {
+          stance: "upper",
+          marchCount: 6,
+          useRally: true,
+          infTotal: 447028,
+          cavTotal: 333546,
+          arcTotal: 480061,
+          minTroop: 5000,
+          rallyCap: 141210,
+          marchCaps: [141210, 141210, 141210, 141210, 127805, 127805],
+          rallyHeroes: ["アルカ(S4)", "ペーラ(S3)", "ローザ(S4)"],
+          prioritizeAtk: true,
+          heroes: JSON.parse(JSON.stringify(DEFAULT_HEROES)),
+          rallyRoster: JSON.parse(JSON.stringify(RALLY_ROSTER)),
+          tierNotes: JSON.parse(JSON.stringify(DEFAULT_TIER_NOTES))
+        };
+      }
+
+      function loadState() {
+        try {
+          if (typeof window !== "undefined" && window.localStorage) {
+            const raw = window.localStorage.getItem(STORAGE_KEY);
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              const def = getDefaultState();
+              const loadedHeroes = Array.isArray(parsed.heroes)
+                ? parsed.heroes.filter(h => h.id !== "zoe")
+                : def.heroes;
+              return {
+                ...def,
+                ...parsed,
+                marchCount: Math.min(6, Math.max(1, Number(parsed.marchCount) || 6)),
+                marchCaps: Array.isArray(parsed.marchCaps) ? parsed.marchCaps : def.marchCaps,
+                rallyHeroes: Array.isArray(parsed.rallyHeroes) ? parsed.rallyHeroes : def.rallyHeroes,
+                heroes: loadedHeroes,
+                rallyRoster: parsed.rallyRoster ? {
+                  inf: { ...def.rallyRoster.inf, ...(parsed.rallyRoster.inf || {}) },
+                  cav: { ...def.rallyRoster.cav, ...(parsed.rallyRoster.cav || {}) },
+                  arc: { ...def.rallyRoster.arc, ...(parsed.rallyRoster.arc || {}) }
+                } : def.rallyRoster,
+                tierNotes: parsed.tierNotes ? { ...def.tierNotes, ...parsed.tierNotes } : def.tierNotes
+              };
+            }
+          }
+        } catch (e) {}
+        return getDefaultState();
+      }
+
+      function saveState() {
+        try {
+          if (typeof window !== "undefined" && window.localStorage) {
+            window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+          }
+        } catch (e) {}
+      }
+
+      let state = loadState();
+
+      function typeLabel(t) {
+        if (t === "invalid") return "熊無効";
+        if (t === "dmg") return "与ダメUP";
+        if (t === "vuln") return "被ダメUP";
+        if (t === "leth") return "殺傷力UP";
+        return "攻撃力UP";
+      }
+
+      function calcEffectiveScore(h) {
+        if (h.type === "invalid") return -999;
+        const val = h.levels[Math.min(4, Math.max(0, h.lv - 1))] || 0;
+        const probFactor = h.prob === 100 ? 1.0 : Math.min(0.85, (h.prob / 100) * (1 + (h.turns - 1) * 0.45));
+        let tierBonus = (h.tier === "S" || h.tier === "S*") ? 15 : 0;
+        let typeWeight = 1.0;
+        if (h.type === "dmg" || h.type === "vuln") typeWeight = 1.12;
+        else if (h.type === "leth") typeWeight = state.prioritizeAtk ? 0.96 : 1.08;
+        else if (h.type === "atk") typeWeight = state.prioritizeAtk ? 1.12 : 1.0;
+
+        let score = tierBonus + val * probFactor * typeWeight;
+        if (h.noStack) score -= 2.5;
+        return score;
+      }
+
+      function formatSkillDesc(h) {
+        const val = h.levels[Math.min(4, Math.max(0, h.lv - 1))] || 0;
+        const probStr = h.prob === 100 ? "確定" : `${h.prob}%確率`;
+        const turnStr = h.turns > 1 ? `・${h.turns}T` : "";
+        return `${typeLabel(h.type)} +${val}% (Lv.${h.lv}/${probStr}${turnStr})`;
+      }
+
+      function calcIntegerPercentages(a, b, c) {
+        const sum = a + b + c;
+        if (sum <= 0) return [0, 0, 0];
+        const raw = [(a / sum) * 100, (b / sum) * 100, (c / sum) * 100];
+        const floored = raw.map(v => Math.floor(v));
+        let remainder = 100 - (floored[0] + floored[1] + floored[2]);
+        const indices = [0, 1, 2].sort((i, j) => (raw[j] - floored[j]) - (raw[i] - floored[i]));
+        for (let i = 0; i < remainder; i++) {
+          floored[indices[i]]++;
+        }
+        return floored;
+      }
+
+      function renderInputs() {
+        document.querySelectorAll(".stance-btn").forEach(btn => {
+          btn.classList.toggle("active", btn.dataset.stance === state.stance);
+        });
+
+        document.querySelectorAll(".count-btn").forEach(btn => {
+          btn.classList.toggle("active", Number(btn.dataset.count) === state.marchCount);
+        });
+
+        document.getElementById("useRallyCheck").checked = state.useRally;
+        document.getElementById("infTotal").value = state.infTotal;
+        document.getElementById("cavTotal").value = state.cavTotal;
+        document.getElementById("arcTotal").value = state.arcTotal;
+        document.getElementById("minTroopInput").value = state.minTroop;
+        document.getElementById("prioritizeAtkCheck").checked = state.prioritizeAtk;
+
+        // STEP 3 定員グリッド
+        const capGrid = document.getElementById("capGrid");
+        capGrid.innerHTML = "";
+        if (state.useRally) {
+          const div = document.createElement("div");
+          div.className = "field";
+          div.style.borderColor = "rgba(251, 191, 36, 0.45)";
+          div.innerHTML = `<label style="color:var(--gold);">自集結 定員</label><input type="number" id="rallyCapInput" value="${state.rallyCap}" min="0" />`;
+          capGrid.appendChild(div);
+          div.querySelector("input").addEventListener("input", e => {
+            state.rallyCap = Math.max(0, Number(e.target.value) || 0);
+            saveState();
+            renderResults();
+          });
+        }
+        for (let i = 0; i < state.marchCount; i++) {
+          const div = document.createElement("div");
+          div.className = "field";
+          div.innerHTML = `<label>乗り手 ${i + 1}軍 定員</label><input type="number" data-idx="${i}" value="${state.marchCaps[i]}" min="0" />`;
+          capGrid.appendChild(div);
+          div.querySelector("input").addEventListener("input", e => {
+            state.marchCaps[i] = Math.max(0, Number(e.target.value) || 0);
+            saveState();
+            renderResults();
+          });
+        }
+
+        // STEP 4 自集結英雄セレクト（全キャラ対応・グループ分け）
+        const step4Card = document.getElementById("step4Card");
+        step4Card.style.opacity = state.useRally ? "1" : "0.45";
+
+        const roster = state.rallyRoster || RALLY_ROSTER;
+        const slotConfigs = [
+          { id: "rallyHero1", primaryKey: "inf", otherKeys: ["cav", "arc"] },
+          { id: "rallyHero2", primaryKey: "cav", otherKeys: ["inf", "arc"] },
+          { id: "rallyHero3", primaryKey: "arc", otherKeys: ["inf", "cav"] }
+        ];
+
+        const knownBaseNames = new Set(
+          ["inf", "cav", "arc"].flatMap(k => [...roster[k].recommended, ...roster[k].others]).map(stripGen)
+        );
+        const customHeroNames = state.heroes
+          .map(h => h.name.trim())
+          .filter(name => name && !knownBaseNames.has(name));
+
+        slotConfigs.forEach((cfg, idx) => {
+          const sel = document.getElementById(cfg.id);
+          sel.disabled = !state.useRally;
+          const currentVal = state.rallyHeroes[idx];
+
+          const primaryRec = roster[cfg.primaryKey].recommended;
+          const primaryOthers = roster[cfg.primaryKey].others;
+          const crossPool = [
+            ...cfg.otherKeys.flatMap(k => [...roster[k].recommended, ...roster[k].others]),
+            ...customHeroNames
+          ];
+
+          const renderOptions = (list) => list.map(name => {
+            const selected = (currentVal === name || stripGen(currentVal) === stripGen(name)) ? "selected" : "";
+            return `<option value="${escapeHtml(name)}" ${selected}>${escapeHtml(name)}</option>`;
+          }).join("");
+
+          sel.innerHTML = `
+            <optgroup label="推奨上位（S1〜S8優先順）">
+              ${renderOptions(primaryRec)}
+            </optgroup>
+            <optgroup label="同兵種のその他全英雄">
+              ${renderOptions(primaryOthers)}
+              <option value="なし" ${currentVal === "なし" ? "selected" : ""}>なし</option>
+            </optgroup>
+            <optgroup label="他兵種・その他全英雄（自由配置・追加英雄含む）">
+              ${renderOptions(crossPool)}
+            </optgroup>
+          `;
+        });
+
+        // ゾーイ × ペーラ干渉警告
+        const infName = stripGen(state.rallyHeroes[0]);
+        const cavName = stripGen(state.rallyHeroes[1]);
+        const alertBox = document.getElementById("rallyInterferenceAlert");
+        if (state.useRally && infName === "ゾーイ" && cavName === "ペーラ") {
+          alertBox.style.display = "block";
+          alertBox.innerHTML = `⚠️ <strong>スキル干渉警告：</strong> ペーラを使用する場合、ゾーイの第3スキルと干渉してダメージが落ちます。歩兵枠はゾーイではなく<strong>「アルカ(S4)」</strong>への変更を強く推奨します！`;
+        } else {
+          alertBox.style.display = "none";
+        }
+
+        // STEP 5 乗り手英雄リスト（有効なS・Aランク候補のみ描画）
+        const usedBaseNames = state.useRally ? state.rallyHeroes.map(stripGen) : [];
+        const heroList = document.getElementById("heroList");
+        heroList.innerHTML = "";
+        state.heroes.forEach(h => {
+          if (h.type === "invalid") return;
+          const usedInRally = usedBaseNames.includes(h.name);
+          const item = document.createElement("div");
+          item.className = `hero-item ${(!h.owned || usedInRally) ? "disabled" : ""}`;
+          const tagClass = (h.tier === "S" || h.tier === "S*") ? "tier-s" : "";
+          const tagText = usedInRally ? "自集結中" : `${h.tier}・${typeLabel(h.type)}`;
+
+          item.innerHTML = `
+            <div class="hero-left">
+              <input type="checkbox" ${h.owned ? "checked" : ""} data-own="${escapeHtml(h.id)}" />
+              <span class="hero-name">${escapeHtml(h.name)}</span>
+              <span class="hero-tag ${tagClass}">${escapeHtml(tagText)}</span>
+            </div>
+            <div class="hero-right">
+              <select data-lv="${escapeHtml(h.id)}">
+                ${[1, 2, 3, 4, 5].map(lv => `<option value="${lv}" ${h.lv === lv ? "selected" : ""}>Lv.${lv}</option>`).join("")}
+              </select>
+              <button type="button" class="icon-btn" data-edit="${escapeHtml(h.id)}" title="スキル編集">✏️</button>
+            </div>
+          `;
+          heroList.appendChild(item);
+        });
+
+        heroList.querySelectorAll("input[data-own]").forEach(chk => {
+          chk.addEventListener("change", e => {
+            const h = state.heroes.find(x => x.id === e.target.dataset.own);
+            if (h) { h.owned = e.target.checked; updateAll(); }
+          });
+        });
+
+        heroList.querySelectorAll("select[data-lv]").forEach(sel => {
+          sel.addEventListener("change", e => {
+            const h = state.heroes.find(x => x.id === e.target.dataset.lv);
+            if (h) { h.lv = Number(e.target.value); updateAll(); }
+          });
+        });
+
+        heroList.querySelectorAll("button[data-edit]").forEach(btn => {
+          btn.addEventListener("click", e => {
+            const targetBtn = e.target.closest("button[data-edit]");
+            if (targetBtn) openEditModal(targetBtn.dataset.edit);
+          });
+        });
+
+        // Tier表モーダル内の動的テキスト同期
+        const tn = state.tierNotes || DEFAULT_TIER_NOTES;
+        document.getElementById("tierTextInf").textContent = tn.inf;
+        document.getElementById("tierTextCav").textContent = tn.cav;
+        document.getElementById("tierTextArc").textContent = tn.arc;
+        document.getElementById("tierTextJoinerS").textContent = tn.joinerS;
+        document.getElementById("tierTextJoinerSOpt").textContent = tn.joinerSOpt;
+        document.getElementById("tierTextJoinerA").textContent = tn.joinerA;
+      }
+
+      function calculate() {
+        let remInf = Math.max(0, Number(state.infTotal) || 0);
+        let remCav = Math.max(0, Number(state.cavTotal) || 0);
+        let remArc = Math.max(0, Number(state.arcTotal) || 0);
+        const minT = Math.max(0, Number(state.minTroop) || 0);
+
+        const units = [];
+        if (state.useRally) {
+          units.push({
+            key: "rally",
+            label: "自集結",
+            isRally: true,
+            cap: state.rallyCap,
+            targetArcPct: state.stance === "top" ? 0.85 : (state.stance === "upper" ? 0.60 : 0.20),
+            priority: state.stance === "top" ? 0 : (state.stance === "upper" ? 3.5 : 99),
+            inf: 0, cav: 0, arc: 0
+          });
+        }
+
+        const marchTargetsUpper = [0.875, 0.825, 0.775, 0.55, 0.30, 0.20];
+        const marchTargetsTop = [0.75, 0.65, 0.55, 0.45, 0.30, 0.20];
+        const marchTargetsJoiner = [0.90, 0.85, 0.80, 0.75, 0.60, 0.45];
+
+        for (let i = 0; i < state.marchCount; i++) {
+          let pct = marchTargetsUpper[i] || 0.2;
+          if (state.stance === "top") pct = marchTargetsTop[i] || 0.2;
+          if (state.stance === "joiner") pct = marchTargetsJoiner[i] || 0.2;
+          units.push({
+            key: `m${i + 1}`,
+            label: `${i + 1}軍`,
+            isRally: false,
+            cap: state.marchCaps[i] || 0,
+            targetArcPct: pct,
+            priority: i + 1,
+            inf: 0, cav: 0, arc: 0
+          });
+        }
+
+        // 1. 全有効部隊に最低確保人数を先入れ
+        units.forEach(u => {
+          if (u.cap <= 0) return;
+          const mEach = Math.min(minT, Math.floor(u.cap / 3));
+          const addInf = Math.min(remInf, mEach);
+          u.inf += addInf; remInf -= addInf;
+
+          const addCav = Math.min(remCav, mEach);
+          u.cav += addCav; remCav -= addCav;
+
+          const addArc = Math.min(remArc, mEach);
+          u.arc += addArc; remArc -= addArc;
+        });
+
+      function copyTextToClipboard(text, successMsg) {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+          document.execCommand("copy");
+          showToast(successMsg);
+        } catch (err) {
+          showToast("コピーに失敗しました");
+        }
+        document.body.removeChild(ta);
+      }
+
+      // コピー機能（document.execCommand('copy')を使用）
+      document.getElementById("copyResultBtn").addEventListener("click", () => {
+        const { units } = calculate();
+        const lines = ["【キングショット 巨熊狩猟 最適編成リスト】"];
+        units.forEach(u => {
+          const ratios = calcIntegerPercentages(u.inf, u.cav, u.arc);
+          const warn = u.noStackNote ? " ※重複不可" : "";
+          lines.push(`■${u.label} [${u.heroMain}${warn}] 歩:${u.inf.toLocaleString()} / 騎:${u.cav.toLocaleString()} / 弓:${u.arc.toLocaleString()} (${ratios[0]}%:${ratios[1]}%:${ratios[2]}%)`);
+        });
+        copyTextToClipboard(lines.join("\n"), "編成表をクリップボードにコピーしました！");
+      });
+
+      function showToast(msg) {
+        const t = document.getElementById("toast");
+        t.textContent = msg;
+        t.style.display = "block";
+        setTimeout(() => { t.style.display = "none"; }, 2200);
+      }
+
+      // JSONマスターデータの生成（エクスポート用）
+      function buildExportPayload() {
+        return {
+          version: "2026.11-S8",
+          updatedAt: new Date().toISOString().slice(0, 10),
+          tierNotes: state.tierNotes,
+          rallyRoster: state.rallyRoster,
+          heroes: state.heroes.map(h => ({
+            id: h.id,
+            name: h.name,
+            tier: h.tier,
+            skill: h.skill,
+            type: h.type,
+            prob: h.prob,
+            turns: h.turns,
+            levels: h.levels,
+            noStack: Boolean(h.noStack),
+            owned: Boolean(h.owned),
+            lv: Number(h.lv) || 5
+          }))
+        };
+      }
+
+      function openJsonModal() {
+        document.getElementById("exportJsonBox").value = JSON.stringify(buildExportPayload(), null, 2);
+        document.getElementById("jsonErrorBox").style.display = "none";
+        document.getElementById("jsonModal").classList.add("open");
+      }
+
+      document.getElementById("openJsonBtn").addEventListener("click", openJsonModal);
+
+      document.getElementById("copyJsonBtn").addEventListener("click", () => {
+        const val = document.getElementById("exportJsonBox").value;
+        copyTextToClipboard(val, "マスターJSONをコピーしました！");
+      });
+
+      document.getElementById("downloadJsonBtn").addEventListener("click", () => {
+        const val = document.getElementById("exportJsonBox").value;
+        const blob = new Blob([val], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `kingshot_bear_master_${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast("JSONファイルをダウンロードしました！");
+      });
+
+      document.getElementById("importJsonFile").addEventListener("change", e => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+          document.getElementById("importJsonBox").value = String(ev.target.result || "");
+          showToast(`ファイル「${file.name}」を読み込みました`);
+        };
+        reader.readAsText(file);
+        e.target.value = "";
+      });
+
+      document.getElementById("loadSampleJsonBtn").addEventListener("click", () => {
+        const sample = {
+          version: "S9-Sample",
+          tierNotes: {
+            ...state.tierNotes,
+            arc: "新弓兵S9(S9) ＞ ルナ(S8) ＞ ヤン(S6) ＞ レン&ロン(S7) ＞ ローザ(S4)",
+            joinerS: state.tierNotes.joinerS + " / 新弓兵S9"
+          },
+          rallyRoster: {
+            ...state.rallyRoster,
+            arc: {
+              ...state.rallyRoster.arc,
+              recommended: ["新弓兵S9(S9)", ...state.rallyRoster.arc.recommended]
+            }
+          },
+          heroes: [
+            {
+              id: "s9_new_archer",
+              name: "新弓兵S9",
+              tier: "S",
+              skill: "第1遠征スキル(サンプル)",
+              type: "dmg",
+              prob: 100,
+              turns: 1,
+              levels: [6, 12, 18, 24, 30],
+              noStack: false,
+              owned: false,
+              lv: 5
+            }
+          ]
+        };
+        document.getElementById("importJsonBox").value = JSON.stringify(sample, null, 2);
+        document.getElementById("jsonErrorBox").style.display = "none";
+      });
+
+      document.getElementById("applyJsonBtn").addEventListener("click", () => {
+        const rawText = document.getElementById("importJsonBox").value.trim();
+        const errBox = document.getElementById("jsonErrorBox");
+        errBox.style.display = "none";
+
+        if (!rawText) {
+          errBox.style.display = "block";
+          errBox.textContent = "⚠️ JSONデータが入力されていません。テキストを貼り付けるかファイルを選択してください。";
+          return;
+        }
+
+        try {
+          const data = JSON.parse(rawText);
+          if (!data || typeof data !== "object") {
+            throw new Error("JSONのルート構造が正しくありません。");
+          }
+
+          const smartMerge = document.getElementById("smartMergeCheck").checked;
+
+          // 1. 英雄リストの反映
+          if (Array.isArray(data.heroes)) {
+            const sanitizedIncoming = data.heroes
+              .filter(h => h && typeof h.name === "string" && h.name.trim())
+              .map(h => {
+                const validTypes = ["dmg", "vuln", "leth", "atk", "invalid"];
+                const type = validTypes.includes(h.type) ? h.type : "atk";
+                const rawLvArr = Array.isArray(h.levels) ? h.levels.map(n => Number(n) || 0) : [5, 10, 15, 20, 25];
+                const levels = [0, 1, 2, 3, 4].map(i => rawLvArr[i] ?? rawLvArr[rawLvArr.length - 1] ?? 0);
+                return {
+                  id: String(h.id || ("imp_" + h.name.trim())),
+                  name: h.name.trim(),
+                  tier: String(h.tier || "A"),
+                  skill: String(h.skill || "第1遠征スキル"),
+                  type,
+                  prob: Math.min(100, Math.max(1, Number(h.prob) || 100)),
+                  turns: Math.max(1, Number(h.turns) || 1),
+                  levels,
+                  noStack: h.noStack !== undefined ? Boolean(h.noStack) : (type === "vuln"),
+                  owned: Boolean(h.owned),
+                  lv: Math.min(5, Math.max(1, Number(h.lv) || 5))
+                };
+              });
+
+            if (smartMerge) {
+              const existingMap = new Map(state.heroes.map(h => [h.name, h]));
+              sanitizedIncoming.forEach(inc => {
+                const prev = existingMap.get(inc.name);
+                if (prev) {
+                  // 個人の所持状況とスキルLvは保持し、スキル性能・Tier定義のみ最新化
+                  existingMap.set(inc.name, {
+                    ...inc,
+                    id: prev.id,
+                    owned: prev.owned,
+                    lv: prev.lv
+                  });
+                } else {
+                  existingMap.set(inc.name, inc);
+                }
+              });
+              state.heroes = Array.from(existingMap.values());
+            } else if (sanitizedIncoming.length > 0) {
+              state.heroes = sanitizedIncoming;
+            }
+          }
+
+          // 2. 集結主プールの反映
+          if (data.rallyRoster && typeof data.rallyRoster === "object") {
+            ["inf", "cav", "arc"].forEach(k => {
+              if (data.rallyRoster[k]) {
+                if (Array.isArray(data.rallyRoster[k].recommended)) {
+                  state.rallyRoster[k].recommended = data.rallyRoster[k].recommended.map(String);
+                }
+                if (Array.isArray(data.rallyRoster[k].others)) {
+                  state.rallyRoster[k].others = data.rallyRoster[k].others.map(String);
+                }
+              }
+            });
+          }
+
+          // 3. Tier解説文の反映
+          if (data.tierNotes && typeof data.tierNotes === "object") {
+            state.tierNotes = { ...state.tierNotes, ...data.tierNotes };
+          }
+
+          document.getElementById("jsonModal").classList.remove("open");
+          updateAll();
+          showToast(smartMerge ? "個人設定を保持したまま最新データを一括反映しました！" : "マスターデータを完全置換しました！");
+        } catch (err) {
+          errBox.style.display = "block";
+          errBox.textContent = `❌ JSONの読み込みに失敗しました（構文エラー）：${err.message}`;
+        }
+      });
+
+      // モーダル制御
+      document.getElementById("openTierBtn").addEventListener("click", () => {
+        document.getElementById("tierModal").classList.add("open");
+      });
+
+      document.getElementById("openGuideBtn").addEventListener("click", () => {
+        document.getElementById("guideModal").classList.add("open");
+      });
+
+      document.getElementById("resetBtn").addEventListener("click", () => {
+        state = getDefaultState();
+        updateAll();
+        showToast("初期設定にリセットしました");
+      });
+
+      document.getElementById("addHeroBtn").addEventListener("click", () => openEditModal(null));
+
+      function openEditModal(heroId) {
+        const modal = document.getElementById("editHeroModal");
+        if (heroId) {
+          const h = state.heroes.find(x => x.id === heroId);
+          if (!h) return;
+          document.getElementById("editModalTitle").textContent = `${h.name} のスキル編集`;
+          document.getElementById("editHeroId").value = h.id;
+          document.getElementById("editHeroName").value = h.name;
+          document.getElementById("editSkillName").value = h.skill;
+          document.getElementById("editBuffType").value = h.type;
+          document.getElementById("editProb").value = h.prob;
+          document.getElementById("editTurns").value = h.turns;
+          document.getElementById("editLevels").value = h.levels.join(",");
+        } else {
+          document.getElementById("editModalTitle").textContent = "新規英雄を追加";
+          document.getElementById("editHeroId").value = "";
+          document.getElementById("editHeroName").value = "";
+          document.getElementById("editSkillName").value = "";
+          document.getElementById("editBuffType").value = "atk";
+          document.getElementById("editProb").value = 100;
+          document.getElementById("editTurns").value = 1;
+          document.getElementById("editLevels").value = "5,10,15,20,25";
+        }
+        modal.classList.add("open");
+      }
+
+      document.getElementById("saveHeroBtn").addEventListener("click", () => {
+        const id = document.getElementById("editHeroId").value;
+        const name = document.getElementById("editHeroName").value.trim();
+        if (!name) {
+          showToast("英雄名を入力してください");
+          return;
+        }
+        const skill = document.getElementById("editSkillName").value.trim() || "第1遠征スキル";
+        const type = document.getElementById("editBuffType").value;
+        const prob = Math.min(100, Math.max(1, Number(document.getElementById("editProb").value) || 100));
+        const turns = Math.max(1, Number(document.getElementById("editTurns").value) || 1);
+        const rawLevels = document.getElementById("editLevels").value.split(",").map(x => Number(x.trim()) || 0);
+        const levels = [0, 1, 2, 3, 4].map(i => rawLevels[i] ?? rawLevels[rawLevels.length - 1] ?? 0);
+        const noStack = type === "vuln";
+
+        if (id) {
+          const h = state.heroes.find(x => x.id === id);
+          if (h) Object.assign(h, { name, skill, type, prob, turns, levels, noStack });
+        } else {
+          state.heroes.push({
+            id: "custom_" + Date.now(),
+            name, tier: "A", skill, type, prob, turns, levels, noStack,
+            owned: true, lv: 5
+          });
+        }
+        document.getElementById("editHeroModal").classList.remove("open");
+        updateAll();
+        showToast(`${name} のデータを保存しました！`);
+      });
+
+      document.querySelectorAll(".close-modal").forEach(btn => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(".modal-backdrop").forEach(m => m.classList.remove("open"));
+        });
+      });
+
+      // フローティングジャンプボタン制御
+      const jumpBtn = document.getElementById("jumpBtn");
+      const resultSection = document.getElementById("resultSection");
+      jumpBtn.addEventListener("click", () => {
+        resultSection.scrollIntoView({ behavior: "smooth" });
+      });
+
+      function checkJumpVisibility() {
+        const rect = resultSection.getBoundingClientRect();
+        if (rect.top < window.innerHeight * 0.78) {
+          jumpBtn.classList.add("hidden");
+        } else {
+          jumpBtn.classList.remove("hidden");
+        }
+      }
+
+      window.addEventListener("scroll", checkJumpVisibility, { passive: true });
+      window.addEventListener("resize", checkJumpVisibility, { passive: true });
+
+      // 初期描画
+      updateAll();
+      checkJumpVisibility();
+    })();
+  </script>
+</body>
+</html>
