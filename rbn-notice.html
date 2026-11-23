@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>キングショット 同盟通知ジェネレーター v6.4</title>
+  <title>キングショット 同盟通知ジェネレーター v6.5</title>
   <style>
     :root {
       --bg-color: #12151c;
@@ -272,7 +272,6 @@
       font-weight: 600;
     }
 
-    /* 作成モード切替タブ */
     .mode-switch {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -310,7 +309,6 @@
       display: block;
     }
 
-    /* 手動ビルダー用スタイル */
     .manual-section {
       background: #12151c;
       border: 1px solid var(--border-color);
@@ -327,21 +325,26 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
     }
 
     .chip-grid {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
+      max-height: 240px;
+      overflow-y: auto;
+      padding-right: 2px;
     }
 
     .event-chip {
       background: #1c212b;
       border: 1px solid var(--border-color);
       color: #d1d5db;
-      padding: 6px 10px;
+      padding: 5px 9px;
       border-radius: 6px;
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       cursor: pointer;
       user-select: none;
       transition: all 0.15s;
@@ -368,6 +371,37 @@
 
     .event-chip.checked .check-box {
       color: #60a5fa;
+    }
+
+    .event-chip.edit-mode {
+      cursor: default;
+      border-style: dashed;
+      border-color: #60a5fa;
+      padding-right: 6px;
+    }
+
+    .chip-edit-actions {
+      display: inline-flex;
+      gap: 3px;
+      margin-left: 4px;
+    }
+
+    .chip-action-btn {
+      background: #2f3746;
+      border: none;
+      color: #e5e7eb;
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 0.72rem;
+      cursor: pointer;
+    }
+
+    .chip-action-btn:hover {
+      background: #4b5563;
+    }
+
+    .chip-action-btn.del {
+      color: #f87171;
     }
 
     .phase-chip {
@@ -628,6 +662,13 @@
       background: #323b4d;
     }
 
+    .mini-btn.active-edit {
+      background: var(--warning);
+      color: #111;
+      border-color: var(--warning);
+      font-weight: 600;
+    }
+
     .mini-btn.danger {
       color: #f87171;
     }
@@ -666,7 +707,7 @@
 
 <div class="container">
   <header>
-    <h1>📢 同盟通知ジェネレーター <span class="ver-badge">v6.4</span></h1>
+    <h1>📢 同盟通知ジェネレーター <span class="ver-badge">v6.5</span></h1>
     <span class="sync-badge warn" id="sync-status-badge">クラウド同期確認中...</span>
   </header>
 
@@ -742,34 +783,46 @@
       <div id="panel-manual" class="builder-panel active">
         <div class="manual-section">
           <div class="manual-section-title">
-            <span>① 開催イベントを選択（設定の自動補足辞書も自動反映）</span>
-            <button type="button" class="mini-btn" id="clear-manual-checks-btn">選択解除</button>
+            <span>① 開催イベントを選択（自動補足辞書も連動）</span>
+            <div style="display: flex; gap: 4px;">
+              <button type="button" class="mini-btn" id="toggle-edit-events-btn">✏️ 項目編集・削除</button>
+              <button type="button" class="mini-btn" id="clear-manual-checks-btn">選択解除</button>
+            </div>
+          </div>
+          <div id="edit-mode-hint" style="display: none; font-size: 0.76rem; color: #fbbf24; margin-bottom: 6px;">
+            ※編集モード中：「✎」で名前変更、「×」で削除できます。変更は自動保存＆クラウド同期されます。
+            <button type="button" class="mini-btn" id="reset-events-default-btn" style="margin-left: 6px;">初期リストに戻す</button>
           </div>
           <div class="chip-grid" id="manual-event-chips"></div>
 
           <div class="custom-event-row">
-            <input type="text" id="custom-event-input" placeholder="リストにないイベント名を手入力して追加...">
-            <button type="button" class="mini-btn" id="add-custom-event-btn" style="white-space: nowrap; padding: 0 12px;">＋ 追加</button>
+            <input type="text" id="custom-event-input" placeholder="新しいイベント名を追加してリストに保存...">
+            <button type="button" class="mini-btn" id="add-custom-event-btn" style="white-space: nowrap; padding: 0 12px;">＋ リストに追加</button>
           </div>
         </div>
 
         <div class="manual-section">
           <div class="manual-section-title">
-            <span>② ポイント対象項目（至高領主・最強王国・同盟総動員など）</span>
+            <span>② ポイント対象項目（至高領主・最強王国・軍備競技など）</span>
           </div>
           <div class="chip-grid" id="manual-phase-chips"></div>
         </div>
 
         <div class="manual-section">
           <div class="manual-section-title">
-            <span>③ 締めのひとこと（任意）</span>
+            <span>③ 締めのひとこと（選択後に下の枠で自由編集も可）</span>
           </div>
-          <select id="manual-closing-select">
-            <option value="">なし</option>
+          <select id="manual-closing-select" style="margin-bottom: 6px;">
+            <option value="">（なし）</option>
             <option value="同盟総動員みんなで力を&#10;合わせてがんばろー(٩・∀・ง)ｵｰ!">同盟総動員みんなで力を合わせてがんばろー(٩・∀・ง)ｵｰ!</option>
             <option value="無理のない範囲でポイント稼いでいきましょー！">無理のない範囲でポイント稼いでいきましょー！</option>
-            <option value="報酬取り忘れのないようチェックお忘れなくー！">報酬取り忘れのないようチェックお忘れなくー！</option>
+            <option value="報酬取り忘れのないよう受け取りお忘れなくー！">報酬取り忘れのないよう受け取りお忘れなくー！</option>
+            <option value="最終日なのでラストスパートよろしくお願いします！">最終日なのでラストスパートよろしくお願いします！</option>
+            <option value="エントリー漏れのないよう早めの登録お願いします！">エントリー漏れのないよう早めの登録お願いします！</option>
+            <option value="時間合う方はぜひ参加よろしくお願いします！">時間合う方はぜひ参加よろしくお願いします！</option>
+            <option value="本日もマイペースに楽しんでいきましょー！">本日もマイペースに楽しんでいきましょー！</option>
           </select>
+          <textarea id="manual-closing-text" rows="2" placeholder="プルダウンから選ぶか、ここに直接締めのひと言を入力できます..."></textarea>
         </div>
 
         <button type="button" class="btn btn-primary" id="build-manual-btn">📝 選択した項目で通知文を組み立てる（API不要）</button>
@@ -894,12 +947,16 @@
       </div>
 
       <div class="input-group">
-        <label for="model-select">2. 使用AIモデル（混雑時は自動リトライ＆代替モデルへ自動切替）</label>
-        <select id="model-select">
-          <option value="gemini-3.8-flash">gemini-3.8-flash（推奨・高精度・無料枠）</option>
-          <option value="gemini-3.8-flash-lite">gemini-3.8-flash-lite（高速・軽量・混雑回避用）</option>
-          <option value="gemini-3.5-flash">gemini-3.5-flash（安定代替モデル）</option>
-        </select>
+        <label for="model-select">2. 使用AIモデル（APIキーで利用可能なモデル一覧を自動取得可能）</label>
+        <div style="display: flex; gap: 6px; margin-bottom: 6px;">
+          <select id="model-select" style="flex: 1;">
+            <option value="gemini-3.8-flash">gemini-3.8-flash（推奨・高精度・無料枠）</option>
+            <option value="gemini-3.8-flash-lite">gemini-3.8-flash-lite（高速・軽量・混雑回避用）</option>
+            <option value="gemini-3.5-flash">gemini-3.5-flash（安定代替モデル）</option>
+          </select>
+          <button type="button" class="mini-btn" id="fetch-models-btn" style="white-space: nowrap; padding: 0 12px;">🔍 利用可能モデルを自動取得</button>
+        </div>
+        <div id="fetch-models-msg" style="font-size: 0.78rem; color: var(--text-muted);">※APIキー入力後に「自動取得」を押すと、現在あなたのキーで使えるモデル一覧をGoogleから取得して反映します。</div>
       </div>
 
       <div class="input-group">
@@ -937,25 +994,54 @@
 <script>
   const EMBEDDED_FIREBASE_URL = 'https://kingshot-rbn-map-default-rtdb.firebaseio.com/kingshot_notice_history';
   const DEFAULT_MODEL = 'gemini-3.8-flash';
-  const AVAILABLE_MODELS = ['gemini-3.8-flash', 'gemini-3.8-flash-lite', 'gemini-3.5-flash'];
+  const FALLBACK_DEFAULT_MODELS = ['gemini-3.8-flash', 'gemini-3.8-flash-lite', 'gemini-3.5-flash'];
   const DEFAULT_EVENT_DICT = `同盟争覇戦：左寄せ、比率613
 調合ショップ：アイテム交換忘れずにー
 全軍出撃：(領地外採集注意⚠
 チェーザレ討伐(最終日)：チェーザレボスは21時30分`;
 
-  const PRESET_EVENTS = [
+  // アルテマ「イベント開催の頻度まとめ」掲載イベントを網羅した初期リスト
+  const DEFAULT_PRESET_EVENTS = [
     '軍備競技',
+    '士官計画',
     '同盟総動員',
+    '同盟争覇戦',
     '同盟争覇戦エントリー',
+    '三盟争覇',
     '三盟争覇エントリー',
+    '聖剣争奪',
     '聖剣争奪エントリー',
     '至高領主',
+    '最強領主',
     '最強王国',
     '全軍出撃',
+    '王城決戦',
+    '遺跡争奪',
+    '失われた遺跡',
+    '英雄殿堂',
+    '英雄ルーレット',
+    '英雄の道',
+    '神秘の占い屋',
+    'シャンパン市場',
     '調合ショップ',
+    '野獣駆逐',
+    'バイキングの略奪',
+    '荒野の試練',
+    '秘境の試練',
+    '黄金と巨刃',
+    '黄金活用',
+    '釣り選手権',
     'チェーザレ討伐',
     'チェーザレ討伐(最終日)',
-    'バイキングの略奪'
+    '決起の角笛',
+    '貿易復興',
+    '同盟対決',
+    '海賊の秘宝',
+    '秘宝海岸',
+    '王国移民',
+    '炎竜の覇者',
+    '風追いの旅',
+    '波越えの旅'
   ];
 
   const PRESET_PHASES = [
@@ -1003,6 +1089,8 @@
 
   const apiKeyInput = document.getElementById('api-key-input');
   const modelSelect = document.getElementById('model-select');
+  const fetchModelsBtn = document.getElementById('fetch-models-btn');
+  const fetchModelsMsg = document.getElementById('fetch-models-msg');
   const firebaseUrlInput = document.getElementById('firebase-url-input');
   const testFirebaseBtn = document.getElementById('test-firebase-btn');
   const firebaseTestMsg = document.getElementById('firebase-test-msg');
@@ -1023,10 +1111,14 @@
 
   const manualEventChipsContainer = document.getElementById('manual-event-chips');
   const manualPhaseChipsContainer = document.getElementById('manual-phase-chips');
+  const toggleEditEventsBtn = document.getElementById('toggle-edit-events-btn');
+  const editModeHint = document.getElementById('edit-mode-hint');
+  const resetEventsDefaultBtn = document.getElementById('reset-events-default-btn');
   const clearManualChecksBtn = document.getElementById('clear-manual-checks-btn');
   const customEventInput = document.getElementById('custom-event-input');
   const addCustomEventBtn = document.getElementById('add-custom-event-btn');
   const manualClosingSelect = document.getElementById('manual-closing-select');
+  const manualClosingText = document.getElementById('manual-closing-text');
   const buildManualBtn = document.getElementById('build-manual-btn');
 
   const pasteZone = document.getElementById('paste-zone');
@@ -1048,9 +1140,11 @@
 
   let uploadedImages = [];
   let historyCache = {};
-  let customEventsList = [];
+  let eventList = [...DEFAULT_PRESET_EVENTS];
+  let availableModelsList = [...FALLBACK_DEFAULT_MODELS];
   let selectedEvents = new Set();
   let selectedPhases = new Set();
+  let isEventEditMode = false;
 
   let controlState = {
     asapan: 'auto',
@@ -1082,23 +1176,88 @@
     });
   });
 
+  // イベントリストの保存・同期
+  async function persistEventList() {
+    localStorage.setItem('ks_custom_event_list', JSON.stringify(eventList));
+    const baseUrl = getFirebaseBaseUrl();
+    if (!baseUrl) return;
+    try {
+      await fetch(`${baseUrl}/_shared_config/eventList.json`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(eventList)
+      });
+    } catch (err) {
+      console.error('Event list sync error:', err);
+    }
+  }
+
+  toggleEditEventsBtn.addEventListener('click', () => {
+    isEventEditMode = !isEventEditMode;
+    toggleEditEventsBtn.classList.toggle('active-edit', isEventEditMode);
+    toggleEditEventsBtn.textContent = isEventEditMode ? '✅ 編集完了' : '✏️ 項目編集・削除';
+    editModeHint.style.display = isEventEditMode ? 'block' : 'none';
+    renderManualChips();
+  });
+
+  resetEventsDefaultBtn.addEventListener('click', async () => {
+    if (!confirm('イベント一覧を初期リスト（アルテマ掲載の全イベント）に戻しますか？')) return;
+    eventList = [...DEFAULT_PRESET_EVENTS];
+    selectedEvents.clear();
+    await persistEventList();
+    renderManualChips();
+  });
+
   // 手動ビルダーのチップ描画
   function renderManualChips() {
     manualEventChipsContainer.innerHTML = '';
-    const allEvents = [...PRESET_EVENTS, ...customEventsList];
-    allEvents.forEach(evName => {
+    eventList.forEach((evName, idx) => {
       const isChecked = selectedEvents.has(evName);
       const chip = document.createElement('div');
-      chip.className = `event-chip ${isChecked ? 'checked' : ''}`;
-      chip.innerHTML = `<span class="check-box">${isChecked ? '☑' : '☐'}</span><span>${evName}</span>`;
-      chip.addEventListener('click', () => {
-        if (selectedEvents.has(evName)) {
+
+      if (isEventEditMode) {
+        chip.className = 'event-chip edit-mode';
+        chip.innerHTML = `
+          <span>${evName}</span>
+          <span class="chip-edit-actions">
+            <button type="button" class="chip-action-btn edit" title="名前変更">✎</button>
+            <button type="button" class="chip-action-btn del" title="削除">×</button>
+          </span>
+        `;
+        chip.querySelector('.edit').addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const newName = prompt('イベント名を編集:', evName);
+          if (newName && newName.trim() && newName.trim() !== evName) {
+            const trimmed = newName.trim();
+            eventList[idx] = trimmed;
+            if (selectedEvents.has(evName)) {
+              selectedEvents.delete(evName);
+              selectedEvents.add(trimmed);
+            }
+            await persistEventList();
+            renderManualChips();
+          }
+        });
+        chip.querySelector('.del').addEventListener('click', async (e) => {
+          e.stopPropagation();
+          eventList.splice(idx, 1);
           selectedEvents.delete(evName);
-        } else {
-          selectedEvents.add(evName);
-        }
-        renderManualChips();
-      });
+          await persistEventList();
+          renderManualChips();
+        });
+      } else {
+        chip.className = `event-chip ${isChecked ? 'checked' : ''}`;
+        chip.innerHTML = `<span class="check-box">${isChecked ? '☑' : '☐'}</span><span>${evName}</span>`;
+        chip.addEventListener('click', () => {
+          if (selectedEvents.has(evName)) {
+            selectedEvents.delete(evName);
+          } else {
+            selectedEvents.add(evName);
+          }
+          renderManualChips();
+        });
+      }
+
       manualEventChipsContainer.appendChild(chip);
     });
 
@@ -1120,11 +1279,12 @@
     });
   }
 
-  addCustomEventBtn.addEventListener('click', () => {
+  addCustomEventBtn.addEventListener('click', async () => {
     const val = customEventInput.value.trim();
     if (!val) return;
-    if (!PRESET_EVENTS.includes(val) && !customEventsList.includes(val)) {
-      customEventsList.push(val);
+    if (!eventList.includes(val)) {
+      eventList.unshift(val);
+      await persistEventList();
     }
     selectedEvents.add(val);
     customEventInput.value = '';
@@ -1142,7 +1302,12 @@
     selectedEvents.clear();
     selectedPhases.clear();
     manualClosingSelect.value = '';
+    manualClosingText.value = '';
     renderManualChips();
+  });
+
+  manualClosingSelect.addEventListener('change', () => {
+    manualClosingText.value = manualClosingSelect.value;
   });
 
   function parseEventDictionary() {
@@ -1170,23 +1335,20 @@
     const dictEntries = parseEventDictionary();
 
     const lines = [targetStr, asapanLine, bearLine];
-    const allOrderedEvents = [...PRESET_EVENTS, ...customEventsList];
-    const chosenEvents = allOrderedEvents.filter(ev => selectedEvents.has(ev));
+    const chosenEvents = eventList.filter(ev => selectedEvents.has(ev));
 
     let phaseInserted = false;
-    const phaseTargets = ['至高領主', '最強王国', '軍備競技'];
+    const phaseTargets = ['至高領主', '最強王国', '最強領主', '軍備競技'];
 
     chosenEvents.forEach(ev => {
       lines.push(`・${ev}`);
 
-      // フェーズ対象イベントの直下にポイント項目を挿入
       if (!phaseInserted && selectedPhases.size > 0 && phaseTargets.some(t => ev.includes(t))) {
         const orderedPhases = PRESET_PHASES.filter(p => selectedPhases.has(p));
         lines.push(orderedPhases.join('、'));
         phaseInserted = true;
       }
 
-      // 自動補足辞書の照合（完全一致または部分一致）
       const matchedNotes = [];
       dictEntries.forEach(entry => {
         if (ev === entry.key || (ev.includes(entry.key) && !ev.includes('最終日'))) {
@@ -1198,13 +1360,12 @@
       matchedNotes.forEach(note => lines.push(note));
     });
 
-    // もし至高領主等を選ばずにフェーズ項目だけチェックしていた場合
     if (!phaseInserted && selectedPhases.size > 0) {
       const orderedPhases = PRESET_PHASES.filter(p => selectedPhases.has(p));
       lines.push(orderedPhases.join('、'));
     }
 
-    const closing = manualClosingSelect.value;
+    const closing = manualClosingText.value.trim();
     if (closing) {
       lines.push('');
       lines.push(closing);
@@ -1222,6 +1383,91 @@
     showStatus(`「${targetStr}」の通知文を手動ビルダーから組み立てました！必要に応じて微調整して「確定保存＆コピー」を押してください。`, 'ok');
   });
 
+  // 利用可能なAIモデルの自動取得（Models API）
+  function populateModelDropdown(modelsArray, preferredModel) {
+    if (!Array.isArray(modelsArray) || modelsArray.length === 0) return;
+    availableModelsList = modelsArray;
+    modelSelect.innerHTML = '';
+    modelsArray.forEach(mName => {
+      const opt = document.createElement('option');
+      opt.value = mName;
+      opt.textContent = mName;
+      modelSelect.appendChild(opt);
+    });
+    if (preferredModel && modelsArray.includes(preferredModel)) {
+      modelSelect.value = preferredModel;
+    } else {
+      modelSelect.value = modelsArray[0];
+    }
+  }
+
+  fetchModelsBtn.addEventListener('click', async () => {
+    const apiKey = (apiKeyInput.value || localStorage.getItem('ks_gemini_api_key') || '').trim();
+    if (!apiKey) {
+      fetchModelsMsg.textContent = '❌ 先に上の「1. Gemini API キー」を入力してください。';
+      fetchModelsMsg.style.color = '#ef4444';
+      return;
+    }
+
+    fetchModelsBtn.disabled = true;
+    fetchModelsMsg.textContent = 'Google AI Studioから利用可能なモデル一覧を取得中...';
+    fetchModelsMsg.style.color = '#9ca3af';
+
+    try {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey)}`);
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error?.message || `HTTP ${res.status}`);
+      }
+
+      const validGeminiModels = (data.models || [])
+        .filter(m =>
+          Array.isArray(m.supportedGenerationMethods) &&
+          m.supportedGenerationMethods.includes('generateContent') &&
+          m.name &&
+          m.name.includes('gemini') &&
+          !m.name.includes('embedding') &&
+          !m.name.includes('aqa') &&
+          !m.name.includes('imagen') &&
+          !m.name.includes('veo')
+        )
+        .map(m => m.name.replace(/^models\//, ''));
+
+      if (validGeminiModels.length === 0) {
+        throw new Error('利用可能なGeminiモデルが見つかりませんでした。');
+      }
+
+      // flash系・新しいモデルを優先順位付け
+      validGeminiModels.sort((a, b) => {
+        const score = (name) => {
+          let s = 0;
+          if (name.includes('flash')) s += 10;
+          if (name.includes('3.8')) s += 8;
+          else if (name.includes('3.5')) s += 6;
+          else if (name.includes('3.0') || name.includes('3-')) s += 5;
+          else if (name.includes('2.5')) s += 3;
+          if (name.includes('lite')) s += 1;
+          return s;
+        };
+        return score(b) - score(a);
+      });
+
+      const currentSelected = modelSelect.value;
+      populateModelDropdown(validGeminiModels, currentSelected);
+      localStorage.setItem('ks_available_models', JSON.stringify(validGeminiModels));
+      localStorage.setItem('ks_gemini_model', modelSelect.value);
+
+      fetchModelsMsg.textContent = `✅ ${validGeminiModels.length}件の利用可能モデルを取得しました！（現在選択: ${modelSelect.value}）`;
+      fetchModelsMsg.style.color = '#10b981';
+    } catch (err) {
+      console.error(err);
+      fetchModelsMsg.textContent = `❌ 取得失敗: ${err.message}`;
+      fetchModelsMsg.style.color = '#ef4444';
+    } finally {
+      fetchModelsBtn.disabled = false;
+    }
+  });
+
   function getFirebaseBaseUrl() {
     const raw = (firebaseUrlInput.value || localStorage.getItem('ks_firebase_url') || EMBEDDED_FIREBASE_URL).trim();
     return raw.replace(/\/+$/, '');
@@ -1234,11 +1480,6 @@
     } else {
       syncStatusBadge.classList.add('warn');
     }
-  }
-
-  function normalizeModelName(m) {
-    if (AVAILABLE_MODELS.includes(m)) return m;
-    return DEFAULT_MODEL;
   }
 
   async function syncFromCloud() {
@@ -1261,10 +1502,17 @@
             apiKeyInput.value = cfg.apiKey;
             localStorage.setItem('ks_gemini_api_key', cfg.apiKey);
           }
-          if (cfg.model) {
-            const validModel = normalizeModelName(cfg.model);
-            modelSelect.value = validModel;
-            localStorage.setItem('ks_gemini_model', validModel);
+          if (Array.isArray(cfg.availableModels) && cfg.availableModels.length > 0) {
+            localStorage.setItem('ks_available_models', JSON.stringify(cfg.availableModels));
+            populateModelDropdown(cfg.availableModels, cfg.model || DEFAULT_MODEL);
+          } else if (cfg.model) {
+            if (!availableModelsList.includes(cfg.model)) {
+              availableModelsList.unshift(cfg.model);
+              populateModelDropdown(availableModelsList, cfg.model);
+            } else {
+              modelSelect.value = cfg.model;
+            }
+            localStorage.setItem('ks_gemini_model', cfg.model);
           }
           if (cfg.bearBaseDate) {
             bearBaseDateInput.value = cfg.bearBaseDate;
@@ -1277,6 +1525,11 @@
           if (cfg.eventDict) {
             eventDictInput.value = cfg.eventDict;
             localStorage.setItem('ks_event_dict', cfg.eventDict);
+          }
+          if (Array.isArray(cfg.eventList) && cfg.eventList.length > 0) {
+            eventList = cfg.eventList;
+            localStorage.setItem('ks_custom_event_list', JSON.stringify(eventList));
+            renderManualChips();
           }
         }
 
@@ -1588,8 +1841,28 @@
     targetDateInput.value = toDateInputString(tmr);
 
     const savedKey = localStorage.getItem('ks_gemini_api_key') || '';
-    const savedModel = normalizeModelName(localStorage.getItem('ks_gemini_model') || DEFAULT_MODEL);
-    localStorage.setItem('ks_gemini_model', savedModel);
+    const savedModelsRaw = localStorage.getItem('ks_available_models');
+    if (savedModelsRaw) {
+      try {
+        const parsedModels = JSON.parse(savedModelsRaw);
+        if (Array.isArray(parsedModels) && parsedModels.length > 0) {
+          availableModelsList = parsedModels;
+        }
+      } catch {}
+    }
+
+    const savedModel = localStorage.getItem('ks_gemini_model') || DEFAULT_MODEL;
+    populateModelDropdown(availableModelsList, savedModel);
+
+    const savedEventsRaw = localStorage.getItem('ks_custom_event_list');
+    if (savedEventsRaw) {
+      try {
+        const parsedEvents = JSON.parse(savedEventsRaw);
+        if (Array.isArray(parsedEvents) && parsedEvents.length > 0) {
+          eventList = parsedEvents;
+        }
+      } catch {}
+    }
 
     const savedUrl = localStorage.getItem('ks_firebase_url') || EMBEDDED_FIREBASE_URL;
     const savedBearDate = localStorage.getItem('ks_bear_base_date') || '2026-11-22';
@@ -1598,7 +1871,6 @@
     const savedLimit = localStorage.getItem('ks_char_limit') || '300';
 
     apiKeyInput.value = savedKey;
-    modelSelect.value = savedModel;
     firebaseUrlInput.value = savedUrl;
     bearBaseDateInput.value = savedBearDate;
     bearTextInput.value = savedBearText;
@@ -1635,7 +1907,7 @@
 
   saveSettingsBtn.addEventListener('click', async () => {
     const key = apiKeyInput.value.trim();
-    const model = normalizeModelName(modelSelect.value);
+    const model = modelSelect.value || DEFAULT_MODEL;
     const fbUrl = firebaseUrlInput.value.trim() || EMBEDDED_FIREBASE_URL;
     const bearDate = bearBaseDateInput.value || '2026-11-22';
     const bearText = bearTextInput.value.trim() || '熊罠 21時 22時';
@@ -1651,9 +1923,11 @@
     const cloudOk = await pushConfigToCloud({
       apiKey: key,
       model: model,
+      availableModels: availableModelsList,
       bearBaseDate: bearDate,
       bearText: bearText,
       eventDict: dict,
+      eventList: eventList,
       updatedAt: Date.now()
     });
 
@@ -1818,12 +2092,13 @@
   }
 
   async function callGeminiWithAutoRetryAndFallback(apiKey, primaryModel, parts) {
-    const fallbackChain = [primaryModel, ...AVAILABLE_MODELS.filter(m => m !== primaryModel)];
+    const candidates = availableModelsList.length > 0 ? availableModelsList : FALLBACK_DEFAULT_MODELS;
+    const fallbackChain = [primaryModel, ...candidates.filter(m => m !== primaryModel)].slice(0, 4);
     let lastError = null;
 
     for (let mIdx = 0; mIdx < fallbackChain.length; mIdx++) {
       const currentModel = fallbackChain[mIdx];
-      const maxRetries = mIdx === 0 ? 3 : 2;
+      const maxRetries = mIdx === 0 ? 2 : 1;
 
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
@@ -1839,18 +2114,18 @@
           }
           if (attempt < maxRetries) {
             const waitSec = attempt * 2;
-            showStatus(`サーバー混雑検知（${currentModel}）。${waitSec}秒後に自動リトライします (${attempt}/${maxRetries})...`, 'warn');
+            showStatus(`サーバー混雑検知（${currentModel}）。${waitSec}秒後に自動リトライします...`, 'warn');
             await sleep(waitSec * 1000);
           } else if (mIdx + 1 < fallbackChain.length) {
             const nextModel = fallbackChain[mIdx + 1];
             showStatus(`${currentModel} が混雑しているため、代替モデル（${nextModel}）へ自動切り替えします...`, 'warn');
-            await sleep(1000);
+            await sleep(800);
           }
         }
       }
     }
 
-    throw lastError || new Error('すべてのモデルが混雑しています。上の「手動ビルダー」タブから即作成できます。');
+    throw lastError || new Error('現在AIサーバーが混雑しています。「☑️ 手動ビルダー」タブから即座に作成できます。');
   }
 
   generateBtn.addEventListener('click', async () => {
@@ -1863,7 +2138,7 @@
 
     if (uploadedImages.length === 0) return;
 
-    const primaryModel = normalizeModelName(modelSelect.value || localStorage.getItem('ks_gemini_model') || DEFAULT_MODEL);
+    const primaryModel = modelSelect.value || localStorage.getItem('ks_gemini_model') || DEFAULT_MODEL;
     const eventDict = eventDictInput.value || localStorage.getItem('ks_event_dict') || DEFAULT_EVENT_DICT;
     const charLimit = charLimitInput.value || 300;
     const targetDateStr = getTargetDateFormatted();
