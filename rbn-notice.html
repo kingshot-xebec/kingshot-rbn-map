@@ -3,428 +3,778 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>キングショット 同盟通知ジェネレーター v6</title>
-  <!-- Tailwind CSS の読み込み -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Google Fonts (Inter & Noto Sans JP) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'Noto Sans JP', 'sans-serif'],
-          },
-          colors: {
-            appBg: '#12151c',
-            cardBg: '#1c212b',
-            borderCol: '#2f3746',
-            primary: '#3b82f6',
-            primaryHover: '#2563eb',
-            success: '#10b981',
-            warning: '#f59e0b',
-            danger: '#ef4444',
-          }
-        }
-      }
+  <title>キングショット 同盟通知ジェネレーター v6.1</title>
+  <style>
+    :root {
+      --bg-color: #12151c;
+      --card-bg: #1c212b;
+      --border-color: #2f3746;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
     }
-  </script>
-</head>
-<body class="bg-appBg text-gray-100 font-sans leading-relaxed p-3 sm:p-4 min-h-screen antialiased">
 
-  <div class="max-w-2xl mx-auto">
-    <!-- ヘッダー & ナビゲーションタブ -->
-    <header class="mb-4 pb-3 border-b border-borderCol">
-      <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
-        <h1 class="text-lg sm:text-xl font-bold flex items-center gap-2 text-white">
-          <span>📢</span>
-          <span>同盟通知ジェネレーター</span>
-          <span class="text-xs font-normal bg-primary/20 text-primary border border-primary/30 px-2 py-0.5 rounded-full">v6</span>
-        </h1>
-        <span id="sync-status-badge" class="text-[11px] font-medium px-2.5 py-1 rounded-full bg-cardBg text-gray-400 border border-borderCol">
-          ☁️ Firebase接続準備中...
-        </span>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans JP", sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      line-height: 1.6;
+      padding: 16px;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    header h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ver-badge {
+      font-size: 0.72rem;
+      background: #262d3b;
+      color: #60a5fa;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border-color);
+    }
+
+    .sync-badge {
+      font-size: 0.75rem;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    .sync-badge.warn {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border-color: rgba(245, 158, 11, 0.4);
+    }
+
+    .nav-tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      background: var(--card-bg);
+      padding: 4px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      margin-bottom: 16px;
+    }
+
+    .nav-tab {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 8px 4px;
+      border-radius: 7px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .nav-tab.active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .tab-pane {
+      display: none;
+    }
+
+    .tab-pane.active {
+      display: block;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .input-group {
+      margin-bottom: 14px;
+    }
+
+    .input-group label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .input-hint {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    input[type="password"],
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    select,
+    textarea {
+      width: 100%;
+      background-color: #12151c;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-family: inherit;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .date-selector-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #12151c;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .date-selector-bar label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #e5e7eb;
+      white-space: nowrap;
+    }
+
+    .date-selector-bar input[type="date"] {
+      width: auto;
+      flex: 1;
+      min-width: 145px;
+      padding: 6px 10px;
+      color-scheme: dark;
+    }
+
+    .date-quick-btns {
+      display: flex;
+      gap: 4px;
+    }
+
+    .date-quick-btn {
+      background: #1c212b;
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    .date-quick-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .quick-controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .control-box {
+      background: #12151c;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px;
+    }
+
+    .control-label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .segmented-btn {
+      display: flex;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+    }
+
+    .segmented-btn button {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 6px 4px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .segmented-btn button.active {
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .segmented-btn button.active-warn {
+      background: var(--warning);
+      color: #111;
+      font-weight: 600;
+    }
+
+    #paste-zone {
+      border: 2px dashed #4b5563;
+      border-radius: 8px;
+      padding: 22px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    #paste-zone:hover, #paste-zone.dragover {
+      border-color: var(--primary);
+      background-color: rgba(59, 130, 246, 0.08);
+    }
+
+    .paste-icon {
+      font-size: 1.6rem;
+      margin-bottom: 4px;
+    }
+
+    .paste-hint {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    #preview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .preview-item {
+      position: relative;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      aspect-ratio: 9 / 16;
+      background: #000;
+    }
+
+    .preview-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .remove-img-btn {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      background: rgba(0, 0, 0, 0.75);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      cursor: pointer;
+      font-size: 12px;
+      line-height: 1;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: #fff;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background-color: var(--primary-hover);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-demo {
+      background-color: #262d3b;
+      border: 1px solid var(--border-color);
+      color: #e5e7eb;
+      margin-top: 8px;
+      padding: 9px;
+      font-size: 0.85rem;
+    }
+
+    .btn-demo:hover {
+      background-color: #323b4d;
+    }
+
+    .btn-success {
+      background-color: var(--success);
+      color: #fff;
+    }
+
+    .btn-success:hover {
+      background-color: #059669;
+    }
+
+    .icon-btn {
+      background: #262d3b;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .icon-btn:hover {
+      background: #323b4d;
+    }
+
+    .counter-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 8px;
+      margin-bottom: 12px;
+    }
+
+    .char-count.over-limit {
+      color: var(--danger);
+      font-weight: bold;
+    }
+
+    .limit-setting {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .limit-setting input {
+      width: 70px;
+      padding: 4px 6px;
+      font-size: 0.85rem;
+      text-align: right;
+    }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: none;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .status-msg {
+      font-size: 0.84rem;
+      margin-top: 8px;
+      text-align: center;
+      min-height: 1.2em;
+      word-break: break-word;
+    }
+
+    .status-error { color: var(--danger); }
+    .status-ok { color: var(--success); }
+
+    .badge-bear {
+      font-size: 0.78rem;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: #262d3b;
+      color: #e5e7eb;
+      border: 1px solid var(--border-color);
+    }
+
+    .history-item {
+      background: #12151c;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 0.85rem;
+      color: #60a5fa;
+      font-weight: 600;
+    }
+
+    .history-body {
+      font-size: 0.84rem;
+      white-space: pre-wrap;
+      color: #d1d5db;
+      background: #181c25;
+      padding: 8px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+
+    .history-actions {
+      display: flex;
+      gap: 6px;
+      justify-content: flex-end;
+    }
+
+    .mini-btn {
+      background: #262d3b;
+      border: 1px solid var(--border-color);
+      color: #e5e7eb;
+      padding: 4px 10px;
+      border-radius: 5px;
+      font-size: 0.78rem;
+      cursor: pointer;
+    }
+
+    .mini-btn:hover {
+      background: #323b4d;
+    }
+
+    .mini-btn.danger {
+      color: #f87171;
+    }
+
+    .ratio-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.84rem;
+      margin-top: 8px;
+    }
+
+    .ratio-table th, .ratio-table td {
+      border: 1px solid var(--border-color);
+      padding: 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .ratio-table th {
+      background: #12151c;
+      color: #93c5fd;
+    }
+
+    .ratio-tag {
+      display: inline-block;
+      background: rgba(59, 130, 246, 0.2);
+      color: #93c5fd;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>📢 同盟通知ジェネレーター <span class="ver-badge">v6.1</span></h1>
+    <span class="sync-badge warn" id="sync-status-badge">クラウド同期確認中...</span>
+  </header>
+
+  <nav class="nav-tabs">
+    <button type="button" class="nav-tab active" data-tab="create">✏️ 通知作成</button>
+    <button type="button" class="nav-tab" data-tab="history">📚 履歴(学習)</button>
+    <button type="button" class="nav-tab" data-tab="ratio">📊 比率解説</button>
+    <button type="button" class="nav-tab" data-tab="settings">⚙️ 設定</button>
+  </nav>
+
+  <!-- 1. 通知作成タブ -->
+  <div id="tab-create" class="tab-pane active">
+    <div class="card">
+      <div class="card-title">
+        <span>1. 通知の対象日・方針切替</span>
+        <span class="badge-bear" id="date-bear-badge"></span>
       </div>
 
-      <!-- 4つの切り替えタブ -->
-      <nav class="grid grid-cols-4 gap-1.5 bg-cardBg p-1 rounded-xl border border-borderCol">
-        <button type="button" data-tab="main" class="nav-tab active-tab py-2 px-1 rounded-lg text-xs sm:text-sm font-semibold bg-primary text-white transition-colors flex items-center justify-center gap-1 cursor-pointer">
-          <span>✏️</span>
-          <span>通知作成</span>
+      <div class="date-selector-bar">
+        <label for="target-date-input">📅 通知対象日:</label>
+        <input type="date" id="target-date-input">
+        <div class="date-quick-btns">
+          <button type="button" class="date-quick-btn" id="btn-set-today">今日</button>
+          <button type="button" class="date-quick-btn active" id="btn-set-tomorrow">翌日(既定)</button>
+        </div>
+      </div>
+
+      <div class="quick-controls">
+        <div class="control-box">
+          <span class="control-label">🌅 朝パーン（情報イベント）</span>
+          <div class="segmented-btn" id="asapan-group">
+            <button type="button" data-val="auto" class="active">AI判定</button>
+            <button type="button" data-val="ok">OK！</button>
+            <button type="button" data-val="ng">温存(NG)</button>
+          </div>
+        </div>
+
+        <div class="control-box">
+          <span class="control-label">🐻 対象日の熊罠</span>
+          <div class="segmented-btn" id="bear-group">
+            <button type="button" data-val="auto" class="active">自動計算</button>
+            <button type="button" data-val="yes">あり</button>
+            <button type="button" data-val="no">なし</button>
+          </div>
+        </div>
+
+        <div class="control-box">
+          <span class="control-label">🌾 翌日採集（寝る前仕込み）</span>
+          <div class="segmented-btn" id="gather-group">
+            <button type="button" data-val="auto" class="active">AI判定</button>
+            <button type="button" data-val="yes">案内あり</button>
+            <button type="button" data-val="no">なし</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="paste-zone">
+        <div class="paste-icon">📋</div>
+        <div><strong>Ctrl + V</strong> でスクショ貼り付け / タップで画像選択</div>
+        <div class="paste-hint">対象日（翌日など）のイベント一覧・カレンダー等のスクショを貼ってください</div>
+        <input type="file" id="file-input" accept="image/*" multiple style="display:none;">
+      </div>
+
+      <div id="preview-grid"></div>
+
+      <div style="margin-top: 14px; display: flex; gap: 8px;">
+        <button class="btn btn-primary" id="generate-btn" disabled>
+          <span class="spinner" id="loading-spinner"></span>
+          <span id="generate-btn-text">✨ スクショから通知文を生成</span>
         </button>
-        <button type="button" data-tab="history" class="nav-tab py-2 px-1 rounded-lg text-xs sm:text-sm font-medium text-gray-400 hover:text-gray-200 transition-colors flex items-center justify-center gap-1 cursor-pointer">
-          <span>📚</span>
-          <span>履歴(学習)</span>
-        </button>
-        <button type="button" data-tab="ratio" class="nav-tab py-2 px-1 rounded-lg text-xs sm:text-sm font-medium text-gray-400 hover:text-gray-200 transition-colors flex items-center justify-center gap-1 cursor-pointer">
-          <span>📊</span>
-          <span>比率解説</span>
-        </button>
-        <button type="button" data-tab="settings" class="nav-tab py-2 px-1 rounded-lg text-xs sm:text-sm font-medium text-gray-400 hover:text-gray-200 transition-colors flex items-center justify-center gap-1 cursor-pointer">
-          <span>⚙️</span>
-          <span>設定</span>
-        </button>
-      </nav>
-    </header>
+        <button class="icon-btn" id="clear-images-btn" style="display:none; white-space: nowrap;">🗑️ クリア</button>
+      </div>
 
-    <!-- ========================================== -->
-    <!-- ビュー1：通知作成ビュー（メイン） -->
-    <!-- ========================================== -->
-    <div id="view-main" class="tab-view space-y-4">
-      <!-- 1. 通知の対象日・方針切替カード -->
-      <section class="bg-cardBg border border-borderCol rounded-xl p-4">
-        <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
-          <h2 class="text-sm font-semibold text-gray-200">1. 通知の対象日・方針切替</h2>
-          <span id="date-bear-badge" class="text-xs font-medium px-2.5 py-1 rounded-full bg-[#262d3b] text-gray-200 border border-borderCol">
-            読み込み中...
-          </span>
-        </div>
+      <button type="button" class="btn btn-demo" id="demo-generate-btn">🧪 サンプルデータで出力をテスト（APIキー不要）</button>
 
-        <!-- 対象日選択バー（デフォルトは翌日） -->
-        <div class="flex flex-wrap items-center gap-2 bg-appBg border border-borderCol rounded-lg p-2.5 mb-3">
-          <label for="target-date-input" class="text-xs sm:text-sm font-semibold text-gray-200 whitespace-nowrap">
-            📅 通知対象日:
-          </label>
-          <input type="date" id="target-date-input" style="color-scheme: dark;" class="flex-1 min-w-[140px] bg-cardBg border border-borderCol focus:border-primary focus:outline-none text-gray-100 px-2.5 py-1.5 rounded-md text-xs sm:text-sm">
-          <div class="flex gap-1.5">
-            <button type="button" id="btn-set-today" class="px-3 py-1.5 rounded-md text-xs font-medium border border-borderCol bg-cardBg text-gray-400 hover:text-gray-200 transition-colors cursor-pointer">
-              今日
-            </button>
-            <button type="button" id="btn-set-tomorrow" class="px-3 py-1.5 rounded-md text-xs font-semibold border border-primary bg-primary text-white transition-colors cursor-pointer">
-              翌日(既定)
-            </button>
-          </div>
-        </div>
-
-        <!-- クイックコントロール 3種 -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-4">
-          <!-- 朝パーン切替 -->
-          <div class="bg-appBg border border-borderCol rounded-lg p-2.5">
-            <span class="block text-xs text-gray-400 mb-1.5">🌅 朝パーン（情報イベント）</span>
-            <div id="asapan-group" class="flex rounded-md overflow-hidden border border-borderCol">
-              <button type="button" data-val="auto" class="flex-1 py-1.5 px-1 text-xs font-semibold bg-primary text-white transition-colors cursor-pointer">AI判定</button>
-              <button type="button" data-val="ok" class="flex-1 py-1.5 px-1 text-xs font-medium text-gray-400 hover:text-gray-200 transition-colors cursor-pointer">OK！</button>
-              <button type="button" data-val="ng" class="flex-1 py-1.5 px-1 text-xs font-medium text-gray-400 hover:text-gray-200 transition-colors cursor-pointer">温存(NG)</button>
-            </div>
-          </div>
-
-          <!-- 熊罠切替 -->
-          <div class="bg-appBg border border-borderCol rounded-lg p-2.5">
-            <span class="block text-xs text-gray-400 mb-1.5">🐻 対象日の熊罠</span>
-            <div id="bear-group" class="flex rounded-md overflow-hidden border border-borderCol">
-              <button type="button" data-val="auto" class="flex-1 py-1.5 px-1 text-xs font-semibold bg-primary text-white transition-colors cursor-pointer">自動計算</button>
-              <button type="button" data-val="yes" class="flex-1 py-1.5 px-1 text-xs font-medium text-gray-400 hover:text-gray-200 transition-colors cursor-pointer">あり</button>
-              <button type="button" data-val="no" class="flex-1 py-1.5 px-1 text-xs font-medium text-gray-400 hover:text-gray-200 transition-colors cursor-pointer">なし</button>
-            </div>
-          </div>
-
-          <!-- 翌日採集リマインダー -->
-          <div class="bg-appBg border border-borderCol rounded-lg p-2.5">
-            <span class="block text-xs text-gray-400 mb-1.5">🌾 翌日採集（寝る前仕込み）</span>
-            <div id="gather-group" class="flex rounded-md overflow-hidden border border-borderCol">
-              <button type="button" data-val="auto" class="flex-1 py-1.5 px-1 text-xs font-semibold bg-primary text-white transition-colors cursor-pointer">AI判定</button>
-              <button type="button" data-val="yes" class="flex-1 py-1.5 px-1 text-xs font-medium text-gray-400 hover:text-gray-200 transition-colors cursor-pointer">案内あり</button>
-              <button type="button" data-val="no" class="flex-1 py-1.5 px-1 text-xs font-medium text-gray-400 hover:text-gray-200 transition-colors cursor-pointer">なし</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- スクショ貼り付け・アップロードエリア -->
-        <div id="paste-zone" class="border-2 border-dashed border-gray-600 hover:border-primary hover:bg-primary/5 rounded-xl p-5 text-center cursor-pointer transition-all bg-white/[0.02]">
-          <div class="text-3xl mb-1">📋</div>
-          <div class="text-sm font-medium text-gray-200">
-            <strong class="text-primary">Ctrl + V</strong> でスクショ貼り付け / タップで画像選択
-          </div>
-          <div class="text-xs text-gray-400 mt-1">
-            対象日のイベント一覧・カレンダー等のスクショを貼ってください（過去履歴も自動学習）
-          </div>
-          <input type="file" id="file-input" accept="image/*" multiple class="hidden">
-        </div>
-
-        <!-- サムネイルプレビューグリッド -->
-        <div id="preview-grid" class="grid grid-cols-3 sm:grid-cols-4 gap-2.5 mt-3"></div>
-
-        <!-- アクションボタン群 -->
-        <div class="mt-3.5 space-y-2">
-          <div class="flex gap-2">
-            <button type="button" id="generate-btn" disabled class="flex-1 bg-primary hover:bg-primaryHover disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg text-sm transition-colors flex justify-center items-center gap-2 cursor-pointer">
-              <span id="loading-spinner" class="hidden w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-              <span id="generate-btn-text">✨ スクショから通知文を生成</span>
-            </button>
-            <button type="button" id="clear-images-btn" class="hidden bg-appBg hover:bg-[#262d3b] border border-borderCol text-gray-200 px-3 py-3 rounded-lg text-sm font-medium whitespace-nowrap cursor-pointer">
-              🗑️ クリア
-            </button>
-          </div>
-
-          <button type="button" id="demo-generate-btn" class="w-full bg-[#262d3b] hover:bg-[#2f3746] border border-borderCol text-gray-200 font-medium py-2.5 px-4 rounded-lg text-xs sm:text-sm transition-colors flex justify-center items-center gap-1.5 cursor-pointer">
-            <span>🧪</span>
-            <span>サンプルデータで出力をテスト（APIキー不要）</span>
-          </button>
-        </div>
-
-        <!-- ステータスメッセージ -->
-        <div id="status-msg" class="text-xs text-center mt-2 min-h-[1.25rem]"></div>
-      </section>
-
-      <!-- 2. 生成結果・編集・確定保存コピーカード -->
-      <section class="bg-cardBg border border-borderCol rounded-xl p-4">
-        <div class="flex justify-between items-center mb-2">
-          <h2 class="text-sm font-semibold text-gray-200">2. 通知文エディタ（手直し後に確定保存＆コピー）</h2>
-          <span id="learned-count-mini" class="text-[11px] text-primary font-medium">学習履歴: 0件</span>
-        </div>
-
-        <textarea id="result-text" rows="13" placeholder="スクショを貼って生成ボタンを押すと、過去の確定履歴（直近1ヶ月分）を学習した文体で通知文が作成されます..." class="w-full bg-appBg border border-borderCol focus:border-primary focus:outline-none text-gray-100 p-3 rounded-lg text-sm leading-relaxed"></textarea>
-
-        <!-- 文字数カウンターバー -->
-        <div class="flex justify-between items-center text-xs text-gray-400 mt-2 mb-3">
-          <div id="char-count" class="font-medium">0 / 300 文字</div>
-          <div class="flex items-center gap-1.5">
-            <label for="char-limit-input">上限目安:</label>
-            <input type="number" id="char-limit-input" value="300" min="50" max="2000" class="w-16 bg-appBg border border-borderCol text-gray-100 px-2 py-1 rounded text-right text-xs">
-          </div>
-        </div>
-
-        <button type="button" id="save-and-copy-btn" class="w-full bg-success hover:bg-emerald-600 text-white font-semibold py-3 px-4 rounded-lg text-sm transition-colors flex justify-center items-center gap-2 cursor-pointer shadow-sm">
-          <span>📋 確定保存してコピー（次回AI学習に反映）</span>
-        </button>
-      </section>
+      <div class="status-msg" id="status-msg"></div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- ビュー2：通知履歴（学習データ）ビュー -->
-    <!-- ========================================== -->
-    <div id="view-history" class="tab-view hidden space-y-4">
-      <section class="bg-cardBg border border-borderCol rounded-xl p-4">
-        <div class="flex flex-wrap justify-between items-center gap-2 mb-2">
-          <h2 class="text-base font-bold text-white flex items-center gap-2">
-            <span>📚</span>
-            <span>確定済みの通知履歴（直近30日保持）</span>
-          </h2>
-          <span id="history-count-badge" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-primary/20 text-primary border border-primary/30">
-            蓄積中 0件 / 直近30日保持
-          </span>
+    <div class="card">
+      <div class="card-title">
+        <span>2. 通知文エディタ（手直し後に確定保存＆コピー）</span>
+        <span style="font-size: 0.78rem; color: #60a5fa;" id="history-count-label">学習履歴: 0件</span>
+      </div>
+
+      <textarea id="result-text" rows="13" placeholder="スクショを貼って生成ボタンを押すと、過去の確定履歴（直近1ヶ月分）を学習した文体で通知文が作成されます..."></textarea>
+
+      <div class="counter-bar">
+        <div class="char-count" id="char-count">0 / 300 文字</div>
+        <div class="limit-setting">
+          <label for="char-limit-input">上限目安:</label>
+          <input type="number" id="char-limit-input" value="300" min="50" max="2000">
         </div>
-        <p class="text-xs text-gray-400 mb-4">
-          「確定保存してコピー」を押した通知文が日付ごとに自動蓄積されます。次回のAI生成時、ここから最新の文体・補足ルール・同曜日の周期パターンを自動学習します。
-        </p>
+      </div>
 
-        <div id="history-list-container" class="space-y-3">
-          <!-- JSで履歴カードを描画 -->
-        </div>
-      </section>
-    </div>
-
-    <!-- ========================================== -->
-    <!-- ビュー3：比率解説ビュー（補足資料） -->
-    <!-- ========================================== -->
-    <div id="view-ratio" class="tab-view hidden space-y-4">
-      <!-- 1. なぜ 6:1:3 が王道なのか -->
-      <section class="bg-cardBg border border-borderCol rounded-xl p-4">
-        <h2 class="text-base font-bold text-primary mb-2 flex items-center gap-2">
-          <span>🛡️</span>
-          <span>同盟争覇戦：なぜ「6 : 1 : 3」が王道なのか？</span>
-        </h2>
-        <p class="text-xs sm:text-sm text-gray-300 mb-3">
-          同盟争覇戦（Alliance Championship）は通常の1発勝負（集結戦）と異なり、<strong>「1部隊の兵士数（容量）が固定された状態で、最大2〜3連戦の勝ち抜き戦（1v1連続バトル）を行う」</strong>特殊ルールです。
-        </p>
-        <div class="space-y-2.5 text-xs sm:text-sm">
-          <div class="bg-appBg border border-borderCol rounded-lg p-3">
-            <div class="font-semibold text-white mb-1">① 連戦による「歩兵の目減り」への耐性（歩兵 60%）</div>
-            <p class="text-gray-400">
-              1戦目に勝つと、<strong>減った兵士数のまま2戦目・3戦目に突入</strong>します。歩兵が50%以下だと2戦目開始時点で前衛が薄くなり、後衛の弓兵が直接殴られて即崩壊します。歩兵60%なら連戦でも前線を維持できます。
-            </p>
-          </div>
-          <div class="bg-appBg border border-borderCol rounded-lg p-3">
-            <div class="font-semibold text-white mb-1">② 騎兵を10%に抑えて弓兵火力を維持（騎兵 10% / 弓兵 30%）</div>
-            <p class="text-gray-400">
-              騎兵は歩兵より前に出て被弾・消耗しやすいため、最低限のスキル発動・ターゲット分散用の10%に抑え、残りを歩兵（盾）と弓兵（純火力）に回すのが最も連戦効率に優れます。
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <!-- 2. 状況別の比率使い分け（左寄せ戦術連動） -->
-      <section class="bg-cardBg border border-borderCol rounded-xl p-4">
-        <h2 class="text-base font-bold text-white mb-2 flex items-center gap-2">
-          <span>⚔️</span>
-          <span>レーン・役割別の比率使い分け（歩：騎：弓）</span>
-        </h2>
-        <p class="text-xs text-gray-400 mb-3">
-          「左寄せ（主力を左・中央レーンに集中、右レーンを捨てる配置）」と組み合わせる際の目安です。
-        </p>
-
-        <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse text-xs sm:text-sm">
-            <thead>
-              <tr class="border-b border-borderCol text-gray-400 bg-appBg">
-                <th class="p-2.5 font-semibold whitespace-nowrap">比率</th>
-                <th class="p-2.5 font-semibold whitespace-nowrap">役割タイプ</th>
-                <th class="p-2.5 font-semibold">有効な場面・レーン</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-borderCol">
-              <tr class="bg-primary/5">
-                <td class="p-2.5 font-bold text-primary whitespace-nowrap">6 : 1 : 3</td>
-                <td class="p-2.5 font-semibold text-white whitespace-nowrap">連戦エース型<br><span class="text-[11px] font-normal text-primary">（基本・万能）</span></td>
-                <td class="p-2.5 text-gray-300"><strong>主力レーン（左・中央）の全員。</strong>迷ったらこれ。1〜3連戦を安定して勝ち抜くための最適解です。</td>
-              </tr>
-              <tr>
-                <td class="p-2.5 font-bold text-emerald-400 whitespace-nowrap">5 : 1 : 4</td>
-                <td class="p-2.5 font-semibold text-white whitespace-nowrap">格下殲滅・先鋒型</td>
-                <td class="p-2.5 text-gray-300"><strong>主力レーンの先頭付近・格下相手。</strong>相手の1〜2番手を素早く溶かしたい場合に有効（格上との連戦には不向き）。</td>
-              </tr>
-              <tr>
-                <td class="p-2.5 font-bold text-amber-400 whitespace-nowrap">7 : 1 : 2</td>
-                <td class="p-2.5 font-semibold text-white whitespace-nowrap">削り・足止め盾型</td>
-                <td class="p-2.5 text-gray-300"><strong>捨てレーン（右）や、敵の廃課金エース対策枠。</strong>勝てない格上の歩兵を少しでも多く削り、後続の味方に繋ぐ肉壁役。</td>
-              </tr>
-              <tr>
-                <td class="p-2.5 font-bold text-purple-400 whitespace-nowrap">5 : 2 : 3</td>
-                <td class="p-2.5 font-semibold text-white whitespace-nowrap">騎兵バフ偏重型</td>
-                <td class="p-2.5 text-gray-300"><strong>騎兵特化の強力な英雄・領主装備を持つ人。</strong>自分の騎兵バフが他兵種より突出している場合のみ有効。</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- 3. 実戦の落とし穴メモ -->
-      <section class="bg-cardBg border border-borderCol rounded-xl p-4">
-        <h2 class="text-base font-bold text-warning mb-2 flex items-center gap-2">
-          <span>⚠️</span>
-          <span>エントリー時の落とし穴・重要メモ</span>
-        </h2>
-        <ul class="space-y-2 text-xs sm:text-sm text-gray-300 list-disc pl-5">
-          <li>
-            <strong>登録前の「部隊容量バフ」を忘れない：</strong><br>
-            エントリー時の兵士数は<strong>「登録ボタンを押した瞬間」</strong>のステータスで固定されます。登録前に容量アップバフを入れると歩兵の絶対数が増えて連戦突破率が大きく上がります。
-          </li>
-          <li>
-            <strong>兵士ランク（Tier）が混ざる場合の調整：</strong><br>
-            最高ランク兵だけで6:1:3を組めず下位ランク兵が混ざる場合、下位ランクの歩兵は1戦目で即溶けするため、<strong>少し歩兵多め（6.5 : 1 : 2.5 〜 7 : 1 : 2）</strong>にすると2戦目以降が安定します。
-          </li>
-        </ul>
-      </section>
-
-      <!-- 4. チャット共有用コピーボックス -->
-      <section class="bg-cardBg border border-borderCol rounded-xl p-4">
-        <h3 class="text-sm font-semibold text-gray-200 mb-2">📋 同盟チャット貼り付け用（短い解説テンプレ）</h3>
-        <textarea id="ratio-share-text" rows="5" readonly class="w-full bg-appBg border border-borderCol text-gray-200 p-3 rounded-lg text-xs sm:text-sm leading-relaxed mb-2.5">【同盟争覇戦の比率目安（歩:騎:弓）】
-・基本は「6:1:3」（連戦で前線の歩兵を保つため）
-・格上削り役／右レーンは「7:1:2」で足止め重視
-※登録ボタンを押した瞬間の兵数で固定されるので、登録前の部隊容量バフ推奨！</textarea>
-        <button type="button" id="copy-ratio-guide-btn" class="w-full bg-success hover:bg-emerald-600 text-white font-semibold py-2.5 px-4 rounded-lg text-sm transition-colors flex justify-center items-center gap-2 cursor-pointer">
-          <span>📋 この比率メモをコピーする</span>
-        </button>
-        <div id="ratio-copy-status" class="text-xs text-center text-success mt-1.5 min-h-[1rem]"></div>
-      </section>
-    </div>
-
-    <!-- ========================================== -->
-    <!-- ビュー4：設定ビュー -->
-    <!-- ========================================== -->
-    <div id="view-settings" class="tab-view hidden space-y-4">
-      <section class="bg-cardBg border border-borderCol rounded-xl p-4 space-y-4">
-        <div class="flex flex-wrap justify-between items-center gap-2 border-b border-borderCol pb-2.5">
-          <h2 class="text-base font-bold text-white flex items-center gap-2">
-            <span>⚙️</span>
-            <span>API・Firebase自動共有・同盟ルール設定</span>
-          </h2>
-          <span id="config-sync-indicator" class="text-[11px] font-medium px-2 py-0.5 rounded bg-primary/20 text-primary">
-            未同期
-          </span>
-        </div>
-
-        <!-- Gemini API キー -->
-        <div>
-          <label for="api-key-input" class="block text-xs font-medium text-gray-300 mb-1">
-            1. Gemini API キー（HTMLには直書きせず、Firebase経由で自動共有）
-          </label>
-          <input type="password" id="api-key-input" placeholder="AIzaSy..." class="w-full bg-appBg border border-borderCol focus:border-primary focus:outline-none text-gray-100 px-3 py-2.5 rounded-lg text-sm">
-          <p class="text-[11px] text-gray-400 mt-1">
-            ※一度保存するとFirebaseの <code class="text-gray-300">/config</code> に保存されるため、他の端末や共有相手は入力不要でそのまま使えます。
-          </p>
-        </div>
-
-        <!-- モデル選択 -->
-        <div>
-          <label for="model-select" class="block text-xs font-medium text-gray-300 mb-1">2. 使用AIモデル</label>
-          <select id="model-select" class="w-full bg-appBg border border-borderCol focus:border-primary focus:outline-none text-gray-100 px-3 py-2.5 rounded-lg text-sm">
-            <option value="gemini-2.5-flash">gemini-2.5-flash（推奨・高速・無料枠）</option>
-            <option value="gemini-2.0-flash">gemini-2.0-flash（代替モデル）</option>
-          </select>
-        </div>
-
-        <!-- Firebase Realtime Database URL（初期値埋め込み済み） -->
-        <div class="bg-appBg border border-borderCol rounded-lg p-3 space-y-2">
-          <label for="firebase-url-input" class="block text-xs font-semibold text-primary">
-            3. Firebase Realtime Database URL（初期設定埋め込み済み）
-          </label>
-          <input type="text" id="firebase-url-input" class="w-full bg-cardBg border border-borderCol focus:border-primary focus:outline-none text-gray-100 px-3 py-2 rounded-lg text-xs sm:text-sm">
-          <p class="text-[11px] text-gray-400 leading-relaxed">
-            ※このURLはコード内にあらかじめ埋め込まれているため、URLを共有した他のR4メンバーも最初から自動で同期されます。
-          </p>
-          <div class="flex flex-wrap items-center gap-2 pt-1">
-            <button type="button" id="test-firebase-btn" class="bg-[#262d3b] hover:bg-[#323b4d] border border-borderCol text-gray-200 px-3 py-1.5 rounded-md text-xs font-medium cursor-pointer">
-              🔌 Firebase接続テスト＆設定・履歴を今すぐ同期
-            </button>
-            <span id="firebase-test-msg" class="text-xs"></span>
-          </div>
-        </div>
-
-        <!-- 熊罠設定 -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label for="bear-base-date" class="block text-xs font-medium text-gray-300 mb-1">4. 熊罠の基準日（「あり」だった日）</label>
-            <input type="date" id="bear-base-date" style="color-scheme: dark;" class="w-full bg-appBg border border-borderCol focus:border-primary focus:outline-none text-gray-100 px-3 py-2 rounded-lg text-sm">
-          </div>
-          <div>
-            <label for="bear-text-input" class="block text-xs font-medium text-gray-300 mb-1">5. 熊罠あり時の表記</label>
-            <input type="text" id="bear-text-input" placeholder="熊罠 21時 22時" class="w-full bg-appBg border border-borderCol focus:border-primary focus:outline-none text-gray-100 px-3 py-2 rounded-lg text-sm">
-          </div>
-        </div>
-
-        <!-- イベント別補足辞書 -->
-        <div>
-          <label for="event-dict-input" class="block text-xs font-medium text-gray-300 mb-1">
-            6. イベント別・自動補足辞書（イベント名：補足テキスト）
-          </label>
-          <textarea id="event-dict-input" rows="5" class="w-full bg-appBg border border-borderCol focus:border-primary focus:outline-none text-gray-100 px-3 py-2 rounded-lg text-sm leading-relaxed"></textarea>
-          <p class="text-xs text-gray-400 mt-1">※「イベント名：補足文」の形式で1行ずつ記述。スクショに該当イベントがあると自動追記します。</p>
-        </div>
-
-        <!-- Firebase共有同期チェックボックス -->
-        <label class="flex items-start gap-2.5 bg-appBg border border-borderCol rounded-lg p-3 cursor-pointer">
-          <input type="checkbox" id="sync-config-checkbox" checked class="mt-0.5 w-4 h-4 accent-primary rounded cursor-pointer">
-          <span class="text-xs text-gray-200 leading-relaxed">
-            <strong>共有設定（APIキー・辞書・熊罠基準日）をFirebaseにも保存して他端末・他メンバーと自動同期する</strong><br>
-            <span class="text-[11px] text-gray-400">※チェックを入れたまま保存すると、PC・スマホ・共有相手の画面にも同じ設定が自動反映されます。</span>
-          </span>
-        </label>
-
-        <button type="button" id="save-settings-btn" class="w-full bg-primary hover:bg-primaryHover text-white font-semibold py-3 px-4 rounded-lg text-sm transition-colors cursor-pointer">
-          設定を保存してクラウド同期する
-        </button>
-        <div id="settings-save-msg" class="text-xs text-center text-success min-h-[1rem]"></div>
-      </section>
+      <button class="btn btn-success" id="save-copy-btn">📋 確定保存（学習蓄積）＆コピー</button>
     </div>
   </div>
 
-  <script>
-    // ==========================================
-    // 定数・初期データ定義（Firebase URL埋め込み済み / APIキーは非ハードコード）
-    // ==========================================
-    const DEFAULT_FIREBASE_URL = 'https://kingshot-rbn-map-default-rtdb.firebaseio.com/kingshot_notice_history';
+  <!-- 2. 履歴(学習)タブ -->
+  <div id="tab-history" class="tab-pane">
+    <div class="card">
+      <div class="card-title">
+        <span>📚 確定通知履歴（直近30日分を自動学習）</span>
+        <button type="button" class="mini-btn" id="refresh-history-btn">🔄 再読込</button>
+      </div>
+      <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 12px;">
+        「確定保存＆コピー」で保存した日付ごとの最終通知文です。次回AIが生成する際、直近履歴および1〜2週間前の同サイクル履歴を自動的に参照して文体や補足ルールを学習します（30日経過分は自動整理）。
+      </p>
+      <div id="history-list-container"></div>
+    </div>
+  </div>
 
-    const DEFAULT_EVENT_DICT = `同盟争覇戦：左寄せ、比率613
+  <!-- 3. 比率解説タブ -->
+  <div id="tab-ratio" class="tab-pane">
+    <div class="card">
+      <div class="card-title">
+        <span>📊 同盟争覇戦（Alliance Championship）兵種比率ガイド</span>
+      </div>
+      <p style="font-size: 0.84rem; color: var(--text-muted); margin-bottom: 10px;">
+        同盟争覇戦は<strong>「兵力固定・最大2〜3連戦の勝ち抜き方式（途中治療なし）」</strong>のため、1戦目で前衛（歩兵）を消耗しすぎない比率が重要です（表記は <strong>歩兵：騎兵：弓兵</strong>）。
+      </p>
+      <table class="ratio-table">
+        <thead>
+          <tr>
+            <th style="width: 24%;">比率</th>
+            <th style="width: 26%;">役割タイプ</th>
+            <th>有効な場面・配置レーン</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="ratio-tag">6 : 1 : 3</span></td>
+            <td><strong>連戦エース型<br>（基本・王道）</strong></td>
+            <td><strong>主力レーン（左・中央）の基本編成。</strong><br>歩兵6割で2〜3戦目まで前線を維持し、弓兵3割で火力を出し続ける最も事故りにくい鉄板比率です。</td>
+          </tr>
+          <tr>
+            <td><span class="ratio-tag">5 : 1 : 4</span></td>
+            <td><strong>格下殲滅・先鋒型</strong></td>
+            <td><strong>主力レーンの先頭付近・格下相手。</strong><br>瞬間火力を高めて相手の1〜2番手を素早く溶かしたい場面向け。格上相手だと2戦目まで歩兵が持ちません。</td>
+          </tr>
+          <tr>
+            <td><span class="ratio-tag">7 : 1 : 2</span></td>
+            <td><strong>削り・足止め型<br>（肉壁・盾特化）</strong></td>
+            <td><strong>捨てレーン（右）や格上エースと当たる枠。</strong><br>勝てない格上に対し、粘り強く相手の歩兵を削って後続の味方にトドメを刺させる役割に最適です。</td>
+          </tr>
+          <tr>
+            <td><span class="ratio-tag">5 : 2 : 3</span></td>
+            <td><strong>騎兵バフ特化型</strong></td>
+            <td><strong>騎兵特化の強力な英雄・領主装備を持つ人向け。</strong><br>騎兵バフが他兵種より突出している場合のみ総合火力が上回ります。</td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="margin-top: 12px; background: #12151c; border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; font-size: 0.82rem; color: #d1d5db;">
+        <strong>💡 同盟メンバー向け補足メモ：</strong><br>
+        ・エントリー時の戦力は<strong>「登録ボタンを押した瞬間」</strong>で固定されるため、登録前に部隊容量バフを入れておくと連戦突破率が上がります。<br>
+        ・最高ランク（Tier）の兵士だけで6:1:3が組めず下位ランクが混ざる場合は、歩兵を少し厚め（6.5:1:2.5〜7:1:2）にすると前線崩壊を防げます。
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. 設定タブ -->
+  <div id="tab-settings" class="tab-pane">
+    <div class="card">
+      <div class="card-title">
+        <span>⚙️ API・Firebase自動共有・同盟ルール設定</span>
+      </div>
+
+      <div class="input-group">
+        <label for="api-key-input">1. Gemini API キー（Firebase経由で全端末・共有メンバーに自動同期）</label>
+        <input type="password" id="api-key-input" placeholder="AIzaSy...">
+        <div class="input-hint">※HTMLコードには直書きせず、下の「設定を保存してクラウド同期」を押すとFirebase経由であなたのスマホや他メンバーにも自動反映されます。</div>
+      </div>
+
+      <div class="input-group">
+        <label for="model-select">2. 使用AIモデル</label>
+        <select id="model-select">
+          <option value="gemini-3.8-flash">gemini-3.8-flash（推奨・最新・無料枠）</option>
+          <option value="gemini-2.5-flash">gemini-2.5-flash（旧モデル）</option>
+        </select>
+      </div>
+
+      <div class="input-group">
+        <label for="firebase-url-input">3. Firebase Realtime Database URL（既定値埋め込み済み）</label>
+        <input type="text" id="firebase-url-input" value="https://kingshot-rbn-map-default-rtdb.firebaseio.com/kingshot_notice_history">
+        <div style="margin-top: 6px; display: flex; gap: 8px; align-items: center;">
+          <button type="button" class="mini-btn" id="test-firebase-btn">🔌 Firebase接続テスト＆再同期</button>
+          <span id="firebase-test-msg" style="font-size: 0.8rem;"></span>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div class="input-group">
+          <label for="bear-base-date">4. 熊罠の基準日（「あり」だった日）</label>
+          <input type="date" id="bear-base-date" style="color-scheme: dark;">
+        </div>
+        <div class="input-group">
+          <label for="bear-text-input">5. 熊罠あり時の表記</label>
+          <input type="text" id="bear-text-input" placeholder="熊罠 21時 22時">
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label for="event-dict-input">6. イベント別・自動補足辞書（イベント名：補足テキスト）</label>
+        <textarea id="event-dict-input" rows="6"></textarea>
+        <div class="input-hint">※「イベント名：補足文」の形式で1行ずつ記述。スクショに該当イベントがあると自動追記します。</div>
+      </div>
+
+      <button class="btn btn-primary" id="save-settings-btn">設定を保存してクラウド同期する</button>
+      <div class="status-msg" id="settings-status-msg"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const EMBEDDED_FIREBASE_URL = 'https://kingshot-rbn-map-default-rtdb.firebaseio.com/kingshot_notice_history';
+  const DEFAULT_MODEL = 'gemini-3.8-flash';
+  const DEFAULT_EVENT_DICT = `同盟争覇戦：左寄せ、比率613
 調合ショップ：アイテム交換忘れずにー
 全軍出撃：(領地外採集注意⚠
 チェーザレ討伐(最終日)：チェーザレボスは21時30分`;
 
-    const DEFAULT_FEW_SHOT_EXAMPLES = `
-【お手本1：11月23日（月）】
+  const BASE_FEW_SHOT = `
+【基本フォーマットお手本1】
 11月23日（月）
 朝パーンOK！
 ・熊罠 なし
@@ -440,7 +790,7 @@
 同盟総動員みんなで力を
 合わせてがんばろー(٩・∀・ง)ｵｰ!
 
-【お手本2：11月22日（日）】
+【基本フォーマットお手本2】
 11月22日（日）
 朝パーンOK！
 
@@ -448,728 +798,623 @@
 ・至高領主
 ペット、黄金、加速、領主装備、採集、欠片
 ・チェーザレ討伐
-
-【お手本3：11月21日（土）】
-11月21日（土）
-朝パーンOK！
-
-・熊罠 なし
-・光浴の旅
-・調合ショップ
-アイテム交換忘れずにー
-・領主対決
-・全軍出撃(領地外採集注意⚠
-・至高領主
-領主装備、訓練
-・チェーザレ討伐
-・王城決戦
-※翌日採取なので寝る前に仕込む人はお忘れなく〜
 `;
 
-    const LOCAL_HISTORY_KEY = 'ks_notice_history_v6';
-    const RETENTION_DAYS = 30; // 直近30日（約1ヶ月）保持
+  const syncStatusBadge = document.getElementById('sync-status-badge');
+  const navTabs = document.querySelectorAll('.nav-tab');
+  const tabPanes = document.querySelectorAll('.tab-pane');
 
-    // ==========================================
-    // DOM要素の参照
-    // ==========================================
-    const navTabs = document.querySelectorAll('.nav-tab');
-    const tabViews = {
-      main: document.getElementById('view-main'),
-      history: document.getElementById('view-history'),
-      ratio: document.getElementById('view-ratio'),
-      settings: document.getElementById('view-settings')
-    };
+  const apiKeyInput = document.getElementById('api-key-input');
+  const modelSelect = document.getElementById('model-select');
+  const firebaseUrlInput = document.getElementById('firebase-url-input');
+  const testFirebaseBtn = document.getElementById('test-firebase-btn');
+  const firebaseTestMsg = document.getElementById('firebase-test-msg');
+  const bearBaseDateInput = document.getElementById('bear-base-date');
+  const bearTextInput = document.getElementById('bear-text-input');
+  const eventDictInput = document.getElementById('event-dict-input');
+  const saveSettingsBtn = document.getElementById('save-settings-btn');
+  const settingsStatusMsg = document.getElementById('settings-status-msg');
 
-    const syncStatusBadge = document.getElementById('sync-status-badge');
-    const configSyncIndicator = document.getElementById('config-sync-indicator');
-    const learnedCountMini = document.getElementById('learned-count-mini');
-    const historyCountBadge = document.getElementById('history-count-badge');
-    const historyListContainer = document.getElementById('history-list-container');
+  const targetDateInput = document.getElementById('target-date-input');
+  const btnSetToday = document.getElementById('btn-set-today');
+  const btnSetTomorrow = document.getElementById('btn-set-tomorrow');
+  const dateBearBadge = document.getElementById('date-bear-badge');
 
-    const targetDateInput = document.getElementById('target-date-input');
-    const btnSetToday = document.getElementById('btn-set-today');
-    const btnSetTomorrow = document.getElementById('btn-set-tomorrow');
-    const dateBearBadge = document.getElementById('date-bear-badge');
+  const pasteZone = document.getElementById('paste-zone');
+  const fileInput = document.getElementById('file-input');
+  const previewGrid = document.getElementById('preview-grid');
+  const clearImagesBtn = document.getElementById('clear-images-btn');
+  const generateBtn = document.getElementById('generate-btn');
+  const generateBtnText = document.getElementById('generate-btn-text');
+  const demoGenerateBtn = document.getElementById('demo-generate-btn');
+  const loadingSpinner = document.getElementById('loading-spinner');
+  const statusMsg = document.getElementById('status-msg');
 
-    const pasteZone = document.getElementById('paste-zone');
-    const fileInput = document.getElementById('file-input');
-    const previewGrid = document.getElementById('preview-grid');
-    const clearImagesBtn = document.getElementById('clear-images-btn');
-    const generateBtn = document.getElementById('generate-btn');
-    const generateBtnText = document.getElementById('generate-btn-text');
-    const demoGenerateBtn = document.getElementById('demo-generate-btn');
-    const loadingSpinner = document.getElementById('loading-spinner');
-    const statusMsg = document.getElementById('status-msg');
+  const resultText = document.getElementById('result-text');
+  const charCount = document.getElementById('char-count');
+  const charLimitInput = document.getElementById('char-limit-input');
+  const saveCopyBtn = document.getElementById('save-copy-btn');
+  const historyCountLabel = document.getElementById('history-count-label');
+  const historyListContainer = document.getElementById('history-list-container');
+  const refreshHistoryBtn = document.getElementById('refresh-history-btn');
 
-    const resultText = document.getElementById('result-text');
-    const charCount = document.getElementById('char-count');
-    const charLimitInput = document.getElementById('char-limit-input');
-    const saveAndCopyBtn = document.getElementById('save-and-copy-btn');
+  let uploadedImages = [];
+  let historyCache = {};
+  let controlState = {
+    asapan: 'auto',
+    bear: 'auto',
+    gather: 'auto'
+  };
 
-    const ratioShareText = document.getElementById('ratio-share-text');
-    const copyRatioGuideBtn = document.getElementById('copy-ratio-guide-btn');
-    const ratioCopyStatus = document.getElementById('ratio-copy-status');
-
-    const apiKeyInput = document.getElementById('api-key-input');
-    const modelSelect = document.getElementById('model-select');
-    const firebaseUrlInput = document.getElementById('firebase-url-input');
-    const testFirebaseBtn = document.getElementById('test-firebase-btn');
-    const firebaseTestMsg = document.getElementById('firebase-test-msg');
-    const bearBaseDateInput = document.getElementById('bear-base-date');
-    const bearTextInput = document.getElementById('bear-text-input');
-    const eventDictInput = document.getElementById('event-dict-input');
-    const syncConfigCheckbox = document.getElementById('sync-config-checkbox');
-    const saveSettingsBtn = document.getElementById('save-settings-btn');
-    const settingsSaveMsg = document.getElementById('settings-save-msg');
-
-    // ==========================================
-    // アプリケーション状態
-    // ==========================================
-    let uploadedImages = [];
-    let historyMap = {}; // { "2026-11-24": { date: "2026-11-24", text: "...", updatedAt: 173234... } }
-    let controlState = {
-      asapan: 'auto',
-      bear: 'auto',
-      gather: 'auto'
-    };
-
-    // ==========================================
-    // タブ切り替え制御
-    // ==========================================
-    function switchTab(tabName) {
-      navTabs.forEach(btn => {
-        const isTarget = btn.dataset.tab === tabName;
-        btn.className = isTarget
-          ? 'nav-tab active-tab py-2 px-1 rounded-lg text-xs sm:text-sm font-semibold bg-primary text-white transition-colors flex items-center justify-center gap-1 cursor-pointer'
-          : 'nav-tab py-2 px-1 rounded-lg text-xs sm:text-sm font-medium text-gray-400 hover:text-gray-200 transition-colors flex items-center justify-center gap-1 cursor-pointer';
-      });
-
-      Object.keys(tabViews).forEach(key => {
-        tabViews[key].classList.toggle('hidden', key !== tabName);
-      });
-
-      if (tabName === 'history') {
+  navTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      navTabs.forEach(t => t.classList.remove('active'));
+      tabPanes.forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
+      if (tab.dataset.tab === 'history') {
         renderHistoryList();
       }
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    navTabs.forEach(btn => {
-      btn.addEventListener('click', () => switchTab(btn.dataset.tab));
     });
+  });
 
-    // ==========================================
-    // Firebase ベースURL取得＆同期ロジック（/config と /logs）
-    // ==========================================
-    function getFirebaseBaseUrl() {
-      const stored = (localStorage.getItem('ks_firebase_url') || '').trim();
-      const base = stored || DEFAULT_FIREBASE_URL;
-      return base.replace(/\.json$/, '').replace(/\/+$/, '');
+  function getFirebaseBaseUrl() {
+    const raw = (firebaseUrlInput.value || localStorage.getItem('ks_firebase_url') || EMBEDDED_FIREBASE_URL).trim();
+    return raw.replace(/\/+$/, '');
+  }
+
+  function updateSyncBadge(ok, text) {
+    syncStatusBadge.textContent = text;
+    if (ok) {
+      syncStatusBadge.classList.remove('warn');
+    } else {
+      syncStatusBadge.classList.add('warn');
+    }
+  }
+
+  async function syncFromCloud() {
+    const baseUrl = getFirebaseBaseUrl();
+    if (!baseUrl) {
+      updateSyncBadge(false, 'ローカル保存モード');
+      loadLocalHistory();
+      return false;
     }
 
-    // 30日より古い履歴を自動パージする
-    function pruneOldHistory(mapObj) {
-      const now = new Date();
-      const cutoffDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - RETENTION_DAYS);
-      const cutoffStr = toDateInputString(cutoffDate);
+    try {
+      const res = await fetch(`${baseUrl}.json`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
 
-      const pruned = {};
-      Object.keys(mapObj).forEach(dateKey => {
-        if (/^\d{4}-\d{2}-\d{2}$/.test(dateKey) && dateKey >= cutoffStr && mapObj[dateKey] && mapObj[dateKey].text) {
-          pruned[dateKey] = mapObj[dateKey];
-        }
-      });
-      return pruned;
-    }
-
-    // 起動時・同期ボタン押下時に Firebase の /config と /logs を一括取得して反映
-    async function syncAllFromFirebase() {
-      // まずローカルの履歴をロード
-      try {
-        const raw = localStorage.getItem(LOCAL_HISTORY_KEY) || localStorage.getItem('ks_notice_history_v5');
-        if (raw) {
-          historyMap = pruneOldHistory(JSON.parse(raw));
-          localStorage.setItem(LOCAL_HISTORY_KEY, JSON.stringify(historyMap));
-        }
-      } catch (e) {
-        historyMap = {};
-      }
-      updateHistoryBadges();
-
-      const baseUrl = getFirebaseBaseUrl();
-      if (!baseUrl) return false;
-
-      syncStatusBadge.textContent = '☁️ Firebase同期中...';
-      syncStatusBadge.className = 'text-[11px] font-medium px-2.5 py-1 rounded-full bg-cardBg text-gray-300 border border-borderCol';
-
-      try {
-        // ルート（config と logs を含む）を一括GET
-        const res = await fetch(`${baseUrl}.json`);
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
-        }
-        const rootData = await res.json();
-
-        if (rootData && typeof rootData === 'object') {
-          // 1. 共有設定 (/config) の反映
-          if (rootData.config && typeof rootData.config === 'object') {
-            const cfg = rootData.config;
-            if (cfg.geminiApiKey) {
-              localStorage.setItem('ks_gemini_api_key', cfg.geminiApiKey);
-              apiKeyInput.value = cfg.geminiApiKey;
-            }
-            if (cfg.geminiModel) {
-              localStorage.setItem('ks_model', cfg.geminiModel);
-              modelSelect.value = cfg.geminiModel;
-            }
-            if (cfg.bearBaseDate) {
-              localStorage.setItem('ks_bear_base_date', cfg.bearBaseDate);
-              bearBaseDateInput.value = cfg.bearBaseDate;
-            }
-            if (cfg.bearText) {
-              localStorage.setItem('ks_bear_text', cfg.bearText);
-              bearTextInput.value = cfg.bearText;
-            }
-            if (cfg.eventDict) {
-              localStorage.setItem('ks_event_dict', cfg.eventDict);
-              eventDictInput.value = cfg.eventDict;
-            }
-            configSyncIndicator.textContent = '☁️ 共有設定同期済';
-            configSyncIndicator.className = 'text-[11px] font-medium px-2 py-0.5 rounded bg-success/20 text-success';
+      if (data && typeof data === 'object') {
+        if (data._shared_config) {
+          const cfg = data._shared_config;
+          if (cfg.apiKey && !apiKeyInput.value) {
+            apiKeyInput.value = cfg.apiKey;
+            localStorage.setItem('ks_gemini_api_key', cfg.apiKey);
+          } else if (cfg.apiKey) {
+            apiKeyInput.value = cfg.apiKey;
+            localStorage.setItem('ks_gemini_api_key', cfg.apiKey);
           }
-
-          // 2. 履歴データ (/logs および旧バージョンのルート直下日付キー) のマージ
-          const remoteLogs = {};
-          if (rootData.logs && typeof rootData.logs === 'object') {
-            Object.assign(remoteLogs, rootData.logs);
+          if (cfg.model) {
+            const validModel = cfg.model === 'gemini-2.5-flash' ? DEFAULT_MODEL : cfg.model;
+            modelSelect.value = validModel;
+            localStorage.setItem('ks_gemini_model', validModel);
           }
-          // 後方互換：v5でルート直下に保存された日付キーがあれば取り込む
-          Object.keys(rootData).forEach(k => {
-            if (/^\d{4}-\d{2}-\d{2}$/.test(k) && rootData[k] && rootData[k].text) {
-              if (!remoteLogs[k] || (rootData[k].updatedAt || 0) > (remoteLogs[k].updatedAt || 0)) {
-                remoteLogs[k] = rootData[k];
-              }
-            }
-          });
-
-          const merged = { ...historyMap };
-          Object.keys(remoteLogs).forEach(k => {
-            if (!merged[k] || (remoteLogs[k].updatedAt || 0) >= (merged[k].updatedAt || 0)) {
-              merged[k] = remoteLogs[k];
-            }
-          });
-          historyMap = pruneOldHistory(merged);
-          localStorage.setItem(LOCAL_HISTORY_KEY, JSON.stringify(historyMap));
+          if (cfg.bearBaseDate) {
+            bearBaseDateInput.value = cfg.bearBaseDate;
+            localStorage.setItem('ks_bear_base_date', cfg.bearBaseDate);
+          }
+          if (cfg.bearText) {
+            bearTextInput.value = cfg.bearText;
+            localStorage.setItem('ks_bear_text', cfg.bearText);
+          }
+          if (cfg.eventDict) {
+            eventDictInput.value = cfg.eventDict;
+            localStorage.setItem('ks_event_dict', cfg.eventDict);
+          }
         }
 
-        const hasKey = Boolean(localStorage.getItem('ks_gemini_api_key'));
-        syncStatusBadge.textContent = hasKey ? '☁️ Firebase同期済 (APIキー共有済)' : '☁️ Firebase同期済 (APIキー未登録)';
-        syncStatusBadge.className = 'text-[11px] font-medium px-2.5 py-1 rounded-full bg-success/20 text-success border border-success/30';
-
-        updateHistoryBadges();
-        updateDateUI();
-        return true;
-      } catch (err) {
-        syncStatusBadge.textContent = '⚠️ Firebase接続エラー(ローカル動作)';
-        syncStatusBadge.className = 'text-[11px] font-medium px-2.5 py-1 rounded-full bg-warning/20 text-warning border border-warning/30';
-        return false;
+        const logs = {};
+        Object.keys(data).forEach(k => {
+          if (k !== '_shared_config' && data[k] && data[k].text) {
+            logs[k] = data[k];
+          }
+        });
+        historyCache = pruneOldHistory(logs);
+        localStorage.setItem('ks_notice_history_cache', JSON.stringify(historyCache));
+      } else {
+        loadLocalHistory();
       }
-    }
 
-    // 確定通知を保存（直近30日保持＆Firebase /logs へ同期）
-    async function saveHistoryEntry(dateKey, text) {
-      const entry = {
-        date: dateKey,
-        text: text.trim(),
-        updatedAt: Date.now()
-      };
-      historyMap[dateKey] = entry;
-      historyMap = pruneOldHistory(historyMap);
-      localStorage.setItem(LOCAL_HISTORY_KEY, JSON.stringify(historyMap));
-      updateHistoryBadges();
-
-      const baseUrl = getFirebaseBaseUrl();
-      if (baseUrl) {
-        try {
-          await fetch(`${baseUrl}/logs.json`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(historyMap)
-          });
-          syncStatusBadge.textContent = '☁️ Firebase同期済 (APIキー共有済)';
-        } catch (err) {
-          console.error('Firebase logs sync failed:', err);
-        }
-      }
-    }
-
-    // 履歴1件削除
-    async function deleteHistoryEntry(dateKey) {
-      delete historyMap[dateKey];
-      localStorage.setItem(LOCAL_HISTORY_KEY, JSON.stringify(historyMap));
-      updateHistoryBadges();
+      updateHistoryCount();
       renderHistoryList();
+      updateDateUI();
+      updateSyncBadge(true, '☁️ Firebase同期済み');
+      return true;
+    } catch (err) {
+      console.error('Firebase sync error:', err);
+      loadLocalHistory();
+      updateSyncBadge(false, '⚠️ Firebase接続エラー(ローカル動作)');
+      return false;
+    }
+  }
 
-      const baseUrl = getFirebaseBaseUrl();
-      if (baseUrl) {
-        try {
-          await fetch(`${baseUrl}/logs/${dateKey}.json`, {
-            method: 'DELETE'
-          });
-        } catch (err) {
-          console.error(err);
-        }
+  async function pushConfigToCloud(cfgObj) {
+    const baseUrl = getFirebaseBaseUrl();
+    if (!baseUrl) return false;
+    try {
+      const res = await fetch(`${baseUrl}/_shared_config.json`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cfgObj)
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      updateSyncBadge(true, '☁️ Firebase同期済み');
+      return true;
+    } catch (err) {
+      console.error(err);
+      updateSyncBadge(false, '⚠️ クラウド保存失敗(ローカル保存済)');
+      return false;
+    }
+  }
+
+  async function saveHistoryEntryToCloud(dateKey, entryObj) {
+    historyCache[dateKey] = entryObj;
+    historyCache = pruneOldHistory(historyCache);
+    localStorage.setItem('ks_notice_history_cache', JSON.stringify(historyCache));
+    updateHistoryCount();
+    renderHistoryList();
+
+    const baseUrl = getFirebaseBaseUrl();
+    if (!baseUrl) return false;
+    try {
+      const res = await fetch(`${baseUrl}/${dateKey}.json`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(entryObj)
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      updateSyncBadge(true, '☁️ Firebase同期済み');
+      return true;
+    } catch (err) {
+      console.error(err);
+      updateSyncBadge(false, '⚠️ クラウド保存失敗(ローカル保存済)');
+      return false;
+    }
+  }
+
+  async function deleteHistoryEntry(dateKey) {
+    delete historyCache[dateKey];
+    localStorage.setItem('ks_notice_history_cache', JSON.stringify(historyCache));
+    updateHistoryCount();
+    renderHistoryList();
+
+    const baseUrl = getFirebaseBaseUrl();
+    if (!baseUrl) return;
+    try {
+      await fetch(`${baseUrl}/${dateKey}.json`, { method: 'DELETE' });
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  function loadLocalHistory() {
+    try {
+      const raw = localStorage.getItem('ks_notice_history_cache');
+      historyCache = raw ? pruneOldHistory(JSON.parse(raw)) : {};
+    } catch {
+      historyCache = {};
+    }
+    updateHistoryCount();
+    renderHistoryList();
+  }
+
+  function pruneOldHistory(logs) {
+    const cutoff = Date.now() - 32 * 24 * 60 * 60 * 1000;
+    const pruned = {};
+    Object.keys(logs).forEach(dateKey => {
+      const item = logs[dateKey];
+      if (!item || !item.text) return;
+      const ts = item.updatedAt || parseLocalDate(dateKey).getTime();
+      if (ts >= cutoff) {
+        pruned[dateKey] = item;
       }
+    });
+    return pruned;
+  }
+
+  function updateHistoryCount() {
+    const count = Object.keys(historyCache).length;
+    historyCountLabel.textContent = `学習履歴: ${count}件`;
+  }
+
+  function renderHistoryList() {
+    const keys = Object.keys(historyCache).sort().reverse();
+    if (keys.length === 0) {
+      historyListContainer.innerHTML = '<div style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 20px;">まだ確定保存された履歴がありません。「通知作成」タブで通知文を作成し、「確定保存＆コピー」を押すとここに蓄積されます。</div>';
+      return;
     }
 
-    function updateHistoryBadges() {
-      const count = Object.keys(historyMap).length;
-      learnedCountMini.textContent = `学習履歴: ${count}件`;
-      historyCountBadge.textContent = `蓄積中 ${count}件 / 直近30日保持`;
-    }
-
-    // 履歴一覧の描画
-    function renderHistoryList() {
-      const keys = Object.keys(historyMap).sort((a, b) => b.localeCompare(a));
-      if (keys.length === 0) {
-        historyListContainer.innerHTML = `
-          <div class="bg-appBg border border-borderCol rounded-lg p-6 text-center text-xs sm:text-sm text-gray-400">
-            まだ保存された確定履歴がありません。<br>
-            「通知作成」タブで通知文を作成し、<strong>「確定保存してコピー」</strong>を押すとここに蓄積され、次回からAIが文体や傾向を自動学習します。
-          </div>
-        `;
-        return;
-      }
-
-      const days = ['日', '月', '火', '水', '木', '金', '土'];
-      historyListContainer.innerHTML = '';
-
-      keys.forEach(dateKey => {
-        const item = historyMap[dateKey];
-        const d = parseLocalDate(dateKey);
-        const dayStr = days[d.getDay()];
-        const card = document.createElement('div');
-        card.className = 'bg-appBg border border-borderCol rounded-xl p-3.5 space-y-2.5';
-
-        card.innerHTML = `
-          <div class="flex justify-between items-center border-b border-borderCol pb-2">
-            <span class="text-xs sm:text-sm font-bold text-primary">📅 ${dateKey}（${dayStr}）確定版</span>
-            <div class="flex items-center gap-1.5">
-              <button type="button" class="load-history-btn bg-cardBg hover:bg-[#262d3b] border border-borderCol text-gray-200 px-2.5 py-1 rounded-md text-xs font-medium cursor-pointer">
-                📥 エディタに読込
-              </button>
-              <button type="button" class="del-history-btn bg-cardBg hover:bg-danger/20 border border-borderCol hover:border-danger text-gray-400 hover:text-danger px-2 py-1 rounded-md text-xs cursor-pointer">
-                🗑️
-              </button>
-            </div>
-          </div>
-          <pre class="whitespace-pre-wrap font-sans text-xs sm:text-sm text-gray-200 leading-relaxed bg-cardBg/50 p-2.5 rounded-lg border border-borderCol/50"></pre>
-        `;
-
-        card.querySelector('pre').textContent = item.text;
-
-        card.querySelector('.load-history-btn').addEventListener('click', () => {
-          resultText.value = item.text;
-          updateCharCounter();
-          switchTab('main');
-          showStatus(`${dateKey} の確定通知をエディタに読み込みました。`, 'ok');
-        });
-
-        card.querySelector('.del-history-btn').addEventListener('click', () => {
+    historyListContainer.innerHTML = '';
+    keys.forEach(dateKey => {
+      const item = historyCache[dateKey];
+      const div = document.createElement('div');
+      div.className = 'history-item';
+      div.innerHTML = `
+        <div class="history-header">
+          <span>📅 ${dateKey}（${item.label || ''}）</span>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">学習データ有効</span>
+        </div>
+        <div class="history-body"></div>
+        <div class="history-actions">
+          <button type="button" class="mini-btn load-btn">📝 エディタに読込</button>
+          <button type="button" class="mini-btn danger del-btn">🗑️ 削除</button>
+        </div>
+      `;
+      div.querySelector('.history-body').textContent = item.text;
+      div.querySelector('.load-btn').addEventListener('click', () => {
+        resultText.value = item.text;
+        updateCharCounter();
+        navTabs[0].click();
+        showStatus(`${dateKey} の確定履歴をエディタに読み込みました。`, 'ok');
+      });
+      div.querySelector('.del-btn').addEventListener('click', () => {
+        if (confirm(`${dateKey} の履歴を削除しますか？`)) {
           deleteHistoryEntry(dateKey);
-        });
-
-        historyListContainer.appendChild(card);
-      });
-    }
-
-    // 動的Few-shot学習プロンプトの構築（直近履歴＋同曜日履歴を抽出）
-    function buildDynamicLearnedExamples(targetDateObj) {
-      const keys = Object.keys(historyMap).sort((a, b) => b.localeCompare(a));
-      if (keys.length === 0) {
-        return DEFAULT_FEW_SHOT_EXAMPLES;
-      }
-
-      const targetDow = targetDateObj.getDay();
-      const selectedKeys = new Set();
-
-      keys.slice(0, 6).forEach(k => selectedKeys.add(k));
-
-      keys.forEach(k => {
-        if (selectedKeys.size < 9) {
-          const d = parseLocalDate(k);
-          if (d.getDay() === targetDow) {
-            selectedKeys.add(k);
-          }
         }
       });
-
-      const sortedSelected = Array.from(selectedKeys).sort((a, b) => b.localeCompare(a));
-      let block = '【過去に確定・編集された実例履歴（直近1ヶ月データから自動学習）】\n※以下の文体、改行位置、記号の使い方、補足表現を最優先で踏襲すること：\n\n';
-      sortedSelected.forEach((k, idx) => {
-        block += `--- 履歴${idx + 1}（${k}） ---\n${historyMap[k].text}\n\n`;
-      });
-
-      if (sortedSelected.length < 3) {
-        block += '\n【参考：基本文体お手本】\n' + DEFAULT_FEW_SHOT_EXAMPLES;
-      }
-      return block;
-    }
-
-    // ==========================================
-    // 日付・熊罠・スイッチ制御ロジック
-    // ==========================================
-    function toDateInputString(dateObj) {
-      const y = dateObj.getFullYear();
-      const m = String(dateObj.getMonth() + 1).padStart(2, '0');
-      const d = String(dateObj.getDate()).padStart(2, '0');
-      return `${y}-${m}-${d}`;
-    }
-
-    function parseLocalDate(yyyyMmDd) {
-      const [y, m, d] = yyyyMmDd.split('-').map(Number);
-      return new Date(y, m - 1, d);
-    }
-
-    function getSelectedTargetDate() {
-      if (targetDateInput.value) {
-        return parseLocalDate(targetDateInput.value);
-      }
-      const d = new Date();
-      return new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
-    }
-
-    function getTargetDateFormatted() {
-      const d = getSelectedTargetDate();
-      const days = ['日', '月', '火', '水', '木', '金', '土'];
-      return `${d.getMonth() + 1}月${d.getDate()}日（${days[d.getDay()]}）`;
-    }
-
-    function isBearDayAuto() {
-      const baseStr = localStorage.getItem('ks_bear_base_date') || '2026-11-22';
-      const baseDate = parseLocalDate(baseStr);
-      const targetDate = getSelectedTargetDate();
-      const diffDays = Math.round((targetDate - baseDate) / (1000 * 60 * 60 * 24));
-      return Math.abs(diffDays) % 2 === 0;
-    }
-
-    function getBearLineText() {
-      const bearActiveText = localStorage.getItem('ks_bear_text') || '熊罠 21時 22時';
-      if (controlState.bear === 'yes') return `・${bearActiveText}`;
-      if (controlState.bear === 'no') return '・熊罠 なし';
-      return isBearDayAuto() ? `・${bearActiveText}` : '・熊罠 なし';
-    }
-
-    function updateDateUI() {
-      const dateStr = getTargetDateFormatted();
-      const bearStr = getBearLineText().replace('・', '');
-      dateBearBadge.textContent = `対象: ${dateStr} / ${bearStr}`;
-
-      const now = new Date();
-      const todayStr = toDateInputString(now);
-      const tmr = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-      const tomorrowStr = toDateInputString(tmr);
-
-      const isToday = targetDateInput.value === todayStr;
-      const isTomorrow = targetDateInput.value === tomorrowStr;
-
-      btnSetToday.className = isToday
-        ? 'px-3 py-1.5 rounded-md text-xs font-semibold border border-primary bg-primary text-white transition-colors cursor-pointer'
-        : 'px-3 py-1.5 rounded-md text-xs font-medium border border-borderCol bg-cardBg text-gray-400 hover:text-gray-200 transition-colors cursor-pointer';
-
-      btnSetTomorrow.className = isTomorrow
-        ? 'px-3 py-1.5 rounded-md text-xs font-semibold border border-primary bg-primary text-white transition-colors cursor-pointer'
-        : 'px-3 py-1.5 rounded-md text-xs font-medium border border-borderCol bg-cardBg text-gray-400 hover:text-gray-200 transition-colors cursor-pointer';
-    }
-
-    function applyRealtimeOverrides() {
-      let text = resultText.value;
-      if (!text.trim()) return;
-
-      const newDateLine = getTargetDateFormatted();
-      if (/^\d{1,2}月\d{1,2}日（[日月火水木金土]）/m.test(text)) {
-        text = text.replace(/^\d{1,2}月\d{1,2}日（[日月火水木金土]）/m, newDateLine);
-      }
-
-      if (controlState.asapan === 'ok') {
-        text = text.replace(/^朝パーン.*$/m, '朝パーンOK！');
-      } else if (controlState.asapan === 'ng') {
-        text = text.replace(/^朝パーン.*$/m, '朝パーン温存（NG）※翌日ポイント対象のため待機推奨');
-      }
-
-      const newBearLine = getBearLineText();
-      if (/^・熊罠.*$/m.test(text)) {
-        text = text.replace(/^・熊罠.*$/m, newBearLine);
-      }
-
-      const gatherNote = '※翌日採取なので寝る前に仕込む人はお忘れなく〜';
-      if (controlState.gather === 'yes' && !text.includes('翌日採取')) {
-        text = text.trimEnd() + '\n' + gatherNote;
-      } else if (controlState.gather === 'no' && text.includes(gatherNote)) {
-        text = text.replace('\n' + gatherNote, '').replace(gatherNote, '');
-      }
-
-      resultText.value = text;
-      updateCharCounter();
-    }
-
-    targetDateInput.addEventListener('change', () => {
-      updateDateUI();
-      applyRealtimeOverrides();
+      historyListContainer.appendChild(div);
     });
+  }
 
-    btnSetToday.addEventListener('click', () => {
-      const now = new Date();
-      targetDateInput.value = toDateInputString(now);
-      updateDateUI();
-      applyRealtimeOverrides();
+  function buildDynamicFewShotPrompt() {
+    const keys = Object.keys(historyCache).sort().reverse();
+    if (keys.length === 0) {
+      return BASE_FEW_SHOT;
+    }
+    const recentKeys = keys.slice(0, 7);
+    let dynamicExamples = '\n【直近の確定通知履歴（最重要・あなたの実際の文体とルールの学習データ）】\n';
+    recentKeys.forEach(k => {
+      dynamicExamples += `--- ${k} の確定版 ---\n${historyCache[k].text}\n\n`;
     });
+    return dynamicExamples + '\n【基本フォーマット参考】\n' + BASE_FEW_SHOT;
+  }
 
-    btnSetTomorrow.addEventListener('click', () => {
-      const now = new Date();
-      const tmr = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-      targetDateInput.value = toDateInputString(tmr);
-      updateDateUI();
-      applyRealtimeOverrides();
-    });
+  function toDateInputString(dateObj) {
+    const y = dateObj.getFullYear();
+    const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const d = String(dateObj.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
 
-    function setupSegmentedControl(groupId, stateKey) {
-      const group = document.getElementById(groupId);
-      const buttons = group.querySelectorAll('button');
-      buttons.forEach(btn => {
-        btn.addEventListener('click', () => {
-          buttons.forEach(b => {
-            b.classList.remove('bg-primary', 'bg-warning', 'text-white', 'text-gray-900', 'font-semibold');
-            b.classList.add('text-gray-400');
-          });
-          const val = btn.dataset.val;
-          controlState[stateKey] = val;
-          btn.classList.remove('text-gray-400');
+  function parseLocalDate(yyyyMmDd) {
+    const [y, m, d] = yyyyMmDd.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
 
-          if (val === 'ng' || (val === 'yes' && stateKey === 'gather')) {
-            btn.classList.add('bg-warning', 'text-gray-900', 'font-semibold');
-          } else {
-            btn.classList.add('bg-primary', 'text-white', 'font-semibold');
-          }
-          updateDateUI();
-          applyRealtimeOverrides();
-        });
-      });
+  function getSelectedTargetDate() {
+    if (targetDateInput.value) {
+      return parseLocalDate(targetDateInput.value);
+    }
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+
+  function getTargetDateFormatted() {
+    const d = getSelectedTargetDate();
+    const days = ['日', '月', '火', '水', '木', '金', '土'];
+    return `${d.getMonth() + 1}月${d.getDate()}日（${days[d.getDay()]}）`;
+  }
+
+  function isBearDayAuto() {
+    const baseStr = bearBaseDateInput.value || localStorage.getItem('ks_bear_base_date') || '2026-11-22';
+    const baseDate = parseLocalDate(baseStr);
+    const targetDate = getSelectedTargetDate();
+    const diffDays = Math.round((targetDate - baseDate) / (1000 * 60 * 60 * 24));
+    return Math.abs(diffDays) % 2 === 0;
+  }
+
+  function getBearLineText() {
+    const bearActiveText = (bearTextInput.value || localStorage.getItem('ks_bear_text') || '熊罠 21時 22時').trim();
+    if (controlState.bear === 'yes') return `・${bearActiveText}`;
+    if (controlState.bear === 'no') return '・熊罠 なし';
+    return isBearDayAuto() ? `・${bearActiveText}` : '・熊罠 なし';
+  }
+
+  function updateDateUI() {
+    const dateStr = getTargetDateFormatted();
+    const bearStr = getBearLineText().replace('・', '');
+    dateBearBadge.textContent = `対象: ${dateStr} / ${bearStr}`;
+
+    const now = new Date();
+    const todayStr = toDateInputString(now);
+    const tmr = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const tomorrowStr = toDateInputString(tmr);
+
+    btnSetToday.classList.toggle('active', targetDateInput.value === todayStr);
+    btnSetTomorrow.classList.toggle('active', targetDateInput.value === tomorrowStr);
+  }
+
+  function applyRealtimeOverrides() {
+    let text = resultText.value;
+    if (!text.trim()) return;
+
+    const newDateLine = getTargetDateFormatted();
+    if (/^\d{1,2}月\d{1,2}日（[日月火水木金土]）/m.test(text)) {
+      text = text.replace(/^\d{1,2}月\d{1,2}日（[日月火水木金土]）/m, newDateLine);
     }
 
-    // ==========================================
-    // 設定保存＆Firebase /config へのクラウド同期
-    // ==========================================
-    saveSettingsBtn.addEventListener('click', async () => {
-      const key = apiKeyInput.value.trim();
-      const model = modelSelect.value;
-      const fbUrl = firebaseUrlInput.value.trim() || DEFAULT_FIREBASE_URL;
-      const bearDate = bearBaseDateInput.value || '2026-11-22';
-      const bearText = bearTextInput.value.trim() || '熊罠 21時 22時';
-      const eventDict = eventDictInput.value;
+    if (controlState.asapan === 'ok') {
+      text = text.replace(/^朝パーン.*$/m, '朝パーンOK！');
+    } else if (controlState.asapan === 'ng') {
+      text = text.replace(/^朝パーン.*$/m, '朝パーン温存（NG）※翌日ポイント対象のため待機推奨');
+    }
 
-      if (key) {
-        localStorage.setItem('ks_gemini_api_key', key);
-      } else {
-        localStorage.removeItem('ks_gemini_api_key');
-      }
-      localStorage.setItem('ks_model', model);
-      localStorage.setItem('ks_firebase_url', fbUrl);
-      localStorage.setItem('ks_bear_base_date', bearDate);
-      localStorage.setItem('ks_bear_text', bearText);
-      localStorage.setItem('ks_event_dict', eventDict);
+    const newBearLine = getBearLineText();
+    if (/^・熊罠.*$/m.test(text)) {
+      text = text.replace(/^・熊罠.*$/m, newBearLine);
+    }
 
-      updateDateUI();
-      applyRealtimeOverrides();
+    const gatherNote = '※翌日採取なので寝る前に仕込む人はお忘れなく〜';
+    if (controlState.gather === 'yes' && !text.includes('翌日採取')) {
+      text = text.trimEnd() + '\n' + gatherNote;
+    } else if (controlState.gather === 'no' && text.includes(gatherNote)) {
+      text = text.replace('\n' + gatherNote, '').replace(gatherNote, '');
+    }
 
-      if (syncConfigCheckbox.checked) {
-        settingsSaveMsg.textContent = '☁️ Firebaseへ共有設定を保存中...';
-        settingsSaveMsg.className = 'text-xs text-center text-gray-300 min-h-[1rem]';
-        const baseUrl = getFirebaseBaseUrl();
-        try {
-          const res = await fetch(`${baseUrl}/config.json`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              geminiApiKey: key,
-              geminiModel: model,
-              bearBaseDate: bearDate,
-              bearText: bearText,
-              eventDict: eventDict,
-              updatedAt: Date.now()
-            })
-          });
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    resultText.value = text;
+    updateCharCounter();
+  }
 
-          configSyncIndicator.textContent = '☁️ 共有設定同期済';
-          configSyncIndicator.className = 'text-[11px] font-medium px-2 py-0.5 rounded bg-success/20 text-success';
-          syncStatusBadge.textContent = key ? '☁️ Firebase同期済 (APIキー共有済)' : '☁️ Firebase同期済';
-          syncStatusBadge.className = 'text-[11px] font-medium px-2.5 py-1 rounded-full bg-success/20 text-success border border-success/30';
+  targetDateInput.addEventListener('change', () => {
+    updateDateUI();
+    applyRealtimeOverrides();
+  });
 
-          settingsSaveMsg.textContent = '✅ 設定を保存し、Firebaseへ自動共有しました！（他端末でもそのまま使えます）';
-          settingsSaveMsg.className = 'text-xs text-center text-success min-h-[1rem]';
-        } catch (err) {
-          settingsSaveMsg.textContent = `⚠️ ローカルには保存しましたがFirebase同期に失敗しました (${err.message})`;
-          settingsSaveMsg.className = 'text-xs text-center text-warning min-h-[1rem]';
+  btnSetToday.addEventListener('click', () => {
+    const now = new Date();
+    targetDateInput.value = toDateInputString(now);
+    updateDateUI();
+    applyRealtimeOverrides();
+  });
+
+  btnSetTomorrow.addEventListener('click', () => {
+    const now = new Date();
+    const tmr = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    targetDateInput.value = toDateInputString(tmr);
+    updateDateUI();
+    applyRealtimeOverrides();
+  });
+
+  function setupSegmentedControl(groupId, stateKey) {
+    const group = document.getElementById(groupId);
+    const buttons = group.querySelectorAll('button');
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        buttons.forEach(b => b.classList.remove('active', 'active-warn'));
+        const val = btn.dataset.val;
+        controlState[stateKey] = val;
+        if (val === 'ng' || (val === 'yes' && stateKey === 'gather')) {
+          btn.classList.add('active-warn');
+        } else {
+          btn.classList.add('active');
         }
-      } else {
-        settingsSaveMsg.textContent = '✅ このブラウザ内に設定を保存しました！';
-        settingsSaveMsg.className = 'text-xs text-center text-success min-h-[1rem]';
-      }
+        updateDateUI();
+        applyRealtimeOverrides();
+      });
+    });
+  }
 
-      setTimeout(() => { settingsSaveMsg.textContent = ''; }, 3500);
+  async function init() {
+    const now = new Date();
+    const tmr = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    targetDateInput.value = toDateInputString(tmr);
+
+    const savedKey = localStorage.getItem('ks_gemini_api_key') || '';
+    let savedModel = localStorage.getItem('ks_gemini_model') || DEFAULT_MODEL;
+    if (savedModel === 'gemini-2.5-flash') {
+      savedModel = DEFAULT_MODEL;
+      localStorage.setItem('ks_gemini_model', DEFAULT_MODEL);
+    }
+    const savedUrl = localStorage.getItem('ks_firebase_url') || EMBEDDED_FIREBASE_URL;
+    const savedBearDate = localStorage.getItem('ks_bear_base_date') || '2026-11-22';
+    const savedBearText = localStorage.getItem('ks_bear_text') || '熊罠 21時 22時';
+    const savedDict = localStorage.getItem('ks_event_dict') || DEFAULT_EVENT_DICT;
+    const savedLimit = localStorage.getItem('ks_char_limit') || '300';
+
+    apiKeyInput.value = savedKey;
+    modelSelect.value = savedModel;
+    firebaseUrlInput.value = savedUrl;
+    bearBaseDateInput.value = savedBearDate;
+    bearTextInput.value = savedBearText;
+    eventDictInput.value = savedDict;
+    charLimitInput.value = savedLimit;
+
+    setupSegmentedControl('asapan-group', 'asapan');
+    setupSegmentedControl('bear-group', 'bear');
+    setupSegmentedControl('gather-group', 'gather');
+
+    updateDateUI();
+    updateCharCounter();
+    await syncFromCloud();
+  }
+
+  testFirebaseBtn.addEventListener('click', async () => {
+    firebaseTestMsg.textContent = '接続確認中...';
+    firebaseTestMsg.style.color = '#9ca3af';
+    const ok = await syncFromCloud();
+    if (ok) {
+      firebaseTestMsg.textContent = '✅ 接続＆同期成功！';
+      firebaseTestMsg.style.color = '#10b981';
+    } else {
+      firebaseTestMsg.textContent = '❌ 接続失敗（URLまたはルールを確認）';
+      firebaseTestMsg.style.color = '#ef4444';
+    }
+  });
+
+  refreshHistoryBtn.addEventListener('click', async () => {
+    await syncFromCloud();
+  });
+
+  saveSettingsBtn.addEventListener('click', async () => {
+    const key = apiKeyInput.value.trim();
+    const model = modelSelect.value || DEFAULT_MODEL;
+    const fbUrl = firebaseUrlInput.value.trim() || EMBEDDED_FIREBASE_URL;
+    const bearDate = bearBaseDateInput.value || '2026-11-22';
+    const bearText = bearTextInput.value.trim() || '熊罠 21時 22時';
+    const dict = eventDictInput.value;
+
+    if (key) localStorage.setItem('ks_gemini_api_key', key);
+    localStorage.setItem('ks_gemini_model', model);
+    localStorage.setItem('ks_firebase_url', fbUrl);
+    localStorage.setItem('ks_bear_base_date', bearDate);
+    localStorage.setItem('ks_bear_text', bearText);
+    localStorage.setItem('ks_event_dict', dict);
+
+    const cloudOk = await pushConfigToCloud({
+      apiKey: key,
+      model: model,
+      bearBaseDate: bearDate,
+      bearText: bearText,
+      eventDict: dict,
+      updatedAt: Date.now()
     });
 
-    testFirebaseBtn.addEventListener('click', async () => {
-      const rawUrl = firebaseUrlInput.value.trim() || DEFAULT_FIREBASE_URL;
-      firebaseUrlInput.value = rawUrl;
-      localStorage.setItem('ks_firebase_url', rawUrl);
+    updateDateUI();
+    applyRealtimeOverrides();
+    settingsStatusMsg.textContent = cloudOk
+      ? '✅ 設定を保存し、Firebase経由で全端末・共有メンバーへ同期しました！'
+      : '⚠️ ブラウザ内に保存しました（Firebase同期はURL・ルールを確認してください）';
+    settingsStatusMsg.className = `status-msg ${cloudOk ? 'status-ok' : 'status-error'}`;
+  });
 
-      firebaseTestMsg.textContent = '接続・設定同期中...';
-      firebaseTestMsg.className = 'text-xs text-gray-400';
+  charLimitInput.addEventListener('change', () => {
+    localStorage.setItem('ks_char_limit', charLimitInput.value);
+    updateCharCounter();
+  });
 
-      const ok = await syncAllFromFirebase();
-      if (ok) {
-        firebaseTestMsg.textContent = '✅ 接続＆共有設定・履歴の同期に成功しました！';
-        firebaseTestMsg.className = 'text-xs text-success';
-      } else {
-        firebaseTestMsg.textContent = '❌ 接続失敗（URLまたはFirebaseルールを確認してください）';
-        firebaseTestMsg.className = 'text-xs text-danger';
-      }
-    });
+  function resizeAndConvertImage(file) {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const MAX_SIZE = 1280;
+          let width = img.width;
+          let height = img.height;
 
-    charLimitInput.addEventListener('change', () => {
-      localStorage.setItem('ks_char_limit', charLimitInput.value);
-      updateCharCounter();
-    });
-
-    // ==========================================
-    // 画像処理＆AI生成
-    // ==========================================
-    function resizeAndConvertImage(file) {
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const img = new Image();
-          img.onload = () => {
-            const MAX_SIZE = 1280;
-            let width = img.width;
-            let height = img.height;
-
-            if (width > MAX_SIZE || height > MAX_SIZE) {
-              if (width > height) {
-                height = Math.round((height * MAX_SIZE) / width);
-                width = MAX_SIZE;
-              } else {
-                width = Math.round((width * MAX_SIZE) / height);
-                height = MAX_SIZE;
-              }
+          if (width > MAX_SIZE || height > MAX_SIZE) {
+            if (width > height) {
+              height = Math.round((height * MAX_SIZE) / width);
+              width = MAX_SIZE;
+            } else {
+              width = Math.round((width * MAX_SIZE) / height);
+              height = MAX_SIZE;
             }
+          }
 
-            const canvas = document.createElement('canvas');
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
 
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-            const base64 = dataUrl.split(',')[1];
-            resolve({
-              id: Date.now() + Math.random(),
-              dataUrl,
-              base64,
-              mimeType: 'image/jpeg'
-            });
-          };
-          img.src = e.target.result;
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          const base64 = dataUrl.split(',')[1];
+          resolve({
+            id: Date.now() + Math.random(),
+            dataUrl,
+            base64,
+            mimeType: 'image/jpeg'
+          });
         };
-        reader.readAsDataURL(file);
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function handleFiles(files) {
+    const imageFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+    if (imageFiles.length === 0) return;
+
+    for (const file of imageFiles) {
+      const processed = await resizeAndConvertImage(file);
+      uploadedImages.push(processed);
+    }
+    renderPreviews();
+    statusMsg.textContent = '';
+  }
+
+  function renderPreviews() {
+    previewGrid.innerHTML = '';
+    uploadedImages.forEach(img => {
+      const div = document.createElement('div');
+      div.className = 'preview-item';
+      div.innerHTML = `
+        <img src="${img.dataUrl}" alt="スクショ">
+        <button class="remove-img-btn" title="削除">×</button>
+      `;
+      div.querySelector('.remove-img-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        uploadedImages = uploadedImages.filter(item => item.id !== img.id);
+        renderPreviews();
       });
-    }
+      previewGrid.appendChild(div);
+    });
 
-    async function handleFiles(files) {
-      const imageFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
-      if (imageFiles.length === 0) return;
+    const hasImages = uploadedImages.length > 0;
+    generateBtn.disabled = !hasImages;
+    clearImagesBtn.style.display = hasImages ? 'inline-flex' : 'none';
+  }
 
-      for (const file of imageFiles) {
-        const processed = await resizeAndConvertImage(file);
-        uploadedImages.push(processed);
+  clearImagesBtn.addEventListener('click', () => {
+    uploadedImages = [];
+    fileInput.value = '';
+    renderPreviews();
+  });
+
+  pasteZone.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+  pasteZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    pasteZone.classList.add('dragover');
+  });
+  pasteZone.addEventListener('dragleave', () => pasteZone.classList.remove('dragover'));
+  pasteZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    pasteZone.classList.remove('dragover');
+    handleFiles(e.dataTransfer.files);
+  });
+
+  document.addEventListener('paste', (e) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    const files = [];
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        const file = item.getAsFile();
+        if (file) files.push(file);
       }
-      renderPreviews();
-      statusMsg.textContent = '';
     }
-
-    function renderPreviews() {
-      previewGrid.innerHTML = '';
-      uploadedImages.forEach(img => {
-        const div = document.createElement('div');
-        div.className = 'relative rounded-lg overflow-hidden border border-borderCol aspect-[9/16] bg-black';
-        div.innerHTML = `
-          <img src="${img.dataUrl}" alt="スクショ" class="w-full h-full object-cover">
-          <button type="button" class="remove-img-btn absolute top-1 right-1 bg-black/75 hover:bg-danger text-white rounded-full w-6 h-6 text-xs flex items-center justify-center cursor-pointer" title="削除">×</button>
-        `;
-        div.querySelector('.remove-img-btn').addEventListener('click', (e) => {
-          e.stopPropagation();
-          uploadedImages = uploadedImages.filter(item => item.id !== img.id);
-          renderPreviews();
-        });
-        previewGrid.appendChild(div);
-      });
-
-      const hasImages = uploadedImages.length > 0;
-      generateBtn.disabled = !hasImages;
-      clearImagesBtn.classList.toggle('hidden', !hasImages);
+    if (files.length > 0) {
+      handleFiles(files);
     }
+  });
 
-    clearImagesBtn.addEventListener('click', () => {
-      uploadedImages = [];
-      fileInput.value = '';
-      renderPreviews();
-    });
+  demoGenerateBtn.addEventListener('click', () => {
+    const targetStr = getTargetDateFormatted();
+    const bearLine = getBearLineText();
+    const asapanLine = controlState.asapan === 'ng'
+      ? '朝パーン温存（NG）※翌日ポイント対象のため待機推奨'
+      : '朝パーンOK！';
+    const gatherLine = controlState.gather === 'yes'
+      ? '\n※翌日採取なので寝る前に仕込む人はお忘れなく〜'
+      : '';
 
-    pasteZone.addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
-
-    pasteZone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      pasteZone.classList.add('border-primary', 'bg-primary/10');
-    });
-    pasteZone.addEventListener('dragleave', () => {
-      pasteZone.classList.remove('border-primary', 'bg-primary/10');
-    });
-    pasteZone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      pasteZone.classList.remove('border-primary', 'bg-primary/10');
-      handleFiles(e.dataTransfer.files);
-    });
-
-    document.addEventListener('paste', (e) => {
-      const items = e.clipboardData?.items;
-      if (!items) return;
-      const files = [];
-      for (const item of items) {
-        if (item.type.startsWith('image/')) {
-          const file = item.getAsFile();
-          if (file) files.push(file);
-        }
-      }
-      if (files.length > 0) {
-        handleFiles(files);
-      }
-    });
-
-    // サンプルテスト生成
-    demoGenerateBtn.addEventListener('click', () => {
-      const targetStr = getTargetDateFormatted();
-      const bearLine = getBearLineText();
-      const asapanLine = controlState.asapan === 'ng'
-        ? '朝パーン温存（NG）※翌日ポイント対象のため待機推奨'
-        : '朝パーンOK！';
-      const gatherLine = controlState.gather === 'yes'
-        ? '\n※翌日採取なので寝る前に仕込む人はお忘れなく〜'
-        : '';
-
-      resultText.value = `${targetStr}
+    resultText.value = `${targetStr}
 ${asapanLine}
 ${bearLine}
 ・軍備競技
@@ -1180,62 +1425,43 @@ ${bearLine}
 同盟総動員みんなで力を
 合わせてがんばろー(٩・∀・ง)ｵｰ!${gatherLine}`;
 
-      updateCharCounter();
-      showStatus(`「${targetStr}」のサンプルを生成しました！編集後に下の「確定保存してコピー」を押すと履歴に学習蓄積されます。`, 'ok');
-    });
+    updateCharCounter();
+    showStatus(`「${targetStr}」のサンプル通知文を生成しました！手直しして「確定保存＆コピー」を押すと学習データに蓄積されます。`, 'ok');
+  });
 
-    // 指数バックオフ付きFetch
-    async function fetchWithRetry(url, options, maxRetries = 3) {
-      let delay = 1000;
-      for (let i = 0; i < maxRetries; i++) {
-        const response = await fetch(url, options);
-        if (response.status !== 429 && response.status < 500) {
-          return response;
-        }
-        if (i < maxRetries - 1) {
-          await new Promise(res => setTimeout(res, delay));
-          delay *= 2;
-        } else {
-          return response;
-        }
-      }
+  generateBtn.addEventListener('click', async () => {
+    const apiKey = (apiKeyInput.value || localStorage.getItem('ks_gemini_api_key') || '').trim();
+    if (!apiKey) {
+      navTabs[3].click();
+      showStatus('先に「⚙️ 設定」タブからGemini APIキーを保存してください。', 'error');
+      return;
     }
 
-    generateBtn.addEventListener('click', async () => {
-      const apiKey = localStorage.getItem('ks_gemini_api_key');
-      if (!apiKey) {
-        switchTab('settings');
-        settingsSaveMsg.textContent = '⚠️ まだFirebase上にAPIキーが保存されていません。1度だけAPIキーを入力して保存してください。';
-        settingsSaveMsg.className = 'text-xs text-center text-warning min-h-[1rem]';
-        return;
-      }
+    if (uploadedImages.length === 0) return;
 
-      if (uploadedImages.length === 0) return;
+    const model = modelSelect.value || localStorage.getItem('ks_gemini_model') || DEFAULT_MODEL;
+    const eventDict = eventDictInput.value || localStorage.getItem('ks_event_dict') || DEFAULT_EVENT_DICT;
+    const charLimit = charLimitInput.value || 300;
+    const targetDateStr = getTargetDateFormatted();
+    const bearLine = getBearLineText();
+    const learnedExamples = buildDynamicFewShotPrompt();
 
-      const model = localStorage.getItem('ks_model') || 'gemini-2.5-flash';
-      const eventDict = localStorage.getItem('ks_event_dict') || DEFAULT_EVENT_DICT;
-      const charLimit = charLimitInput.value || 300;
-      const targetDateObj = getSelectedTargetDate();
-      const targetDateStr = getTargetDateFormatted();
-      const bearLine = getBearLineText();
-      const learnedExamplesBlock = buildDynamicLearnedExamples(targetDateObj);
+    let asapanInstruction = '画像に翌日の情報イベント（諜報）やスタミナ・黄金の巨刃がポイント加算対象として写っている場合は「朝パーン温存（NG）※翌日ポイント対象のため待機推奨」、そうでなければ「朝パーンOK！」と出力すること。';
+    if (controlState.asapan === 'ok') {
+      asapanInstruction = '2行目は必ず「朝パーンOK！」と出力すること。';
+    } else if (controlState.asapan === 'ng') {
+      asapanInstruction = '2行目は必ず「朝パーン温存（NG）※翌日ポイント対象のため待機推奨」と出力すること。';
+    }
 
-      let asapanInstruction = '画像に翌日の情報イベント（諜報）やスタミナ・黄金の巨刃がポイント加算対象として写っている場合は「朝パーン温存（NG）※翌日ポイント対象のため待機推奨」、そうでなければ「朝パーンOK！」と出力すること。';
-      if (controlState.asapan === 'ok') {
-        asapanInstruction = '2行目は必ず「朝パーンOK！」と出力すること。';
-      } else if (controlState.asapan === 'ng') {
-        asapanInstruction = '2行目は必ず「朝パーン温存（NG）※翌日ポイント対象のため待機推奨」と出力すること。';
-      }
+    let gatherInstruction = '画像に翌日のポイント項目として「採集（採取）」が写っている場合は、末尾に「※翌日採取なので寝る前に仕込む人はお忘れなく〜」を追記すること。写っていなければ書かないこと。';
+    if (controlState.gather === 'yes') {
+      gatherInstruction = '末尾に必ず「※翌日採取なので寝る前に仕込む人はお忘れなく〜」を追記すること。';
+    } else if (controlState.gather === 'no') {
+      gatherInstruction = '「※翌日採取〜」の文言は出力しないこと。';
+    }
 
-      let gatherInstruction = '画像に翌日のポイント項目として「採集（採取）」が写っている場合は、末尾に「※翌日採取なので寝る前に仕込む人はお忘れなく〜」を追記すること。写っていなければ書かないこと。';
-      if (controlState.gather === 'yes') {
-        gatherInstruction = '末尾に必ず「※翌日採取なので寝る前に仕込む人はお忘れなく〜」を追記すること。';
-      } else if (controlState.gather === 'no') {
-        gatherInstruction = '「※翌日採取〜」の文言は出力しないこと。';
-      }
-
-      const systemPrompt = `あなたは戦略ゲーム「キングショット」の同盟幹部（R4）です。
-添付されたゲーム画面のスクリーンショットから「${targetDateStr} に開催中のイベント」と「ポイント加算項目」を読み取り、以下の【過去の確定履歴・お手本】と全く同じ文体・フォーマットで同盟通知文を作成してください。
+    const systemPrompt = `あなたは戦略ゲーム「キングショット」の同盟幹部（R4）です。
+添付されたゲーム画面のスクリーンショットから「${targetDateStr} に開催中のイベント」と「ポイント加算項目」を読み取り、以下の【学習済み確定履歴】および【基本フォーマット】の文体・表記ルールを忠実に踏襲して同盟通知文を作成してください。
 
 【固定情報】
 ・1行目の日付は必ず「${targetDateStr}」とすること。
@@ -1250,160 +1476,118 @@ ${eventDict}
 【厳守ルール】
 1. 至高領主や最強王国などのフェーズポイント対象項目は、イベント名の次の行に「・」なしで読点（、）区切りで簡潔に並べること（例：領主装備、訓練）。
 2. カレンダー画面などで複数日分の予定が写っている場合は、必ず「${targetDateStr}」に該当する列・日のイベントのみを抽出すること。
-3. 画像に書かれていないイベントの捏造は厳禁。
-4. 全体で【${charLimit}文字以内】に収めること。
-5. 出力は通知文のテキストのみを返し、挨拶や解説、コードブロック記号は一切含めないこと。
+3. 過去の学習履歴で同イベントに対して使われている補足表現や絵文字のテンションがあれば積極的に引き継ぐこと。
+4. 画像に書かれていないイベントの捏造は厳禁。
+5. 全体で【${charLimit}文字以内】に収めること。
+6. 出力は通知文のテキストのみを返し、挨拶や解説、コードブロック記号は一切含めないこと。
 
-${learnedExamplesBlock}`;
+${learnedExamples}`;
 
-      setLoading(true);
-      statusMsg.textContent = '';
+    setLoading(true);
+    statusMsg.textContent = '';
 
-      try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
 
-        const parts = [{ text: systemPrompt }];
-        uploadedImages.forEach(img => {
-          parts.push({
-            inline_data: {
-              mime_type: img.mimeType,
-              data: img.base64
-            }
-          });
+      const parts = [{ text: systemPrompt }];
+      uploadedImages.forEach(img => {
+        parts.push({
+          inline_data: {
+            mime_type: img.mimeType,
+            data: img.base64
+          }
         });
+      });
 
-        const response = await fetchWithRetry(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts }],
-            generationConfig: {
-              temperature: 0.2
-            }
-          })
-        });
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts }],
+          generationConfig: {
+            temperature: 0.2
+          }
+        })
+      });
 
-        const data = await response.json();
+      const data = await response.json();
 
-        if (!response.ok) {
-          const errMsg = data.error?.message || `APIエラー (${response.status})`;
-          throw new Error(errMsg);
-        }
-
-        const generated = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (!generated) {
-          throw new Error('AIからの応答が空でした。');
-        }
-
-        resultText.value = generated.trim();
-        updateCharCounter();
-        showStatus(`「${targetDateStr}」の通知文を生成しました！手直し後に「確定保存してコピー」を押すと履歴に学習蓄積されます。`, 'ok');
-
-      } catch (err) {
-        showStatus(`エラー: ${err.message}`, 'error');
-      } finally {
-        setLoading(false);
-      }
-    });
-
-    function setLoading(isLoading) {
-      generateBtn.disabled = isLoading;
-      loadingSpinner.classList.toggle('hidden', !isLoading);
-      generateBtnText.textContent = isLoading ? '過去履歴を参照して解析中...' : '✨ スクショから通知文を生成';
-    }
-
-    function showStatus(msg, type) {
-      statusMsg.textContent = msg;
-      statusMsg.className = `text-xs text-center mt-2 min-h-[1.25rem] ${type === 'error' ? 'text-danger' : 'text-success'}`;
-    }
-
-    function updateCharCounter() {
-      const len = resultText.value.length;
-      const limit = parseInt(charLimitInput.value, 10) || 300;
-      charCount.textContent = `${len} / ${limit} 文字`;
-      if (len > limit) {
-        charCount.classList.add('text-danger', 'font-bold');
-      } else {
-        charCount.classList.remove('text-danger', 'font-bold');
-      }
-    }
-
-    resultText.addEventListener('input', updateCharCounter);
-
-    // 確定保存してコピー
-    saveAndCopyBtn.addEventListener('click', async () => {
-      const text = resultText.value;
-      if (!text.trim()) {
-        showStatus('保存・コピーするテキストがありません。', 'error');
-        return;
+      if (!response.ok) {
+        const errMsg = data.error?.message || `APIエラー (${response.status})`;
+        throw new Error(errMsg);
       }
 
-      resultText.select();
-      resultText.setSelectionRange(0, 99999);
-      try {
-        document.execCommand('copy');
-      } catch (err) {
-        if (navigator.clipboard) {
-          navigator.clipboard.writeText(text);
-        }
+      const generated = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!generated) {
+        throw new Error('AIからの応答が空でした。');
       }
 
-      const dateKey = targetDateInput.value || toDateInputString(getSelectedTargetDate());
-      await saveHistoryEntry(dateKey, text);
-
-      const originalHtml = saveAndCopyBtn.innerHTML;
-      saveAndCopyBtn.innerHTML = '<span>✅ 確定保存＆コピー完了！（学習データに追加済）</span>';
-      showStatus(`「${dateKey}」の確定通知を履歴に保存し、コピーしました！`, 'ok');
-
-      setTimeout(() => {
-        saveAndCopyBtn.innerHTML = originalHtml;
-      }, 2500);
-    });
-
-    // 比率メモのコピー
-    copyRatioGuideBtn.addEventListener('click', () => {
-      ratioShareText.select();
-      ratioShareText.setSelectionRange(0, 99999);
-      try {
-        document.execCommand('copy');
-        ratioCopyStatus.textContent = '✅ 比率メモをクリップボードにコピーしました！';
-        setTimeout(() => { ratioCopyStatus.textContent = ''; }, 2500);
-      } catch (err) {
-        if (navigator.clipboard) {
-          navigator.clipboard.writeText(ratioShareText.value);
-        }
-      }
-    });
-
-    // ==========================================
-    // 初期化処理
-    // ==========================================
-    async function init() {
-      const now = new Date();
-      const tmr = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-      targetDateInput.value = toDateInputString(tmr);
-
-      // まずローカルまたは初期埋め込み値をフォームへセット
-      apiKeyInput.value = localStorage.getItem('ks_gemini_api_key') || '';
-      modelSelect.value = localStorage.getItem('ks_model') || 'gemini-2.5-flash';
-      firebaseUrlInput.value = localStorage.getItem('ks_firebase_url') || DEFAULT_FIREBASE_URL;
-      bearBaseDateInput.value = localStorage.getItem('ks_bear_base_date') || '2026-11-22';
-      bearTextInput.value = localStorage.getItem('ks_bear_text') || '熊罠 21時 22時';
-      eventDictInput.value = localStorage.getItem('ks_event_dict') || DEFAULT_EVENT_DICT;
-      charLimitInput.value = localStorage.getItem('ks_char_limit') || '300';
-
-      setupSegmentedControl('asapan-group', 'asapan');
-      setupSegmentedControl('bear-group', 'bear');
-      setupSegmentedControl('gather-group', 'gather');
-
-      updateDateUI();
+      resultText.value = generated.trim();
       updateCharCounter();
+      showStatus(`「${targetDateStr}」の通知文を生成しました！手直し後に「確定保存＆コピー」を押すと学習蓄積されます。`, 'ok');
 
-      // 起動と同時にFirebaseから共有設定（APIキー・辞書）と30日履歴を自動同期
-      await syncAllFromFirebase();
+    } catch (err) {
+      console.error(err);
+      showStatus(`エラー: ${err.message}`, 'error');
+    } finally {
+      setLoading(false);
+    }
+  });
+
+  function setLoading(isLoading) {
+    generateBtn.disabled = isLoading;
+    loadingSpinner.style.display = isLoading ? 'inline-block' : 'none';
+    generateBtnText.textContent = isLoading ? 'スクショを解析中...' : '✨ スクショから通知文を生成';
+  }
+
+  function showStatus(msg, type) {
+    statusMsg.textContent = msg;
+    statusMsg.className = `status-msg status-${type}`;
+  }
+
+  function updateCharCounter() {
+    const len = resultText.value.length;
+    const limit = parseInt(charLimitInput.value, 10) || 300;
+    charCount.textContent = `${len} / ${limit} 文字`;
+    if (len > limit) {
+      charCount.classList.add('over-limit');
+    } else {
+      charCount.classList.remove('over-limit');
+    }
+  }
+
+  resultText.addEventListener('input', updateCharCounter);
+
+  saveCopyBtn.addEventListener('click', async () => {
+    const text = resultText.value.trim();
+    if (!text) return;
+
+    const dateKey = targetDateInput.value || toDateInputString(getSelectedTargetDate());
+    const dateLabel = getTargetDateFormatted();
+
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      resultText.select();
+      document.execCommand('copy');
     }
 
-    init();
-  </script>
+    const cloudOk = await saveHistoryEntryToCloud(dateKey, {
+      text: text,
+      label: dateLabel,
+      updatedAt: Date.now()
+    });
+
+    const originalText = saveCopyBtn.textContent;
+    saveCopyBtn.textContent = cloudOk ? '✅ 確定保存＆コピー完了！' : '✅ コピー＆ローカル保存完了！';
+    showStatus(`${dateKey} の確定通知文を学習データに保存しました（次回以降の生成に自動活用されます）。`, 'ok');
+    setTimeout(() => {
+      saveCopyBtn.textContent = originalText;
+    }, 2200);
+  });
+
+  init();
+</script>
+
 </body>
 </html>
