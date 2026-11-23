@@ -824,7 +824,7 @@
 
 <script>
   // ==========================================
-  // 1. 共通設定＆Firebase接続設定（現行維持）
+  // 1. 共通設定＆Firebase接続設定（修正済み）
   // ==========================================
   const SHARED_SETTINGS_KEY = "rbn_suite_shared_settings_v1";
   const DEFAULT_SHARED_SETTINGS = {
@@ -855,6 +855,14 @@
   const DB_NODE = "bear_master";
   const STORAGE_KEY = "rbn_bear_sim_user_v3";
 
+  function normalizeDatabaseUrl(raw) {
+    return (raw || "")
+      .trim()
+      .replace(/\/+$/, "")
+      .replace(/\/bear_master$/, "")
+      .replace(/\/kingshot_notice_history$/, "");
+  }
+
   function loadSharedSettings() {
     let base = JSON.parse(JSON.stringify(DEFAULT_SHARED_SETTINGS));
     try {
@@ -872,15 +880,17 @@
     if (!base.ai.studioApiKey && legacyKey) {
       base.ai.studioApiKey = legacyKey;
     }
+    base.firebase.databaseUrl = normalizeDatabaseUrl(base.firebase.databaseUrl) || FIREBASE_CONFIG.databaseURL;
     return base;
   }
 
   let sharedSettings = loadSharedSettings();
   if (sharedSettings.firebase && sharedSettings.firebase.databaseUrl) {
-    FIREBASE_CONFIG.databaseURL = sharedSettings.firebase.databaseUrl.trim().replace(/\/+$/, "");
+    FIREBASE_CONFIG.databaseURL = sharedSettings.firebase.databaseUrl;
   }
 
   function saveSharedSettings(next) {
+    const cleanDbUrl = normalizeDatabaseUrl(next.firebase?.databaseUrl) || FIREBASE_CONFIG.databaseURL;
     sharedSettings = {
       links: {
         cityMapUrl: (next.links?.cityMapUrl || "./index.html").trim(),
@@ -888,7 +898,7 @@
         noticeGenUrl: (next.links?.noticeGenUrl || "./rbn-notice.html").trim()
       },
       firebase: {
-        databaseUrl: (next.firebase?.databaseUrl || FIREBASE_CONFIG.databaseURL).trim().replace(/\/+$/, "")
+        databaseUrl: cleanDbUrl
       },
       ai: {
         studioApiKey: (next.ai?.studioApiKey || "").trim()
@@ -926,7 +936,7 @@
         noticeGenUrl: document.getElementById("setLinkNotice").value.trim()
       },
       firebase: {
-        databaseUrl: document.getElementById("setFirebaseUrl").value.trim()
+        databaseUrl: normalizeDatabaseUrl(document.getElementById("setFirebaseUrl").value)
       },
       ai: {
         studioApiKey: document.getElementById("setAiStudioKey").value.trim()
@@ -1072,29 +1082,41 @@
 
   function initFirebase() {
     try {
-      const dbUrl = (sharedSettings.firebase?.databaseUrl || FIREBASE_CONFIG.databaseURL || "").trim().replace(/\/+$/, "");
-      FIREBASE_CONFIG.databaseURL = dbUrl;
-      if (FIREBASE_CONFIG && FIREBASE_CONFIG.apiKey && dbUrl) {
-        if (!firebase.apps.length) {
-          firebase.initializeApp(FIREBASE_CONFIG);
-        }
-        const targetDb = firebase.database(dbUrl);
-        if (db) {
-          db.ref(DB_NODE).off();
-        }
-        db = targetDb;
-        db.ref(DB_NODE).on("value", (snapshot) => {
-          const val = snapshot.val();
-          updateSyncBadge(true);
-          if (val && val.heroes) {
-            applyMasterUpdate(val, true);
-            renderAll();
-          }
-        }, (err) => {
-          console.warn("Firebase read warning:", err);
-          updateSyncBadge(false);
-        });
+      const dbUrl = normalizeDatabaseUrl(sharedSettings.firebase?.databaseUrl || FIREBASE_CONFIG.databaseURL);
+      if (!FIREBASE_CONFIG || !FIREBASE_CONFIG.apiKey || !dbUrl.startsWith("https://")) {
+        updateSyncBadge(false);
+        return;
       }
+      FIREBASE_CONFIG.databaseURL = dbUrl;
+
+      let appInstance;
+      if (!firebase.apps.length) {
+        appInstance = firebase.initializeApp(FIREBASE_CONFIG);
+      } else {
+        appInstance = firebase.app();
+        if (appInstance.options.databaseURL !== dbUrl) {
+          const existing = firebase.apps.find(a => a.name === "bearCustomApp");
+          appInstance = existing || firebase.initializeApp({ ...FIREBASE_CONFIG, databaseURL: dbUrl }, "bearCustomApp");
+        }
+      }
+
+      const targetDb = firebase.database(appInstance);
+      if (db) {
+        db.ref(DB_NODE).off();
+      }
+      db = targetDb;
+
+      db.ref(DB_NODE).on("value", (snapshot) => {
+        const val = snapshot.val();
+        updateSyncBadge(true);
+        if (val && val.heroes) {
+          applyMasterUpdate(val, true);
+          renderAll();
+        }
+      }, (err) => {
+        console.warn("Firebase read warning:", err);
+        updateSyncBadge(false);
+      });
     } catch (e) {
       console.warn("Firebase init skipped:", e);
       updateSyncBadge(false);
@@ -1650,6 +1672,9 @@ ${currentJson}`;
     const pass = document.getElementById("adminPassInput").value.trim();
     if (pass !== ADMIN_PASSCODE) {
       return alert("管理者パスコードが一致しません。");
+    }
+    if (!db) {
+      initFirebase();
     }
     if (!db) {
       return alert("Firebaseが初期化されていません。設定を確認してください。");
