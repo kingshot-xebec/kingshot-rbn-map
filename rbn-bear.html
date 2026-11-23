@@ -511,13 +511,11 @@
       box-shadow: 0 1px 4px rgba(0,0,0,0.35);
     }
 
-    /* 強制PC表示モード（スマホ画面でもPCレイアウトを維持） */
     body.force-pc {
       max-width: 1120px;
       min-width: 960px;
     }
 
-    /* スマホ表示モード（強制スマホ または 画面幅680px以下の自動判定） */
     body.view-mobile {
       max-width: 540px;
       padding: 10px 10px 76px;
@@ -1128,7 +1126,7 @@
             <option value="arc">🏹 弓兵</option>
           </select>
           <button type="button" class="btn-primary" onclick="addPoolHeroManual()">追加する</button>
-          <button type="button" class="btn-secondary" style="margin-left:auto; font-size:0.76rem;" onclick="resetPoolsToDefault()">🔄 兵種分類を初期基準に戻す</button>
+          <button type="button" class="btn-secondary" style="margin-left:auto; font-size:0.76rem;" onclick="resetPoolsToDefault()">🔄 アルテマ全37名基準にリセット</button>
         </div>
         <div id="inspectPoolsGrid" class="pool-columns"></div>
       </div>
@@ -1294,7 +1292,7 @@
 
 <script>
   // ==========================================
-  // 0. PC / スマホ表示モード切替（機能劣化なし・完全同期）
+  // 0. PC / スマホ表示モード切替
   // ==========================================
   const VIEW_MODE_KEY = "rbn_bear_view_mode_v1";
   let currentViewMode = localStorage.getItem(VIEW_MODE_KEY) || "auto";
@@ -1360,17 +1358,55 @@
   const ADMIN_PASSCODE = "rbn2011";
   const DB_NODE = "bear_master";
   const STORAGE_KEY = "rbn_bear_sim_user_v6";
-  const MASTER_CACHE_KEY = "rbn_bear_master_cache_v1";
+  const MASTER_CACHE_KEY = "rbn_bear_master_cache_v2";
+
+  // 配列型 lv（Firebaseでindex 0のnullが消えて詰まる現象）をオブジェクト形式 {1:.., 5:..} へ正規化
+  function normalizeHeroLvMap(rawLv) {
+    if (Array.isArray(rawLv)) {
+      const nums = rawLv.filter(v => v !== null && v !== undefined && !Number.isNaN(Number(v))).map(Number);
+      if (nums.length >= 5) {
+        return { 1: nums[0], 2: nums[1], 3: nums[2], 4: nums[3], 5: nums[4] };
+      }
+    }
+    if (rawLv && typeof rawLv === "object") {
+      return {
+        1: Number(rawLv[1] ?? rawLv["1"] ?? 5),
+        2: Number(rawLv[2] ?? rawLv["2"] ?? 10),
+        3: Number(rawLv[3] ?? rawLv["3"] ?? 15),
+        4: Number(rawLv[4] ?? rawLv["4"] ?? 20),
+        5: Number(rawLv[5] ?? rawLv["5"] ?? 25)
+      };
+    }
+    return { 1: 5, 2: 10, 3: 15, 4: 20, 5: 25 };
+  }
+
+  function sanitizeMasterObject(obj) {
+    if (!obj || typeof obj !== "object") return obj;
+    if (Array.isArray(obj.heroes)) {
+      obj.heroes = obj.heroes.map(h => ({
+        ...h,
+        lv: normalizeHeroLvMap(h.lv)
+      }));
+    }
+    if (obj.rallyPools && typeof obj.rallyPools === "object") {
+      ["inf", "cav", "arc"].forEach(t => {
+        if (Array.isArray(obj.rallyPools[t])) {
+          obj.rallyPools[t] = Array.from(new Set(obj.rallyPools[t].map(n => String(n || "").trim()).filter(Boolean)));
+        } else {
+          obj.rallyPools[t] = [];
+        }
+      });
+    }
+    return obj;
+  }
 
   function saveMasterCache(dataObj) {
     try {
       if (!dataObj || !Array.isArray(dataObj.heroes)) return;
-      const toStore = {
-        ...dataObj,
-        _trustedManual: true,
-        updatedAt: Number(dataObj.updatedAt) || Date.now()
-      };
-      localStorage.setItem(MASTER_CACHE_KEY, JSON.stringify(toStore));
+      const sanitized = sanitizeMasterObject(JSON.parse(JSON.stringify(dataObj)));
+      sanitized._trustedManual = true;
+      sanitized.updatedAt = Number(dataObj.updatedAt) || Date.now();
+      localStorage.setItem(MASTER_CACHE_KEY, JSON.stringify(sanitized));
     } catch (e) {}
   }
 
@@ -1380,9 +1416,10 @@
       if (!raw) return null;
       const parsed = JSON.parse(raw);
       if (!parsed || !Array.isArray(parsed.heroes)) return null;
-      parsed._trustedManual = true;
-      parsed.updatedAt = Number(parsed.updatedAt) || 0;
-      return parsed;
+      const sanitized = sanitizeMasterObject(parsed);
+      sanitized._trustedManual = true;
+      sanitized.updatedAt = Number(parsed.updatedAt) || 0;
+      return sanitized;
     } catch (e) {
       return null;
     }
@@ -1528,101 +1565,103 @@
   let db = null;
 
   // ==========================================
-  // 2. S1〜S8 初期マスタデータ（兵種別全キャラ網羅・Tier表含む）
+  // 2. S1〜S8 初期マスタデータ（アルテマ英雄一覧・全37名完全準拠版）
   // ==========================================
   const HERO_TYPE_REGISTRY = {
     inf: [
-      "アマデウス (S1)", "ヘルガ (S1)", "ゾーイ (S2)", "ディエゴ (S8)", "アルカ (S4)",
-      "ロンフェイ (S5)", "トライトン (S6)", "チャールズ (S7)",
-      "イェーガー (S3)", "インウー (SR)", "ハワード (SR)", "スミス (R)", "エドウィン (R)", "フォレスト (R)"
+      "アマデウス (S1)", "ゾーイ (S2)", "ヘルガ (S1)", "アルカ (S4)", "ディエゴ (S8)",
+      "龍飛 (S5)", "トリトン (S6)", "チャールズ (S7)",
+      "エリック (S3)", "ハワード (SR)", "スミス (R)", "フォルスト (R)"
     ],
     cav: [
-      "アイヴァ (S7)", "ペーラ (S3)", "スルード (S5)",
-      "リズ (S8)", "ソフィア (S6)", "ヒルデ (S3)", "ジェベル (S1)",
-      "チェンコ (SR)", "ゴードン (SR)", "ファーディ (SR)"
+      "アイヴァ (S7)", "ペーラ (S3)", "スルード (S5)", "ソフィア (S6)", "リズ (S8)",
+      "マーゴ (S4)", "ヒルデ (S2)", "ジェベル (S1)",
+      "チェンコ (SR)", "ゴードン (SR)", "ファハド (SR)", "エドウィン (R)"
     ],
     arc: [
-      "ルナ (S8)", "ヤン (S6)", "レン&ロン (S7)", "ローザ (S4)", "ビビアン (S5)", "マリン (S2)",
-      "マーゴ (S4)", "サロ (S1)",
-      "あまね (SR)", "クイン (SR)", "ダイアナ (SR)", "パトリック (SR)", "オリーブ (R)"
+      "ルナ (S8)", "レン&ロン (S7)", "ヤン (S6)", "ローザ (S4)", "ビビアン (S5)", "マリン (S2)",
+      "イェーガー (S3)", "あまね (SR)", "インウー (SR)", "サロ (S1)",
+      "ダイアナ (SR)", "クイン (SR)", "オリーブ (R)"
     ]
   };
 
   const RALLY_RECOMMENDED = {
-    inf: ["アマデウス (S1)", "ヘルガ (S1)", "ゾーイ (S2)", "ディエゴ (S8)", "アルカ (S4)"],
-    cav: ["アイヴァ (S7)", "ペーラ (S3)", "スルード (S5)"],
-    arc: ["ルナ (S8)", "ヤン (S6)", "レン&ロン (S7)", "ローザ (S4)", "ビビアン (S5)", "マリン (S2)"]
+    inf: ["アマデウス (S1)", "ゾーイ (S2)", "ヘルガ (S1)", "アルカ (S4)", "ディエゴ (S8)"],
+    cav: ["アイヴァ (S7)", "ペーラ (S3)", "スルード (S5)", "ソフィア (S6)", "リズ (S8)"],
+    arc: ["ルナ (S8)", "レン&ロン (S7)", "ヤン (S6)", "ローザ (S4)", "ビビアン (S5)", "マリン (S2)"]
   };
 
   const DEFAULT_MASTER = {
-    version: "S1〜S8完全対応",
+    _trustedManual: true,
+    version: "S1〜S8完全対応（アルテマ英雄一覧・全37名完全準拠版）",
     rallyPools: {
       inf: [
-        "アマデウス (S1)", "ヘルガ (S1)", "ゾーイ (S2)", "ディエゴ (S8)", "アルカ (S4)",
-        "ロンフェイ (S5)", "トライトン (S6)", "チャールズ (S7)",
-        "イェーガー (S3)", "インウー (SR)", "ハワード (SR)", "スミス (R)", "エドウィン (R)", "フォレスト (R)"
+        "アマデウス (S1)", "ゾーイ (S2)", "ヘルガ (S1)", "アルカ (S4)", "ディエゴ (S8)",
+        "龍飛 (S5)", "トリトン (S6)", "チャールズ (S7)",
+        "エリック (S3)", "ハワード (SR)", "スミス (R)", "フォルスト (R)"
       ],
       cav: [
-        "アイヴァ (S7)", "ペーラ (S3)", "スルード (S5)",
-        "リズ (S8)", "ソフィア (S6)", "ヒルデ (S3)", "ジェベル (S1)",
-        "チェンコ (SR)", "ゴードン (SR)", "ファーディ (SR)"
+        "アイヴァ (S7)", "ペーラ (S3)", "スルード (S5)", "ソフィア (S6)", "リズ (S8)",
+        "マーゴ (S4)", "ヒルデ (S2)", "ジェベル (S1)",
+        "チェンコ (SR)", "ゴードン (SR)", "ファハド (SR)", "エドウィン (R)"
       ],
       arc: [
-        "ルナ (S8)", "ヤン (S6)", "レン&ロン (S7)", "ローザ (S4)", "ビビアン (S5)", "マリン (S2)",
-        "マーゴ (S4)", "サロ (S1)",
-        "あまね (SR)", "クイン (SR)", "ダイアナ (SR)", "パトリック (SR)", "オリーブ (R)"
+        "ルナ (S8)", "レン&ロン (S7)", "ヤン (S6)", "ローザ (S4)", "ビビアン (S5)", "マリン (S2)",
+        "イェーガー (S3)", "あまね (SR)", "インウー (SR)", "サロ (S1)",
+        "ダイアナ (SR)", "クイン (SR)", "オリーブ (R)"
       ]
     },
     tierGuide: {
       title: "🏆 S1〜S8 巨熊狩猟 環境Tier・詳細仕様解説",
       sections: [
         {
-          heading: "1. 集結主（自集結）の世代別優先度",
+          heading: "1. 集結主（自集結）の世代別優先度（アルテマ基準・Reddit考察反映）",
           items: [
-            "弓兵（最重要）： ルナ(S8) ＞ ヤン(S6) ＞ レン&ロン(S7) ＞ ローザ(S4) ＞ ビビアン(S5) ＞ マリン(S2)",
-            "騎兵： アイヴァ(S7) ＞ ペーラ(S3) ＞ スルード(S5)",
-            "歩兵： アマデウス(S1) ＞ ヘルガ(S1) ＞ ゾーイ(S2) ＞ ディエゴ(S8) ＞ アルカ(S4)"
+            "弓兵（最重要）： ルナ(S8) / レン&ロン(S7) ＞ ヤン(S6) ＞ ローザ(S4) ＞ ビビアン(S5) ＞ マリン(S2)",
+            "騎兵： アイヴァ(S7) ＞ ペーラ(S3) ＞ スルード(S5) ＞ ソフィア(S6) ＞ リズ(S8)",
+            "歩兵： アマデウス(S1) ＞ ゾーイ(S2) ＞ ヘルガ(S1) ＞ アルカ(S4) ＞ ディエゴ(S8)（ディエゴは第1遠征が防御/HP寄りのため、歩兵比率を抑える巨熊戦ではゾーイやアマデウスが優先される傾向）"
           ]
         },
         {
-          heading: "2. 乗り手（参加者・左端）Sランク＆Aランク基準",
+          heading: "2. 乗り手（参加者・左端）Sランク＆Aランク基準（アルテマ第1遠征スキル実測値反映）",
           items: [
-            "Sランク（常時発動・高倍率）： チェンコ（殺傷+25%）、インウー（殺傷+25%）、あまね（攻撃+25%）、マーゴ（攻撃+25%）、レン&ロン(S7)、リズ(S8 ※重複不可)、アイヴァ(S7)、ルナ(S8)、アマデウス(S1)",
-            "Aランク（確率発動・重複不可デバフ）： ヤン(S6)、マリン(S2・40%1T=期待値4.00T)、ローザ(S4)、イェーガー(S3・20%3T=上書き/10T打ち切り込み期待値3.82T)、ビビアン(S5・重複不可)、スルード(S5)、ヒルデ(S3)"
+            "Sランク（確定・高期待値火力）： チェンコ（殺傷+25%）、インウー（殺傷+25%）、あまね（攻撃+25%）、マーゴ（攻撃+25%）、レン&ロン(S7・攻撃+15%/殺傷+10%)、ルナ(S8・総攻撃+25%)、アマデウス(S1・殺傷+25%)、アイヴァ(S7・敵防御-25%)、ペーラ(S3・50%1T被ダメ+50% ※重複不可)",
+            "Aランク（確率発動・条件付き・役割限定）： ヤン(S6・4T毎100%追加攻撃=期待値25%)、リズ(S8・50%1T殺傷+50%)、ビビアン(S5・敵被ダメ+25% ※重複不可)、マリン(S2・40%1T与ダメ+50%=期待値20%)、ローザ(S4・40%1T与ダメ+50%=期待値20%)、スルード(S5・歩弓与ダメ+15%)、ヒルデ(S2・総攻撃+15%)、イェーガー(S3・20%3T与ダメ+40%=期待値15.3%)、ディエゴ(S8・第1遠征は防御/HPバフのみで火力寄与なし)"
           ]
         },
         {
           heading: "3. 10ターン戦闘の仕様・Reddit検証考察",
           items: [
-            "10ターン制限と周期ロス： 巨熊戦は10ターンで終了するため、終盤（9〜10ターン目）に発動した3ターン持続バフは残りターンが切り捨てられます。",
-            "重複不可デバフ： ペーラ・リズ・ビビアンの「敵被ダメージ増加」系は集結内で1人しか有効にならないため、同盟内で被らないよう調整が必要です。",
-            "無課金〜微課金の育成定石： S5はルーレット歩兵ロンフェイのみ回収して欠片を温存し、S6ヤン・S7レン&ロン（ルーレット）・S8ルナへ集中投資するのが最高効率です。"
+            "10ターン制限と周期ロス： 巨熊戦は10ターンで終了するため、終盤（9〜10ターン目）に発動した複数ターン持続バフは残りターンが切り捨てられます。",
+            "確率発動とスキル干渉： ペーラ(S3)は第1遠征【ドゥーム】が50%確率で敵被ダメージ+50%上昇（ビビアン・リズ等の被ダメ増加枠との重複管理が重要）。またRedditではゾーイ第3スキルとペーラ第1スキルの干渉も議論されています。",
+            "育成・欠片配分の定石： ルナ(S8)やレン&ロン(S7)、アマデウス(S1)などの確定バフ持ちを軸にしつつ、手持ちの星ランク・同盟内の被り状況に合わせて最適解を組み立てるのが効率的です。"
           ]
         }
       ]
     },
     heroes: [
       { id: "amane", name: "あまね (SR)", type: "arc", tier: "S", buffType: "atk", unique: false, chance: 100, dur: 10, lv: {1:5, 2:10, 3:15, 4:20, 5:25}, defaultOwned: true, defaultLv: 5, rallyAlias: "あまね (SR)" },
-      { id: "margot", name: "マーゴ (S4)", type: "arc", tier: "S", buffType: "atk", unique: false, chance: 100, dur: 10, lv: {1:5, 2:10, 3:15, 4:20, 5:25}, defaultOwned: true, defaultLv: 5, rallyAlias: "マーゴ (S4)" },
+      { id: "margot", name: "マーゴ (S4)", type: "cav", tier: "S", buffType: "atk", unique: false, chance: 100, dur: 10, lv: {1:5, 2:10, 3:15, 4:20, 5:25}, defaultOwned: true, defaultLv: 5, rallyAlias: "マーゴ (S4)" },
       { id: "chenko", name: "チェンコ (SR)", type: "cav", tier: "S", buffType: "leth", unique: false, chance: 100, dur: 10, lv: {1:5, 2:10, 3:15, 4:20, 5:25}, defaultOwned: true, defaultLv: 5, rallyAlias: "チェンコ (SR)" },
-      { id: "inwoo", name: "インウー (SR)", type: "inf", tier: "S", buffType: "leth", unique: false, chance: 100, dur: 10, lv: {1:5, 2:10, 3:15, 4:20, 5:25}, defaultOwned: true, defaultLv: 5, rallyAlias: "インウー (SR)" },
-      { id: "renron", name: "レン&ロン (S7)", type: "arc", tier: "S", buffType: "atk", unique: false, chance: 100, dur: 10, lv: {1:6, 2:12, 3:18, 4:24, 5:30}, defaultOwned: false, defaultLv: 5, rallyAlias: "レン&ロン (S7)" },
-      { id: "liz", name: "リズ (S8)", type: "cav", tier: "S", buffType: "dmg", unique: true, chance: 100, dur: 10, lv: {1:6, 2:12, 3:18, 4:24, 5:30}, defaultOwned: false, defaultLv: 5, rallyAlias: "リズ (S8)" },
+      { id: "inwoo", name: "インウー (SR)", type: "arc", tier: "S", buffType: "leth", unique: false, chance: 100, dur: 10, lv: {1:5, 2:10, 3:15, 4:20, 5:25}, defaultOwned: true, defaultLv: 5, rallyAlias: "インウー (SR)" },
+      { id: "renron", name: "レン&ロン (S7)", type: "arc", tier: "S", buffType: "atk", unique: false, chance: 100, dur: 10, lv: {1:5, 2:10, 3:15, 4:20, 5:25}, defaultOwned: false, defaultLv: 5, rallyAlias: "レン&ロン (S7)" },
+      { id: "liz", name: "リズ (S8)", type: "cav", tier: "A", buffType: "leth", unique: false, chance: 50, dur: 1, lv: {1:10, 2:20, 3:30, 4:40, 5:50}, defaultOwned: false, defaultLv: 5, rallyAlias: "リズ (S8)" },
       { id: "amadeus", name: "アマデウス (S1)", type: "inf", tier: "S", buffType: "leth", unique: false, chance: 100, dur: 10, lv: {1:5, 2:10, 3:15, 4:20, 5:25}, defaultOwned: false, defaultLv: 5, rallyAlias: "アマデウス (S1)" },
-      { id: "aiva", name: "アイヴァ (S7)", type: "cav", tier: "S", buffType: "leth", unique: false, chance: 100, dur: 10, lv: {1:6, 2:12, 3:18, 4:24, 5:30}, defaultOwned: false, defaultLv: 5, rallyAlias: "アイヴァ (S7)" },
-      { id: "luna", name: "ルナ (S8)", type: "arc", tier: "S", buffType: "atk", unique: false, chance: 100, dur: 10, lv: {1:6, 2:12, 3:18, 4:24, 5:30}, defaultOwned: false, defaultLv: 5, rallyAlias: "ルナ (S8)" },
-      { id: "peira", name: "ペーラ (S3)", type: "cav", tier: "S", buffType: "dmg", unique: true, chance: 100, dur: 10, lv: {1:5, 2:10, 3:15, 4:20, 5:25}, defaultOwned: true, defaultLv: 5, rallyAlias: "ペーラ (S3)" },
-      { id: "yang", name: "ヤン (S6)", type: "arc", tier: "A", buffType: "dmg", unique: false, chance: 50, dur: 1, lv: {1:10, 2:20, 3:30, 4:40, 5:50}, defaultOwned: false, defaultLv: 5, rallyAlias: "ヤン (S6)" },
+      { id: "aiva", name: "アイヴァ (S7)", type: "cav", tier: "S", buffType: "dmg", unique: false, chance: 100, dur: 10, lv: {1:5, 2:10, 3:15, 4:20, 5:25}, defaultOwned: false, defaultLv: 5, rallyAlias: "アイヴァ (S7)" },
+      { id: "luna", name: "ルナ (S8)", type: "arc", tier: "S", buffType: "atk", unique: false, chance: 100, dur: 10, lv: {1:5, 2:10, 3:15, 4:20, 5:25}, defaultOwned: false, defaultLv: 5, rallyAlias: "ルナ (S8)" },
+      { id: "peira", name: "ペーラ (S3)", type: "cav", tier: "S", buffType: "dmg", unique: true, chance: 50, dur: 1, lv: {1:10, 2:20, 3:30, 4:40, 5:50}, defaultOwned: true, defaultLv: 5, rallyAlias: "ペーラ (S3)" },
+      { id: "yang", name: "ヤン (S6)", type: "arc", tier: "A", buffType: "dmg", unique: false, chance: 25, dur: 1, lv: {1:20, 2:40, 3:60, 4:80, 5:100}, defaultOwned: false, defaultLv: 5, rallyAlias: "ヤン (S6)" },
       { id: "marin", name: "マリン (S2)", type: "arc", tier: "A", buffType: "dmg", unique: false, chance: 40, dur: 1, lv: {1:10, 2:20, 3:30, 4:40, 5:50}, defaultOwned: true, defaultLv: 5, rallyAlias: "マリン (S2)" },
       { id: "rosa", name: "ローザ (S4)", type: "arc", tier: "A", buffType: "dmg", unique: false, chance: 40, dur: 1, lv: {1:10, 2:20, 3:30, 4:40, 5:50}, defaultOwned: true, defaultLv: 5, rallyAlias: "ローザ (S4)" },
-      { id: "jaeger", name: "イェーガー (S3)", type: "inf", tier: "A", buffType: "dmg", unique: false, chance: 20, dur: 3, lv: {1:8, 2:16, 3:24, 4:32, 5:40}, defaultOwned: true, defaultLv: 5, rallyAlias: "イェーガー (S3)" },
-      { id: "vivian", name: "ビビアン (S5)", type: "arc", tier: "A", buffType: "dmg", unique: true, chance: 50, dur: 1, lv: {1:6, 2:12, 3:18, 4:24, 5:30}, defaultOwned: false, defaultLv: 5, rallyAlias: "ビビアン (S5)" },
-      { id: "thrud", name: "スルード (S5)", type: "cav", tier: "A", buffType: "atk", unique: false, chance: 30, dur: 2, lv: {1:6, 2:12, 3:18, 4:24, 5:30}, defaultOwned: false, defaultLv: 5, rallyAlias: "スルード (S5)" },
-      { id: "hilde", name: "ヒルデ (S3)", type: "cav", tier: "A", buffType: "atk", unique: false, chance: 100, dur: 10, lv: {1:3, 2:6, 3:9, 4:12, 5:15}, defaultOwned: true, defaultLv: 5, rallyAlias: "ヒルデ (S3)" }
+      { id: "jaeger", name: "イェーガー (S3)", type: "arc", tier: "A", buffType: "dmg", unique: false, chance: 20, dur: 3, lv: {1:8, 2:16, 3:24, 4:32, 5:40}, defaultOwned: true, defaultLv: 5, rallyAlias: "イェーガー (S3)" },
+      { id: "vivian", name: "ビビアン (S5)", type: "arc", tier: "A", buffType: "dmg", unique: true, chance: 100, dur: 10, lv: {1:5, 2:10, 3:15, 4:20, 5:25}, defaultOwned: false, defaultLv: 5, rallyAlias: "ビビアン (S5)" },
+      { id: "thrud", name: "スルード (S5)", type: "cav", tier: "A", buffType: "dmg", unique: false, chance: 100, dur: 10, lv: {1:3, 2:6, 3:9, 4:12, 5:15}, defaultOwned: false, defaultLv: 5, rallyAlias: "スルード (S5)" },
+      { id: "hilde", name: "ヒルデ (S2)", type: "cav", tier: "A", buffType: "atk", unique: false, chance: 100, dur: 10, lv: {1:3, 2:6, 3:9, 4:12, 5:15}, defaultOwned: true, defaultLv: 5, rallyAlias: "ヒルデ (S2)" },
+      { id: "diego", name: "ディエゴ (S8)", type: "inf", tier: "A", buffType: "invalid", unique: false, chance: 100, dur: 10, lv: {1:3, 2:6, 3:9, 4:12, 5:15}, defaultOwned: false, defaultLv: 5, rallyAlias: "ディエゴ (S8)" }
     ]
   };
 
-  let masterData = JSON.parse(JSON.stringify(DEFAULT_MASTER));
+  let masterData = sanitizeMasterObject(JSON.parse(JSON.stringify(DEFAULT_MASTER)));
   let userState = {
     infTotal: 150000,
     cavTotal: 180000,
@@ -1643,7 +1682,8 @@
   // ==========================================
   // 3. マスタデータ整合性保証＆Firebase同期ロジック
   // ==========================================
-  function normalizeMasterConsistency(targetMaster, trustIncomingPools = false) {
+  function normalizeMasterConsistency(targetMaster, trustIncomingPools = true) {
+    sanitizeMasterObject(targetMaster);
     if (!targetMaster.rallyPools || typeof targetMaster.rallyPools !== "object") {
       targetMaster.rallyPools = { inf: [], cav: [], arc: [] };
     }
@@ -1669,7 +1709,7 @@
       });
 
       const otherRegistryNames = new Set();
-      if (!trustIncomingPools || !allPoolsPopulated) {
+      if (!trustIncomingPools && !allPoolsPopulated) {
         otherTypes.forEach((other) => {
           (HERO_TYPE_REGISTRY[other] || []).forEach((n) => otherRegistryNames.add(String(n).trim()));
         });
@@ -1677,7 +1717,7 @@
 
       const merged = [];
       const seen = new Set();
-      const sourceList = (trustIncomingPools && allPoolsPopulated)
+      const sourceList = (trustIncomingPools || allPoolsPopulated)
         ? [...existingPool, ...fromHeroes]
         : [...existingPool, ...baseDefaults, ...fromHeroes];
 
@@ -1693,7 +1733,7 @@
     return targetMaster;
   }
 
-  normalizeMasterConsistency(masterData);
+  normalizeMasterConsistency(masterData, true);
 
   function initApp() {
     applyViewMode();
@@ -1746,11 +1786,11 @@
           if (cached && cachedUpdatedAt > 0 && remoteUpdatedAt === 0 && Date.now() - cachedUpdatedAt < 30000) {
             return;
           }
-          const incoming = {
+          const incoming = sanitizeMasterObject({
             ...val,
             _trustedManual: true,
             updatedAt: remoteUpdatedAt || cachedUpdatedAt || Date.now()
-          };
+          });
           applyMasterUpdate(incoming, true);
           saveMasterCache(masterData);
           renderAll();
@@ -1889,7 +1929,8 @@
   // 4. UI描画・兵種別プルダウン・Tier表動的描画
   // ==========================================
   function renderAll() {
-    normalizeMasterConsistency(masterData);
+    // 現在の masterData のプール割り当てを尊重して正規化（古い DEFAULT_MASTER を強制マージしない）
+    normalizeMasterConsistency(masterData, true);
     if (masterData.version) {
       document.getElementById("masterVersionLabel").textContent = masterData.version;
     }
@@ -2021,8 +2062,9 @@
     grid.innerHTML = masterData.heroes.map(h => {
       const owned = !!userState.ownedMap[h.id];
       const lv = userState.lvMap[h.id] || 5;
+      const lvObj = normalizeHeroLvMap(h.lv);
       const probText = h.chance === 100 ? "常時" : `${h.chance}%/${h.dur}T`;
-      const valText = h.buffType === "invalid" ? "効果なし" : `+${h.lv[lv] || h.lv[5]}%`;
+      const valText = h.buffType === "invalid" ? "効果なし" : `+${lvObj[lv] || lvObj[5]}%`;
       return `
         <div class="hero-card ${owned ? "" : "disabled"}">
           <div class="hero-left">
@@ -2094,7 +2136,8 @@
   function getHeroScore(h, priorityMode) {
     if (h.buffType === "invalid") return -1;
     const lv = userState.lvMap[h.id] || 5;
-    const mag = h.lv[lv] || h.lv[5] || 0;
+    const lvObj = normalizeHeroLvMap(h.lv);
+    const mag = lvObj[lv] || lvObj[5] || 0;
     const effTurns = calcEffectiveTurns(h.chance, h.dur);
     let ev = mag * (effTurns / 10);
     if (priorityMode === "atk" && h.buffType === "atk") {
@@ -2325,6 +2368,7 @@
     } else {
       const h = masterData.heroes.find(x => x.id === heroId);
       if (!h) return;
+      const lvObj = normalizeHeroLvMap(h.lv);
       document.getElementById("editModalTitle").textContent = `${h.name} のスキル編集`;
       document.getElementById("editHeroId").value = h.id;
       document.getElementById("editName").value = h.name;
@@ -2334,9 +2378,9 @@
       document.getElementById("editUnique").value = String(!!h.unique);
       document.getElementById("editChance").value = h.chance;
       document.getElementById("editDur").value = h.dur;
-      document.getElementById("editLv1").value = h.lv[1];
-      document.getElementById("editLv3").value = h.lv[3];
-      document.getElementById("editLv5").value = h.lv[5];
+      document.getElementById("editLv1").value = lvObj[1];
+      document.getElementById("editLv3").value = lvObj[3];
+      document.getElementById("editLv5").value = lvObj[5];
       delBtn.style.display = "inline-flex";
     }
     openModal("heroEditModal");
@@ -2391,7 +2435,8 @@
       masterData.rallyPools[newType].push(name);
     }
 
-    normalizeMasterConsistency(masterData);
+    normalizeMasterConsistency(masterData, true);
+    saveMasterCache(masterData);
     closeModal("heroEditModal");
     renderAll();
     showToast("英雄データを更新しました");
@@ -2407,6 +2452,7 @@
         n => n !== target.name && n !== target.rallyAlias
       );
     }
+    saveMasterCache(masterData);
     closeModal("heroEditModal");
     renderAll();
   }
@@ -2415,27 +2461,27 @@
   // 7. マスタデータ JSON / AIプロンプト / Firebase 一括更新
   // ==========================================
   function openDataModal() {
-    normalizeMasterConsistency(masterData);
+    normalizeMasterConsistency(masterData, true);
     document.getElementById("jsonArea").value = JSON.stringify(masterData, null, 2);
     openModal("dataModal");
   }
 
   function exportMasterJson() {
-    normalizeMasterConsistency(masterData);
+    normalizeMasterConsistency(masterData, true);
     const str = JSON.stringify(masterData, null, 2);
     document.getElementById("jsonArea").value = str;
     navigator.clipboard.writeText(str).then(() => showToast("マスタJSONをコピーしました！"));
   }
 
   function copyAiUpdatePrompt() {
-    normalizeMasterConsistency(masterData);
+    normalizeMasterConsistency(masterData, true);
     const currentJson = JSON.stringify(masterData, null, 2);
     const promptText = `あなたはスマホゲーム「キングショット（KingShot）」の巨熊狩猟（Bear Trap）データアナリストです。
 以下の手順とルールに従って、既存の「マスターデータJSON」を最新世代までアップデートした新しいJSONを作成してください。
 
 【情報収集・分析の役割分担（厳守）】
 1. キャラクター情報・兵種・スキル数値の一次ソース（日本の攻略サイト最優先）：
-   - キャラクター名・兵種（inf=歩兵 / cav=騎兵 / arc=弓兵）・スキル効果・Lv倍率・確率・持続ターンなどの基礎マスタデータは、必ず「アルテマ（altema.jp/kingshot）」を最優先で参照して収集してください。
+   - キャラクター名・兵種（inf=歩兵 / cav=騎兵 / arc=弓兵）・スキル効果・Lv倍率（"lv": {"1": ..., "2": ..., "3": ..., "4": ..., "5": ...} のオブジェクト形式）・確率・持続ターンなどの基礎マスタデータは、必ず「アルテマ（altema.jp/kingshot）」を最優先で参照して収集してください。
    - アルテマで見つからない・未掲載の項目がある場合のみ、他の日本語攻略サイト（Game8・攻略Wiki・日本語データベース等）を補完的に参照して収集してください。
    - 英語圏のRedditからキャラ情報やスキル数値を直接収集しないでください。
 2. Reddit（r/KingShot）の活用範囲（仕様考察・判定の参考のみ）：
@@ -2446,6 +2492,7 @@
    - JSON内の "version" および "tierGuide"（集結主優先度・乗り手S/A基準・10ターン仕様とReddit検証考察）も、新世代の評価を含めた最新内容へ書き換えてください。
 5. 出力形式の厳守：
    - 既存キャラクターの "id" は変更しないでください（ユーザーの個人保存データとスマートマージするため）。
+   - "lv" は配列ではなく必ず {"1": 数値, "2": 数値, "3": 数値, "4": 数値, "5": 数値} の形式にしてください。
    - 解説は最小限にし、そのままツールへ貼り付けられる完全なJSONコードブロックのみを出力してください。
 
 【現在のマスターデータJSON】
@@ -2460,7 +2507,7 @@ ${currentJson}`;
     if (!incoming || !Array.isArray(incoming.heroes)) {
       throw new Error("不正なJSON形式です（heroes配列が必要です）");
     }
-    const normalized = normalizeMasterConsistency(incoming, !!incoming._trustedManual);
+    const normalized = normalizeMasterConsistency(sanitizeMasterObject(incoming), true);
     normalized._trustedManual = true;
     normalized.updatedAt = Number(incoming.updatedAt) || Date.now();
     masterData = normalized;
@@ -2508,7 +2555,7 @@ ${currentJson}`;
       const rawParsed = JSON.parse(document.getElementById("jsonArea").value);
       rawParsed._trustedManual = true;
       rawParsed.updatedAt = Date.now();
-      const parsed = normalizeMasterConsistency(rawParsed, true);
+      const parsed = normalizeMasterConsistency(sanitizeMasterObject(rawParsed), true);
       parsed._trustedManual = true;
       parsed.updatedAt = rawParsed.updatedAt;
       saveMasterCache(parsed);
@@ -2591,7 +2638,9 @@ ${currentJson}`;
     }).join("");
 
     const hBody = document.getElementById("inspectHeroesBody");
-    hBody.innerHTML = (masterData.heroes || []).map((h, idx) => `
+    hBody.innerHTML = (masterData.heroes || []).map((h, idx) => {
+      const lvObj = normalizeHeroLvMap(h.lv);
+      return `
       <tr>
         <td><strong>${h.name}</strong></td>
         <td>
@@ -2617,7 +2666,7 @@ ${currentJson}`;
         </td>
         <td><input type="number" min="1" max="100" value="${h.chance}" onchange="updateInspectHeroField(${idx}, 'chance', Number(this.value))" /></td>
         <td><input type="number" min="1" max="10" value="${h.dur}" onchange="updateInspectHeroField(${idx}, 'dur', Number(this.value))" /></td>
-        <td><input type="number" step="0.5" value="${h.lv ? h.lv[5] : 25}" onchange="updateInspectHeroLv5(${idx}, Number(this.value))" /></td>
+        <td><input type="number" step="0.5" value="${lvObj[5]}" onchange="updateInspectHeroLv5(${idx}, Number(this.value))" /></td>
         <td>
           <select onchange="updateInspectHeroField(${idx}, 'unique', this.value === 'true')">
             <option value="false" ${!h.unique ? "selected" : ""}>重複可</option>
@@ -2626,7 +2675,7 @@ ${currentJson}`;
         </td>
         <td><button type="button" class="mini-del-btn" onclick="deleteInspectHero(${idx})">🗑</button></td>
       </tr>
-    `).join("");
+    `}).join("");
 
     const tierEl = document.getElementById("inspectTierPreview");
     const guide = masterData.tierGuide || DEFAULT_MASTER.tierGuide;
@@ -2684,15 +2733,12 @@ ${currentJson}`;
   }
 
   function resetPoolsToDefault() {
-    if (!confirm("集結主リストの兵種分けを最新の標準定義（クイン=弓兵、オリーブ=弓兵、フォレスト=歩兵、スミス=歩兵）にリセットしますか？")) return;
-    masterData.rallyPools = JSON.parse(JSON.stringify(DEFAULT_MASTER.rallyPools));
-    (masterData.heroes || []).forEach((h) => {
-      const regHit = ["inf", "cav", "arc"].find((t) => (HERO_TYPE_REGISTRY[t] || []).includes(h.name));
-      if (regHit) h.type = regHit;
-    });
+    if (!confirm("マスターデータを最新のアルテマ全37名完全準拠版にリセットしますか？")) return;
+    masterData = sanitizeMasterObject(JSON.parse(JSON.stringify(DEFAULT_MASTER)));
     masterData._trustedManual = true;
+    masterData.updatedAt = Date.now();
     renderInspectModal();
-    showToast("標準の兵種分類にリセットしました");
+    showToast("アルテマ全37名完全準拠版にリセットしました");
   }
 
   function updateInspectHeroField(idx, field, val) {
@@ -2735,7 +2781,9 @@ ${currentJson}`;
 
   function applyInspectChangesLocal() {
     masterData._trustedManual = true;
+    masterData.updatedAt = Date.now();
     normalizeMasterConsistency(masterData, true);
+    saveMasterCache(masterData);
     renderAll();
     closeModal("inspectModal");
     showToast("💾 補正内容をこの端末に反映しました！");
@@ -2755,7 +2803,7 @@ ${currentJson}`;
     const nowTs = Date.now();
     masterData._trustedManual = true;
     masterData.updatedAt = nowTs;
-    const cleaned = normalizeMasterConsistency(JSON.parse(JSON.stringify(masterData)), true);
+    const cleaned = normalizeMasterConsistency(sanitizeMasterObject(JSON.parse(JSON.stringify(masterData))), true);
     cleaned._trustedManual = true;
     cleaned.updatedAt = nowTs;
     saveMasterCache(cleaned);
