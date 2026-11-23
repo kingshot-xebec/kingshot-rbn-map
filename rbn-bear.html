@@ -252,6 +252,48 @@
     }
     .warning-box.active { display: block; }
 
+    .buff-priority-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+    }
+    .buff-toggle-group {
+      display: inline-flex;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--card);
+    }
+    .buff-toggle-btn {
+      border: none;
+      border-radius: 0;
+      padding: 6px 12px;
+      font-size: 0.82rem;
+      background: transparent;
+      color: var(--muted);
+    }
+    .buff-toggle-btn:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+    }
+    .buff-toggle-btn.active-leth {
+      background: rgba(245, 158, 11, 0.24);
+      color: #fde68a;
+      font-weight: 700;
+    }
+    .buff-toggle-btn.active-atk {
+      background: rgba(56, 189, 248, 0.24);
+      color: #7dd3fc;
+      font-weight: 700;
+    }
+
     .hero-list {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
@@ -492,7 +534,7 @@
       <span><span class="step-badge">STEP 2</span>出撃枠・部隊別出撃定員（最大7部隊）</span>
       <button class="btn-secondary" style="font-size:0.75rem; padding:4px 9px;" onclick="syncJoinCaps()">乗り1軍の値を他に反映</button>
     </div>
-    <div class="grid-2">
+    <div class="grid-3">
       <label class="field">
         総出撃部隊数（自集結＋乗り）
         <select id="squadCount" onchange="updateCapBoxes(); recalc();">
@@ -505,6 +547,10 @@
       <label class="field">
         全兵種の最低確保人数（推奨 5,000）
         <input type="number" id="minTroop" min="0" step="1000" value="5000" oninput="recalc()" />
+      </label>
+      <label class="field">
+        🏹 1部隊の弓兵上限（% / 既定 90%）
+        <input type="number" id="maxArcPct" min="0" max="100" step="5" value="90" oninput="recalc()" />
       </label>
     </div>
 
@@ -611,13 +657,18 @@
     <span><span class="step-badge">STEP 5</span>乗り手候補（所持英雄・第1遠征スキルLv設定）</span>
     <button class="btn-secondary" style="font-size: 0.78rem; padding: 5px 10px;" onclick="openHeroEditor(null)">＋ 新規英雄を追加</button>
   </div>
-  <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px;">
-    <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer;">
-      <input type="checkbox" id="preferAtkBuff" checked onchange="recalc()" style="width:16px; height:16px; accent-color:var(--accent);" />
-      <span><strong>攻撃力バフ優先（あまね・マーゴ優遇）</strong> ※周囲にチェンコ等の殺傷力バフが多い環境向け</span>
-    </label>
-    <span style="font-size: 0.78rem; color: var(--muted);">※チェックONの英雄から期待値順に1〜6軍の左端へ自動配置</span>
+
+  <div class="buff-priority-bar">
+    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+      <span style="font-size:0.84rem; font-weight:700; color:#e2e8f0;">バフ優先切替：</span>
+      <div class="buff-toggle-group" role="group" aria-label="バフ優先切替">
+        <button type="button" id="btnPriorityLeth" class="buff-toggle-btn active-leth" onclick="setBuffPriority('leth')">💥 殺傷力UP優先（チェンコ等）</button>
+        <button type="button" id="btnPriorityAtk" class="buff-toggle-btn" onclick="setBuffPriority('atk')">⚔️ 攻撃力UP優先（あまね・マーゴ等）</button>
+      </div>
+    </div>
+    <span style="font-size: 0.76rem; color: var(--muted);">※チェックONの英雄から期待値順に1〜6軍の左端へ自動配置</span>
   </div>
+
   <div id="heroGrid" class="hero-list"></div>
 </section>
 
@@ -797,7 +848,7 @@
       </div>
 
       <label class="field" style="margin-top: 10px;">
-        マスタJSONデータ（英雄データ・集結主リスト・環境Tier表を一括管理）
+        マスタJSONデータ（英雄データ・集結主リスト（歩/騎/弓全キャラ）・環境Tier表を一括管理）
         <textarea id="jsonArea" rows="8" placeholder="ここにマスタJSONを貼り付け..."></textarea>
       </label>
       <div style="margin-top: 10px;">
@@ -824,7 +875,7 @@
 
 <script>
   // ==========================================
-  // 1. 共通設定＆Firebase接続設定（修正済み）
+  // 1. 共通設定＆Firebase接続設定
   // ==========================================
   const SHARED_SETTINGS_KEY = "rbn_suite_shared_settings_v1";
   const DEFAULT_SHARED_SETTINGS = {
@@ -853,7 +904,7 @@
   };
   const ADMIN_PASSCODE = "rbn2011";
   const DB_NODE = "bear_master";
-  const STORAGE_KEY = "rbn_bear_sim_user_v3";
+  const STORAGE_KEY = "rbn_bear_sim_user_v6";
 
   function normalizeDatabaseUrl(raw) {
     return (raw || "")
@@ -995,14 +1046,32 @@
   let db = null;
 
   // ==========================================
-  // 2. S1〜S8 初期マスタデータ（Tier表含む）
+  // 2. S1〜S8 初期マスタデータ（兵種別全キャラ網羅・Tier表含む）
   // ==========================================
+  const RALLY_RECOMMENDED = {
+    inf: ["アマデウス (S1)", "ヘルガ (S1)", "ゾーイ (S2)", "ディエゴ (S8)", "アルカ (S4)"],
+    cav: ["アイヴァ (S7)", "ペーラ (S3)", "スルード (S5)"],
+    arc: ["ルナ (S8)", "ヤン (S6)", "レン&ロン (S7)", "ローザ (S4)", "ビビアン (S5)", "マリン (S2)"]
+  };
+
   const DEFAULT_MASTER = {
     version: "S1〜S8完全対応",
     rallyPools: {
-      inf: ["アマデウス (S1)", "ヘルガ (S1)", "ゾーイ (S2)", "ディエゴ (S8)", "アルカ (S4)", "ロンフェイ (S5)", "トライトン (S6)", "チャールズ (S7)"],
-      cav: ["アイヴァ (S7)", "ペーラ (S3)", "スルード (S5)", "ソフィア (S6)", "ヒルデ (S3)", "チェンコ (SR)"],
-      arc: ["ルナ (S8)", "ヤン (S6)", "レン&ロン (S7)", "ローザ (S4)", "ビビアン (S5)", "マリン (S2)", "あまね (SR)"]
+      inf: [
+        "アマデウス (S1)", "ヘルガ (S1)", "ゾーイ (S2)", "ディエゴ (S8)", "アルカ (S4)",
+        "ロンフェイ (S5)", "トライトン (S6)", "チャールズ (S7)",
+        "イェーガー (S3)", "インウー (SR)", "ハワード (SR)", "クイン (SR)", "セス (R)", "エドウィン (R)"
+      ],
+      cav: [
+        "アイヴァ (S7)", "ペーラ (S3)", "スルード (S5)",
+        "リズ (S8)", "ソフィア (S6)", "ヒルデ (S3)", "ジェベル (S1)",
+        "チェンコ (SR)", "ゴードン (SR)", "ファーディ (SR)", "オリーブ (R)"
+      ],
+      arc: [
+        "ルナ (S8)", "ヤン (S6)", "レン&ロン (S7)", "ローザ (S4)", "ビビアン (S5)", "マリン (S2)",
+        "マーゴ (S4)", "サロ (S1)",
+        "あまね (SR)", "ダイアナ (SR)", "パトリック (SR)", "フォレスト (R)"
+      ]
     },
     tierGuide: {
       title: "🏆 S1〜S8 巨熊狩猟 環境Tier・詳細仕様解説",
@@ -1034,11 +1103,11 @@
     },
     heroes: [
       { id: "amane", name: "あまね (SR)", type: "arc", tier: "S", buffType: "atk", unique: false, chance: 100, dur: 10, lv: {1:5, 2:10, 3:15, 4:20, 5:25}, defaultOwned: true, defaultLv: 5, rallyAlias: "あまね (SR)" },
-      { id: "margot", name: "マーゴ (S4)", type: "arc", tier: "S", buffType: "atk", unique: false, chance: 100, dur: 10, lv: {1:5, 2:10, 3:15, 4:20, 5:25}, defaultOwned: true, defaultLv: 5, rallyAlias: null },
+      { id: "margot", name: "マーゴ (S4)", type: "arc", tier: "S", buffType: "atk", unique: false, chance: 100, dur: 10, lv: {1:5, 2:10, 3:15, 4:20, 5:25}, defaultOwned: true, defaultLv: 5, rallyAlias: "マーゴ (S4)" },
       { id: "chenko", name: "チェンコ (SR)", type: "cav", tier: "S", buffType: "leth", unique: false, chance: 100, dur: 10, lv: {1:5, 2:10, 3:15, 4:20, 5:25}, defaultOwned: true, defaultLv: 5, rallyAlias: "チェンコ (SR)" },
-      { id: "inwoo", name: "インウー (SR)", type: "inf", tier: "S", buffType: "leth", unique: false, chance: 100, dur: 10, lv: {1:5, 2:10, 3:15, 4:20, 5:25}, defaultOwned: true, defaultLv: 5, rallyAlias: null },
+      { id: "inwoo", name: "インウー (SR)", type: "inf", tier: "S", buffType: "leth", unique: false, chance: 100, dur: 10, lv: {1:5, 2:10, 3:15, 4:20, 5:25}, defaultOwned: true, defaultLv: 5, rallyAlias: "インウー (SR)" },
       { id: "renron", name: "レン&ロン (S7)", type: "arc", tier: "S", buffType: "atk", unique: false, chance: 100, dur: 10, lv: {1:6, 2:12, 3:18, 4:24, 5:30}, defaultOwned: false, defaultLv: 5, rallyAlias: "レン&ロン (S7)" },
-      { id: "liz", name: "リズ (S8)", type: "cav", tier: "S", buffType: "dmg", unique: true, chance: 100, dur: 10, lv: {1:6, 2:12, 3:18, 4:24, 5:30}, defaultOwned: false, defaultLv: 5, rallyAlias: null },
+      { id: "liz", name: "リズ (S8)", type: "cav", tier: "S", buffType: "dmg", unique: true, chance: 100, dur: 10, lv: {1:6, 2:12, 3:18, 4:24, 5:30}, defaultOwned: false, defaultLv: 5, rallyAlias: "リズ (S8)" },
       { id: "amadeus", name: "アマデウス (S1)", type: "inf", tier: "S", buffType: "leth", unique: false, chance: 100, dur: 10, lv: {1:5, 2:10, 3:15, 4:20, 5:25}, defaultOwned: false, defaultLv: 5, rallyAlias: "アマデウス (S1)" },
       { id: "aiva", name: "アイヴァ (S7)", type: "cav", tier: "S", buffType: "leth", unique: false, chance: 100, dur: 10, lv: {1:6, 2:12, 3:18, 4:24, 5:30}, defaultOwned: false, defaultLv: 5, rallyAlias: "アイヴァ (S7)" },
       { id: "luna", name: "ルナ (S8)", type: "arc", tier: "S", buffType: "atk", unique: false, chance: 100, dur: 10, lv: {1:6, 2:12, 3:18, 4:24, 5:30}, defaultOwned: false, defaultLv: 5, rallyAlias: "ルナ (S8)" },
@@ -1046,7 +1115,7 @@
       { id: "yang", name: "ヤン (S6)", type: "arc", tier: "A", buffType: "dmg", unique: false, chance: 50, dur: 1, lv: {1:10, 2:20, 3:30, 4:40, 5:50}, defaultOwned: false, defaultLv: 5, rallyAlias: "ヤン (S6)" },
       { id: "marin", name: "マリン (S2)", type: "arc", tier: "A", buffType: "dmg", unique: false, chance: 40, dur: 1, lv: {1:10, 2:20, 3:30, 4:40, 5:50}, defaultOwned: true, defaultLv: 5, rallyAlias: "マリン (S2)" },
       { id: "rosa", name: "ローザ (S4)", type: "arc", tier: "A", buffType: "dmg", unique: false, chance: 40, dur: 1, lv: {1:10, 2:20, 3:30, 4:40, 5:50}, defaultOwned: true, defaultLv: 5, rallyAlias: "ローザ (S4)" },
-      { id: "jaeger", name: "イェーガー (S3)", type: "inf", tier: "A", buffType: "dmg", unique: false, chance: 20, dur: 3, lv: {1:8, 2:16, 3:24, 4:32, 5:40}, defaultOwned: true, defaultLv: 5, rallyAlias: null },
+      { id: "jaeger", name: "イェーガー (S3)", type: "inf", tier: "A", buffType: "dmg", unique: false, chance: 20, dur: 3, lv: {1:8, 2:16, 3:24, 4:32, 5:40}, defaultOwned: true, defaultLv: 5, rallyAlias: "イェーガー (S3)" },
       { id: "vivian", name: "ビビアン (S5)", type: "arc", tier: "A", buffType: "dmg", unique: true, chance: 50, dur: 1, lv: {1:6, 2:12, 3:18, 4:24, 5:30}, defaultOwned: false, defaultLv: 5, rallyAlias: "ビビアン (S5)" },
       { id: "thrud", name: "スルード (S5)", type: "cav", tier: "A", buffType: "atk", unique: false, chance: 30, dur: 2, lv: {1:6, 2:12, 3:18, 4:24, 5:30}, defaultOwned: false, defaultLv: 5, rallyAlias: "スルード (S5)" },
       { id: "hilde", name: "ヒルデ (S3)", type: "cav", tier: "A", buffType: "atk", unique: false, chance: 100, dur: 10, lv: {1:3, 2:6, 3:9, 4:12, 5:15}, defaultOwned: true, defaultLv: 5, rallyAlias: "ヒルデ (S3)" }
@@ -1061,18 +1130,47 @@
     squadCount: 7,
     marchCaps: [140000, 125000, 125000, 125000, 125000, 125000, 125000],
     minTroop: 5000,
+    maxArcPct: 90,
     stance: "mid",
     rallyInf: "アルカ (S4)",
     rallyCav: "ペーラ (S3)",
     rallyArc: "ローザ (S4)",
-    preferAtkBuff: true,
+    buffPriority: "leth",
     ownedMap: {},
     lvMap: {}
   };
 
   // ==========================================
-  // 3. 初期化・Firebase同期ロジック
+  // 3. マスタデータ整合性保証＆Firebase同期ロジック
   // ==========================================
+  function normalizeMasterConsistency(targetMaster) {
+    if (!targetMaster.rallyPools || typeof targetMaster.rallyPools !== "object") {
+      targetMaster.rallyPools = { inf: [], cav: [], arc: [] };
+    }
+    ["inf", "cav", "arc"].forEach((t) => {
+      const baseDefaults = DEFAULT_MASTER.rallyPools[t] || [];
+      const existingPool = Array.isArray(targetMaster.rallyPools[t]) ? targetMaster.rallyPools[t] : [];
+      const fromHeroes = (targetMaster.heroes || [])
+        .filter((h) => h && h.type === t)
+        .map((h) => (h.rallyAlias || h.name || "").trim())
+        .filter(Boolean);
+
+      const merged = [];
+      const seen = new Set();
+      [...existingPool, ...baseDefaults, ...fromHeroes].forEach((name) => {
+        const clean = String(name || "").trim();
+        if (clean && !seen.has(clean)) {
+          seen.add(clean);
+          merged.push(clean);
+        }
+      });
+      targetMaster.rallyPools[t] = merged;
+    });
+    return targetMaster;
+  }
+
+  normalizeMasterConsistency(masterData);
+
   function initApp() {
     loadUserState();
     syncSettingsModalUI();
@@ -1135,11 +1233,22 @@
   }
 
   function loadUserState() {
-    const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem("rbn_bear_sim_user_v2");
+    const saved =
+      localStorage.getItem(STORAGE_KEY) ||
+      localStorage.getItem("rbn_bear_sim_user_v5") ||
+      localStorage.getItem("rbn_bear_sim_user_v4") ||
+      localStorage.getItem("rbn_bear_sim_user_v3") ||
+      localStorage.getItem("rbn_bear_sim_user_v2");
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         userState = { ...userState, ...parsed };
+        if (!parsed.buffPriority) {
+          userState.buffPriority = parsed.preferAtkBuff === true ? "atk" : "leth";
+        }
+        if (parsed.maxArcPct === undefined || parsed.maxArcPct === null || Number.isNaN(Number(parsed.maxArcPct))) {
+          userState.maxArcPct = 90;
+        }
         if (!Array.isArray(userState.marchCaps) || userState.marchCaps.length < 7) {
           const fallback = parsed.marchCap || 125000;
           userState.marchCaps = [140000, fallback, fallback, fallback, fallback, fallback, fallback];
@@ -1157,13 +1266,29 @@
     document.getElementById("arcTotal").value = userState.arcTotal;
     document.getElementById("squadCount").value = userState.squadCount;
     document.getElementById("minTroop").value = userState.minTroop;
+    document.getElementById("maxArcPct").value = userState.maxArcPct;
     for (let i = 0; i < 7; i++) {
       document.getElementById(`cap${i}`).value = userState.marchCaps[i] || 125000;
     }
-    document.getElementById("preferAtkBuff").checked = userState.preferAtkBuff;
     const r = document.querySelector(`input[name="stance"][value="${userState.stance}"]`);
     if (r) r.checked = true;
     updateCapBoxes();
+    syncBuffPriorityButtons();
+  }
+
+  function syncBuffPriorityButtons() {
+    const btnLeth = document.getElementById("btnPriorityLeth");
+    const btnAtk = document.getElementById("btnPriorityAtk");
+    const isAtk = userState.buffPriority === "atk";
+    btnLeth.classList.toggle("active-leth", !isAtk);
+    btnAtk.classList.toggle("active-atk", isAtk);
+  }
+
+  function setBuffPriority(mode) {
+    userState.buffPriority = mode === "atk" ? "atk" : "leth";
+    syncBuffPriorityButtons();
+    recalc();
+    showToast(userState.buffPriority === "atk" ? "⚔️ 攻撃力UP優先に切り替えました" : "💥 殺傷力UP優先に切り替えました");
   }
 
   function updateCapBoxes() {
@@ -1192,13 +1317,14 @@
     userState.arcTotal = Math.max(0, Number(document.getElementById("arcTotal").value) || 0);
     userState.squadCount = Number(document.getElementById("squadCount").value) || 7;
     userState.minTroop = Math.max(0, Number(document.getElementById("minTroop").value) || 0);
+    const rawArcPct = Number(document.getElementById("maxArcPct").value);
+    userState.maxArcPct = Number.isFinite(rawArcPct) ? Math.min(100, Math.max(0, rawArcPct)) : 90;
     for (let i = 0; i < 7; i++) {
       userState.marchCaps[i] = Math.max(1000, Number(document.getElementById(`cap${i}`).value) || 100000);
     }
     userState.rallyInf = document.getElementById("rallyInf").value;
     userState.rallyCav = document.getElementById("rallyCav").value;
     userState.rallyArc = document.getElementById("rallyArc").value;
-    userState.preferAtkBuff = document.getElementById("preferAtkBuff").checked;
     const st = document.querySelector('input[name="stance"]:checked');
     if (st) userState.stance = st.value;
 
@@ -1206,16 +1332,20 @@
   }
 
   function resetLocalUser() {
-    if (!confirm("入力した兵士数・各部隊定員・所持英雄のチェックを初期値に戻しますか？")) return;
+    if (!confirm("入力した兵士数・各部隊定員・弓兵上限・所持英雄・バフ優先設定を初期値に戻しますか？")) return;
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem("rbn_bear_sim_user_v5");
+    localStorage.removeItem("rbn_bear_sim_user_v4");
+    localStorage.removeItem("rbn_bear_sim_user_v3");
     localStorage.removeItem("rbn_bear_sim_user_v2");
     location.reload();
   }
 
   // ==========================================
-  // 4. UI描画・プルダウン・Tier表動的描画
+  // 4. UI描画・兵種別プルダウン・Tier表動的描画
   // ==========================================
   function renderAll() {
+    normalizeMasterConsistency(masterData);
     if (masterData.version) {
       document.getElementById("masterVersionLabel").textContent = masterData.version;
     }
@@ -1248,23 +1378,50 @@
 
   function renderRallySelects() {
     const pools = masterData.rallyPools;
-    const allNames = Array.from(new Set([...pools.inf, ...pools.cav, ...pools.arc]));
 
-    const buildOptions = (selectId, primaryList, savedVal) => {
+    const buildTypeOptions = (selectId, typeKey, savedVal) => {
       const sel = document.getElementById(selectId);
-      const others = allNames.filter(n => !primaryList.includes(n));
-      let html = `<optgroup label="★ 推奨上位（世代順）">`;
-      primaryList.forEach(name => { html += `<option value="${name}">${name}</option>`; });
-      html += `</optgroup><optgroup label="その他（他兵種カスタム等）">`;
-      others.forEach(name => { html += `<option value="${name}">${name}</option>`; });
+      const typePool = Array.isArray(pools[typeKey]) ? pools[typeKey] : [];
+      const recSeed = RALLY_RECOMMENDED[typeKey] || [];
+
+      // 推奨上位（該当兵種プール内の推奨順）と、その他（該当兵種の残り全キャラ）に完全分離
+      const recommendedList = [];
+      const seen = new Set();
+      recSeed.forEach((name) => {
+        if (typePool.includes(name) && !seen.has(name)) {
+          seen.add(name);
+          recommendedList.push(name);
+        }
+      });
+      // マスタ側で新規に先頭追加されたキャラも推奨側または同兵種リストに表示
+      const otherSameTypeList = typePool.filter((name) => !seen.has(name));
+
+      const typeLabelMap = { inf: "歩兵", cav: "騎兵", arc: "弓兵" };
+      const tLabel = typeLabelMap[typeKey] || "";
+
+      let html = `<optgroup label="★ ${tLabel} 推奨上位">`;
+      recommendedList.forEach(name => {
+        html += `<option value="${name}">${name}</option>`;
+      });
+      html += `</optgroup><optgroup label="${tLabel} その他全キャラ">`;
+      otherSameTypeList.forEach(name => {
+        html += `<option value="${name}">${name}</option>`;
+      });
       html += `</optgroup>`;
       sel.innerHTML = html;
-      if (allNames.includes(savedVal)) sel.value = savedVal;
+
+      if (typePool.includes(savedVal)) {
+        sel.value = savedVal;
+      } else if (recommendedList.length > 0) {
+        sel.value = recommendedList[0];
+      } else if (otherSameTypeList.length > 0) {
+        sel.value = otherSameTypeList[0];
+      }
     };
 
-    buildOptions("rallyInf", pools.inf, userState.rallyInf);
-    buildOptions("rallyCav", pools.cav, userState.rallyCav);
-    buildOptions("rallyArc", pools.arc, userState.rallyArc);
+    buildTypeOptions("rallyInf", "inf", userState.rallyInf);
+    buildTypeOptions("rallyCav", "cav", userState.rallyCav);
+    buildTypeOptions("rallyArc", "arc", userState.rallyArc);
   }
 
   function renderHeroCards() {
@@ -1317,7 +1474,7 @@
   }
 
   // ==========================================
-  // 5. 期待値計算（10ターンマルコフモデル）＆部隊別定員対応兵力配分
+  // 5. 期待値計算（10ターンマルコフモデル）＆部隊別定員・弓兵上限対応兵力配分
   // ==========================================
   function calcEffectiveTurns(chancePct, duration) {
     if (chancePct >= 100) return 10.0;
@@ -1345,13 +1502,15 @@
     return activeTurns;
   }
 
-  function getHeroScore(h, preferAtk) {
+  function getHeroScore(h, priorityMode) {
     if (h.buffType === "invalid") return -1;
     const lv = userState.lvMap[h.id] || 5;
     const mag = h.lv[lv] || h.lv[5] || 0;
     const effTurns = calcEffectiveTurns(h.chance, h.dur);
     let ev = mag * (effTurns / 10);
-    if (preferAtk && h.buffType === "atk") {
+    if (priorityMode === "atk" && h.buffType === "atk") {
+      ev *= 1.06;
+    } else if (priorityMode === "leth" && h.buffType === "leth") {
       ev *= 1.06;
     }
     if (h.chance === 100) ev += 0.05;
@@ -1375,12 +1534,13 @@
     const candidates = masterData.heroes
       .filter(h => userState.ownedMap[h.id] && h.buffType !== "invalid")
       .filter(h => !h.rallyAlias || !usedInRally.includes(h.rallyAlias))
-      .map(h => ({ ...h, score: getHeroScore(h, userState.preferAtkBuff) }))
+      .map(h => ({ ...h, score: getHeroScore(h, userState.buffPriority || "leth") }))
       .sort((a, b) => b.score - a.score);
 
     const n = userState.squadCount;
     const caps = userState.marchCaps;
     const minT = userState.minTroop;
+    const maxArcCapPerSquad = caps.map(c => Math.floor(c * ((userState.maxArcPct ?? 90) / 100)));
     let remInf = userState.infTotal;
     let remCav = userState.cavTotal;
     let remArc = userState.arcTotal;
@@ -1404,8 +1564,9 @@
       let capLeft = caps[i];
       const aInf = Math.min(remInf, minT, capLeft); remInf -= aInf; capLeft -= aInf;
       const aCav = Math.min(remCav, minT, capLeft); remCav -= aCav; capLeft -= aCav;
-      const aArc = Math.min(remArc, minT, capLeft); remArc -= aArc; capLeft -= aArc;
-      squads.push({ inf: aInf, cav: aCav, arc: aArc, cap: caps[i] });
+      const arcAllowedByCap = Math.max(0, maxArcCapPerSquad[i]);
+      const aArc = Math.min(remArc, minT, capLeft, arcAllowedByCap); remArc -= aArc; capLeft -= aArc;
+      squads.push({ inf: aInf, cav: aCav, arc: aArc, cap: caps[i], maxArc: maxArcCapPerSquad[i] });
     }
 
     const fillOrder = userState.stance === "top"
@@ -1416,8 +1577,9 @@
       const s = squads[idx];
       const currentTotal = s.inf + s.cav + s.arc;
       const room = Math.max(0, s.cap - currentTotal);
-      const targetArc = Math.floor(s.cap * arcRatios[idx]);
-      const needArc = Math.max(0, Math.min(room, targetArc - s.arc, remArc));
+      const arcRoom = Math.max(0, s.maxArc - s.arc);
+      const targetArc = Math.min(s.maxArc, Math.floor(s.cap * arcRatios[idx]));
+      const needArc = Math.max(0, Math.min(room, arcRoom, targetArc - s.arc, remArc));
       s.arc += needArc;
       remArc -= needArc;
     });
@@ -1425,8 +1587,9 @@
     fillOrder.forEach(idx => {
       const s = squads[idx];
       let room = Math.max(0, s.cap - (s.inf + s.cav + s.arc));
-      if (room > 0 && remArc > 0) {
-        const add = Math.min(room, remArc);
+      const arcRoom = Math.max(0, s.maxArc - s.arc);
+      if (room > 0 && arcRoom > 0 && remArc > 0) {
+        const add = Math.min(room, arcRoom, remArc);
         s.arc += add; remArc -= add; room -= add;
       }
       if (room > 0 && remCav > 0) {
@@ -1511,7 +1674,7 @@
   }
 
   // ==========================================
-  // 6. 英雄個別編集モーダル
+  // 6. 英雄個別編集モーダル（rallyPools 整合性連動）
   // ==========================================
   function openHeroEditor(heroId) {
     const delBtn = document.getElementById("deleteHeroBtn");
@@ -1558,11 +1721,12 @@
     const lv5 = Number(document.getElementById("editLv5").value) || 0;
     const lv2 = Number(((lv1 + lv3) / 2).toFixed(1));
     const lv4 = Number(((lv3 + lv5) / 2).toFixed(1));
+    const newType = document.getElementById("editType").value;
 
     const obj = {
       id,
       name,
-      type: document.getElementById("editType").value,
+      type: newType,
       tier: document.getElementById("editTier").value,
       buffType: document.getElementById("editBuffType").value,
       unique: document.getElementById("editUnique").value === "true",
@@ -1576,15 +1740,28 @@
 
     const idx = masterData.heroes.findIndex(x => x.id === id);
     if (idx >= 0) {
-      masterData.heroes[idx] = { ...masterData.heroes[idx], ...obj };
+      const prev = masterData.heroes[idx];
+      if (prev.type !== newType && Array.isArray(masterData.rallyPools[prev.type])) {
+        masterData.rallyPools[prev.type] = masterData.rallyPools[prev.type].filter(n => n !== prev.name && n !== prev.rallyAlias);
+      }
+      if (prev.name !== name && Array.isArray(masterData.rallyPools[newType])) {
+        masterData.rallyPools[newType] = masterData.rallyPools[newType].map(n => (n === prev.name || n === prev.rallyAlias) ? name : n);
+      }
+      masterData.heroes[idx] = { ...prev, ...obj };
     } else {
       masterData.heroes.push(obj);
       userState.ownedMap[id] = true;
       userState.lvMap[id] = 5;
-      if (!masterData.rallyPools[obj.type].includes(name)) {
-        masterData.rallyPools[obj.type].unshift(name);
-      }
     }
+
+    if (!Array.isArray(masterData.rallyPools[newType])) {
+      masterData.rallyPools[newType] = [];
+    }
+    if (!masterData.rallyPools[newType].includes(name)) {
+      masterData.rallyPools[newType].push(name);
+    }
+
+    normalizeMasterConsistency(masterData);
     closeModal("heroEditModal");
     renderAll();
     showToast("英雄データを更新しました");
@@ -1593,7 +1770,13 @@
   function deleteHero() {
     const id = document.getElementById("editHeroId").value;
     if (!id || !confirm("この英雄をリストから削除しますか？")) return;
+    const target = masterData.heroes.find(x => x.id === id);
     masterData.heroes = masterData.heroes.filter(x => x.id !== id);
+    if (target && Array.isArray(masterData.rallyPools[target.type])) {
+      masterData.rallyPools[target.type] = masterData.rallyPools[target.type].filter(
+        n => n !== target.name && n !== target.rallyAlias
+      );
+    }
     closeModal("heroEditModal");
     renderAll();
   }
@@ -1602,17 +1785,20 @@
   // 7. マスタデータ JSON / AIプロンプト / Firebase 一括更新
   // ==========================================
   function openDataModal() {
+    normalizeMasterConsistency(masterData);
     document.getElementById("jsonArea").value = JSON.stringify(masterData, null, 2);
     openModal("dataModal");
   }
 
   function exportMasterJson() {
+    normalizeMasterConsistency(masterData);
     const str = JSON.stringify(masterData, null, 2);
     document.getElementById("jsonArea").value = str;
     navigator.clipboard.writeText(str).then(() => showToast("マスタJSONをコピーしました！"));
   }
 
   function copyAiUpdatePrompt() {
+    normalizeMasterConsistency(masterData);
     const currentJson = JSON.stringify(masterData, null, 2);
     const promptText = `あなたはスマホゲーム「キングショット（KingShot）」の巨熊狩猟（Bear Trap）データアナリストです。
 以下の手順とルールに従って、既存の「マスターデータJSON」を最新世代までアップデートした新しいJSONを作成してください。
@@ -1620,11 +1806,13 @@
 【調査・データ抽出ルール】
 1. キャラクター情報・スキル数値の取得：
    - 日本の攻略サイト「アルテマ（altema.jp/kingshot）」の最新英雄一覧・スキルページを参照し、新世代キャラクターの名前・兵種（inf/cav/arc）・第1遠征スキルのLv.1〜Lv.5倍率・発動確率・持続ターンを正確に取得してください。
-2. 評価・考察の反映：
+2. 集結主リスト（rallyPools）の兵種別更新：
+   - rallyPools.inf（歩兵のみ）、rallyPools.cav（騎兵のみ）、rallyPools.arc（弓兵のみ）のそれぞれに、新世代を含む該当兵種の全キャラクターを漏れなく登録してください（他兵種を混ぜないでください）。
+3. 評価・考察の反映：
    - 海外コミュニティ「Reddit（r/KingShot）」の最新考察を分析し、集結主（rallyPools）の優先順位、乗り手Tier（S/A）、重複不可（unique: true/false）、状態異常などの熊無効スキル（buffType: "invalid"）の判定を反映してください。
-3. 環境Tier表（tierGuide）の同時更新：
+4. 環境Tier表（tierGuide）の同時更新：
    - JSON内の "version" および "tierGuide"（集結主優先度・乗り手S/A基準・10ターン仕様とReddit考察）も、新世代の評価を含めた最新内容へ書き換えてください。
-4. 出力形式の厳守：
+5. 出力形式の厳守：
    - 既存キャラクターの "id" は変更しないでください（ユーザーの個人保存データとスマートマージするため）。
    - 解説は最小限にし、そのままツールへ貼り付けられる完全なJSONコードブロックのみを出力してください。
 
@@ -1640,7 +1828,7 @@ ${currentJson}`;
     if (!incoming || !Array.isArray(incoming.heroes)) {
       throw new Error("不正なJSON形式です（heroes配列が必要です）");
     }
-    masterData = incoming;
+    masterData = normalizeMasterConsistency(incoming);
     if (!masterData.tierGuide) {
       masterData.tierGuide = JSON.parse(JSON.stringify(DEFAULT_MASTER.tierGuide));
     }
@@ -1680,7 +1868,7 @@ ${currentJson}`;
       return alert("Firebaseが初期化されていません。設定を確認してください。");
     }
     try {
-      const parsed = JSON.parse(document.getElementById("jsonArea").value);
+      const parsed = normalizeMasterConsistency(JSON.parse(document.getElementById("jsonArea").value));
       db.ref(DB_NODE).set(parsed).then(() => {
         applyMasterUpdate(parsed, true);
         closeModal("dataModal");
