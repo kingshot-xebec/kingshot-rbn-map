@@ -73,9 +73,6 @@
       border-color: rgba(148, 163, 184, 0.4);
       color: #cbd5e1;
     }
-    button, select, a.open-link-btn, input[type="checkbox"], input[type="radio"] {
-      touch-action: manipulation;
-    }
     button {
       cursor: pointer;
       border: 1px solid var(--border);
@@ -89,8 +86,6 @@
       gap: 6px;
       background: var(--card-sub);
       color: var(--text);
-      position: relative;
-      z-index: 1;
     }
     button:hover { background: #334155; border-color: #64748b; }
     .btn-primary { background: var(--blue-strong); border-color: var(--blue); color: #fff; }
@@ -406,16 +401,12 @@
       inset: 0;
       background: rgba(2, 6, 23, 0.78);
       display: none;
-      pointer-events: none;
       align-items: center;
       justify-content: center;
       padding: 16px;
       z-index: 1000;
     }
-    .modal-backdrop.open {
-      display: flex;
-      pointer-events: auto;
-    }
+    .modal-backdrop.open { display: flex; }
     .modal {
       background: var(--card);
       border: 1px solid var(--border);
@@ -1135,7 +1126,7 @@
             <option value="arc">🏹 弓兵</option>
           </select>
           <button type="button" class="btn-primary" onclick="addPoolHeroManual()">追加する</button>
-          <button type="button" class="btn-secondary" style="margin-left:auto; font-size:0.76rem;" onclick="resetPoolsToDefault()">🔄 アルテマ全37名基準にリセット</button>
+          <button type="button" class="btn-secondary" style="margin-left:auto; font-size:0.76rem;" onclick="resetPoolsToDefault()">🔄 初期基準へリセット</button>
         </div>
         <div id="inspectPoolsGrid" class="pool-columns"></div>
       </div>
@@ -1259,7 +1250,7 @@
         <ol>
           <li>下の<strong>「🤖 AI更新用プロンプト＋現行JSONをコピー」</strong>ボタンを押します（アルテマ優先・他日本語サイト補完でキャラ／スキル情報を収集し、Redditは仕様考察の参考として反映する指示文と現在データがセットでコピーされます）。</li>
           <li>Gemini等のAIチャットにそのまま貼り付けて送信し、出力された<strong>更新済みJSON</strong>をコピーします。</li>
-          <li>下の「マスタJSONデータ」欄へ貼り付け（スマートマージON推奨）、管理者パスコードを入力して<strong>「☁️ Firebaseへ保存して全員に配信」</strong>を押すと、全英雄データと<strong>環境Tier表</strong>が同盟メンバー全員へ即時反映されます。</li>
+          <li>下の「マスタJSONデータ」欄へ貼り付けて<strong>「☁️ Firebaseへ保存して全員に配信」</strong>を押すと、古いデータは一切残らず貼り付けたJSONの内容で全員分が完全置換されます（各自の所持チェック・スキルLvは保持されます）。</li>
         </ol>
       </div>
 
@@ -1269,17 +1260,17 @@
       </div>
 
       <label class="field" style="margin-top: 10px;">
-        マスタJSONデータ（英雄データ・集結主リスト（歩/騎/弓全キャラ）・環境Tier表を一括管理）
+        マスタJSONデータ（貼り付けたJSONの内容で全英雄・集結主リスト・Tier表を完全置換）
         <textarea id="jsonArea" rows="8" placeholder="ここにマスタJSONを貼り付け..."></textarea>
       </label>
       <div style="margin-top: 10px;">
         <label style="display: flex; align-items: center; gap: 8px; font-size: 0.84rem;">
           <input type="checkbox" id="smartMergeChk" checked style="width:16px; height:16px;" />
-          <span><strong>スマートマージ（推奨）：</strong> 各自が設定済みの所持チェック・スキルLvを消さずに新データだけ統合</span>
+          <span><strong>個人設定を引き継ぐ（推奨）：</strong> 各自の所持チェック・スキルLvだけ残し、マスタデータ本体は貼り付けたJSONで完全更新</span>
         </label>
       </div>
       <div style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
-        <button class="btn-secondary" onclick="importLocalJson()">📥 自分の端末だけに反映</button>
+        <button class="btn-secondary" onclick="importLocalJson()">📥 自分の端末だけに完全反映</button>
       </div>
 
       <hr style="border: 0; border-top: 1px solid var(--border); margin: 16px 0;" />
@@ -1367,7 +1358,7 @@
   const ADMIN_PASSCODE = "rbn2011";
   const DB_NODE = "bear_master";
   const STORAGE_KEY = "rbn_bear_sim_user_v6";
-  const MASTER_CACHE_KEY = "rbn_bear_master_cache_v2";
+  const MASTER_CACHE_KEY = "rbn_bear_master_cache_v3";
 
   function normalizeHeroLvMap(rawLv) {
     if (Array.isArray(rawLv)) {
@@ -1522,7 +1513,7 @@
     };
     const str = JSON.stringify(payload, null, 2);
     document.getElementById("setSharedJson").value = str;
-    fallbackCopyText(str, "共通設定JSONをコピーしました！");
+    navigator.clipboard.writeText(str).then(() => showToast("共通設定JSONをコピーしました！"));
   }
 
   function applySharedSettingsJson() {
@@ -1575,24 +1566,6 @@
   // ==========================================
   // 2. S1〜S8 初期マスタデータ（アルテマ英雄一覧・全37名完全準拠版）
   // ==========================================
-  const HERO_TYPE_REGISTRY = {
-    inf: [
-      "アマデウス (S1)", "ゾーイ (S2)", "ヘルガ (S1)", "アルカ (S4)", "ディエゴ (S8)",
-      "龍飛 (S5)", "トリトン (S6)", "チャールズ (S7)",
-      "エリック (S3)", "ハワード (SR)", "スミス (R)", "フォルスト (R)"
-    ],
-    cav: [
-      "アイヴァ (S7)", "ペーラ (S3)", "スルード (S5)", "ソフィア (S6)", "リズ (S8)",
-      "マーゴ (S4)", "ヒルデ (S2)", "ジェベル (S1)",
-      "チェンコ (SR)", "ゴードン (SR)", "ファハド (SR)", "エドウィン (R)"
-    ],
-    arc: [
-      "ルナ (S8)", "レン&ロン (S7)", "ヤン (S6)", "ローザ (S4)", "ビビアン (S5)", "マリン (S2)",
-      "イェーガー (S3)", "あまね (SR)", "インウー (SR)", "サロ (S1)",
-      "ダイアナ (SR)", "クイン (SR)", "オリーブ (R)"
-    ]
-  };
-
   const RALLY_RECOMMENDED = {
     inf: ["アマデウス (S1)", "ゾーイ (S2)", "ヘルガ (S1)", "アルカ (S4)", "ディエゴ (S8)"],
     cav: ["アイヴァ (S7)", "ペーラ (S3)", "スルード (S5)", "ソフィア (S6)", "リズ (S8)"],
@@ -1688,19 +1661,14 @@
   };
 
   // ==========================================
-  // 3. マスタデータ整合性保証＆Firebase同期ロジック
+  // 3. マスタデータ整合性保証（古い初期データを強制マージしない完全置換対応）
   // ==========================================
-  function normalizeMasterConsistency(targetMaster, trustIncomingPools = true) {
+  function normalizeMasterConsistency(targetMaster) {
     sanitizeMasterObject(targetMaster);
     if (!targetMaster.rallyPools || typeof targetMaster.rallyPools !== "object") {
       targetMaster.rallyPools = { inf: [], cav: [], arc: [] };
     }
-    const allPoolsPopulated = ["inf", "cav", "arc"].every(
-      (t) => Array.isArray(targetMaster.rallyPools[t]) && targetMaster.rallyPools[t].length > 0
-    );
-
     ["inf", "cav", "arc"].forEach((t) => {
-      const baseDefaults = DEFAULT_MASTER.rallyPools[t] || [];
       const existingPool = Array.isArray(targetMaster.rallyPools[t]) ? targetMaster.rallyPools[t] : [];
       const fromHeroes = (targetMaster.heroes || [])
         .filter((h) => h && h.type === t)
@@ -1716,23 +1684,13 @@
         }
       });
 
-      const otherRegistryNames = new Set();
-      if (!trustIncomingPools && !allPoolsPopulated) {
-        otherTypes.forEach((other) => {
-          (HERO_TYPE_REGISTRY[other] || []).forEach((n) => otherRegistryNames.add(String(n).trim()));
-        });
-      }
-
       const merged = [];
       const seen = new Set();
-      const sourceList = (trustIncomingPools || allPoolsPopulated)
-        ? [...existingPool, ...fromHeroes]
-        : [...existingPool, ...baseDefaults, ...fromHeroes];
-
-      sourceList.forEach((name) => {
+      // 貼り付けた・保存された rallyPools と heroes のみを尊重（DEFAULT_MASTERの古い配列は混ぜない）
+      [...existingPool, ...fromHeroes].forEach((name) => {
         const clean = String(name || "").trim();
         if (!clean || seen.has(clean)) return;
-        if (otherHeroNames.has(clean) || otherRegistryNames.has(clean)) return;
+        if (otherHeroNames.has(clean)) return;
         seen.add(clean);
         merged.push(clean);
       });
@@ -1741,20 +1699,18 @@
     return targetMaster;
   }
 
-  normalizeMasterConsistency(masterData, true);
+  normalizeMasterConsistency(masterData);
 
   function initApp() {
-    try { applyViewMode(); } catch (e) { console.warn(e); }
-    try {
-      const cachedMaster = loadMasterCache();
-      if (cachedMaster) {
-        masterData = normalizeMasterConsistency(cachedMaster, true);
-      }
-    } catch (e) { console.warn(e); }
-    try { loadUserState(); } catch (e) { console.warn(e); }
-    try { syncSettingsModalUI(); } catch (e) { console.warn(e); }
-    try { initFirebase(); } catch (e) { console.warn(e); }
-    try { renderAll(); } catch (e) { console.warn(e); }
+    applyViewMode();
+    const cachedMaster = loadMasterCache();
+    if (cachedMaster) {
+      masterData = normalizeMasterConsistency(cachedMaster);
+    }
+    loadUserState();
+    syncSettingsModalUI();
+    initFirebase();
+    renderAll();
   }
 
   function initFirebase() {
@@ -1899,760 +1855,4 @@
   function syncJoinCaps() {
     const val = Math.max(1000, Number(document.getElementById("cap1").value) || 125000);
     for (let i = 2; i < 7; i++) {
-      document.getElementById(`cap${i}`).value = val;
-    }
-    recalc();
-    showToast("乗り1軍の定員を2〜6軍へ反映しました");
-  }
-
-  function saveUserState() {
-    userState.infTotal = Math.max(0, Number(document.getElementById("infTotal").value) || 0);
-    userState.cavTotal = Math.max(0, Number(document.getElementById("cavTotal").value) || 0);
-    userState.arcTotal = Math.max(0, Number(document.getElementById("arcTotal").value) || 0);
-    userState.squadCount = Number(document.getElementById("squadCount").value) || 7;
-    userState.minTroop = Math.max(0, Number(document.getElementById("minTroop").value) || 0);
-    const rawArcPct = Number(document.getElementById("maxArcPct").value);
-    userState.maxArcPct = Number.isFinite(rawArcPct) ? Math.min(100, Math.max(0, rawArcPct)) : 90;
-    for (let i = 0; i < 7; i++) {
-      userState.marchCaps[i] = Math.max(1000, Number(document.getElementById(`cap${i}`).value) || 100000);
-    }
-    userState.rallyInf = document.getElementById("rallyInf").value;
-    userState.rallyCav = document.getElementById("rallyCav").value;
-    userState.rallyArc = document.getElementById("rallyArc").value;
-    const st = document.querySelector('input[name="stance"]:checked');
-    if (st) userState.stance = st.value;
-
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(userState));
-  }
-
-  function resetLocalUser() {
-    if (!confirm("入力した兵士数・各部隊定員・弓兵上限・所持英雄・バフ優先設定を初期値に戻しますか？")) return;
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem("rbn_bear_sim_user_v5");
-    localStorage.removeItem("rbn_bear_sim_user_v4");
-    localStorage.removeItem("rbn_bear_sim_user_v3");
-    localStorage.removeItem("rbn_bear_sim_user_v2");
-    location.reload();
-  }
-
-  // ==========================================
-  // 4. UI描画・兵種別プルダウン・Tier表動的描画
-  // ==========================================
-  function renderAll() {
-    normalizeMasterConsistency(masterData, true);
-    if (masterData.version) {
-      document.getElementById("masterVersionLabel").textContent = masterData.version;
-    }
-    renderRallySelects();
-    renderHeroCards();
-    renderTierModalContent();
-    recalc();
-  }
-
-  function renderTierModalContent() {
-    const guide = masterData.tierGuide || DEFAULT_MASTER.tierGuide;
-    document.getElementById("tierModalTitle").textContent = guide.title || "🏆 巨熊狩猟 環境Tier・詳細仕様解説";
-    const bodyEl = document.getElementById("tierModalBody");
-    bodyEl.innerHTML = (guide.sections || []).map(sec => {
-      const lis = (sec.items || []).map(item => {
-        const parts = item.split("：");
-        if (parts.length > 1) {
-          return `<li><strong>${parts[0]}：</strong>${parts.slice(1).join("：")}</li>`;
-        }
-        return `<li>${item}</li>`;
-      }).join("");
-      return `<h4>${sec.heading}</h4><ul>${lis}</ul>`;
-    }).join("");
-  }
-
-  function openTierModal() {
-    renderTierModalContent();
-    openModal("tierModal");
-  }
-
-  function getAllowedNamesForType(typeKey) {
-    const allowed = new Set();
-    const pool = (masterData.rallyPools && masterData.rallyPools[typeKey]) || [];
-    pool.forEach((n) => allowed.add(String(n).trim()));
-    (masterData.heroes || []).forEach((h) => {
-      if (h && h.type === typeKey) {
-        if (h.name) allowed.add(String(h.name).trim());
-        if (h.rallyAlias) allowed.add(String(h.rallyAlias).trim());
-      }
-    });
-    return allowed;
-  }
-
-  function isNameAllowedForType(name, typeKey) {
-    const clean = String(name || "").trim();
-    if (!clean) return false;
-    const otherTypes = ["inf", "cav", "arc"].filter((t) => t !== typeKey);
-    const inOtherHeroList = (masterData.heroes || []).some(
-      (h) => h && otherTypes.includes(h.type) && (String(h.name || "").trim() === clean || String(h.rallyAlias || "").trim() === clean)
-    );
-    if (inOtherHeroList) return false;
-
-    const pool = (masterData.rallyPools && masterData.rallyPools[typeKey]) || [];
-    if (pool.includes(clean)) return true;
-
-    const allowedSet = getAllowedNamesForType(typeKey);
-    return allowedSet.has(clean);
-  }
-
-  function renderRallySelects() {
-    const pools = masterData.rallyPools || { inf: [], cav: [], arc: [] };
-
-    const buildTypeOptions = (selectId, typeKey, savedVal) => {
-      const sel = document.getElementById(selectId);
-      const rawPool = Array.isArray(pools[typeKey]) ? pools[typeKey] : [];
-      const heroNamesOfType = (masterData.heroes || [])
-        .filter((h) => h && h.type === typeKey)
-        .map((h) => String(h.rallyAlias || h.name || "").trim())
-        .filter(Boolean);
-
-      const filteredPool = [];
-      const poolSeen = new Set();
-      [...rawPool, ...heroNamesOfType].forEach((name) => {
-        const clean = String(name || "").trim();
-        if (!clean || poolSeen.has(clean)) return;
-        if (!isNameAllowedForType(clean, typeKey)) return;
-        poolSeen.add(clean);
-        filteredPool.push(clean);
-      });
-
-      const recSeed = RALLY_RECOMMENDED[typeKey] || [];
-      const recommendedList = [];
-      const seen = new Set();
-      recSeed.forEach((name) => {
-        if (filteredPool.includes(name) && !seen.has(name)) {
-          seen.add(name);
-          recommendedList.push(name);
-        }
-      });
-      const otherSameTypeList = filteredPool.filter((name) => !seen.has(name));
-
-      const typeLabelMap = { inf: "歩兵", cav: "騎兵", arc: "弓兵" };
-      const tLabel = typeLabelMap[typeKey] || "";
-
-      let html = `<optgroup label="★ ${tLabel} 推奨上位">`;
-      recommendedList.forEach(name => {
-        html += `<option value="${name}">${name}</option>`;
-      });
-      html += `</optgroup><optgroup label="${tLabel} その他（${tLabel}全キャラ）">`;
-      otherSameTypeList.forEach(name => {
-        html += `<option value="${name}">${name}</option>`;
-      });
-      html += `</optgroup>`;
-      sel.innerHTML = html;
-
-      if (filteredPool.includes(savedVal)) {
-        sel.value = savedVal;
-      } else if (recommendedList.length > 0) {
-        sel.value = recommendedList[0];
-      } else if (otherSameTypeList.length > 0) {
-        sel.value = otherSameTypeList[0];
-      }
-    };
-
-    buildTypeOptions("rallyInf", "inf", userState.rallyInf);
-    buildTypeOptions("rallyCav", "cav", userState.rallyCav);
-    buildTypeOptions("rallyArc", "arc", userState.rallyArc);
-
-    userState.rallyInf = document.getElementById("rallyInf").value;
-    userState.rallyCav = document.getElementById("rallyCav").value;
-    userState.rallyArc = document.getElementById("rallyArc").value;
-  }
-
-  function renderHeroCards() {
-    const grid = document.getElementById("heroGrid");
-    const typeLabel = { inf: "歩", cav: "騎", arc: "弓" };
-    const buffLabel = { atk: "攻撃UP", leth: "殺傷UP", dmg: "ダメ増", invalid: "熊無効" };
-
-    grid.innerHTML = masterData.heroes.map(h => {
-      const owned = !!userState.ownedMap[h.id];
-      const lv = userState.lvMap[h.id] || 5;
-      const lvObj = normalizeHeroLvMap(h.lv);
-      const probText = h.chance === 100 ? "常時" : `${h.chance}%/${h.dur}T`;
-      const valText = h.buffType === "invalid" ? "効果なし" : `+${lvObj[lv] || lvObj[5]}%`;
-      return `
-        <div class="hero-card ${owned ? "" : "disabled"}">
-          <div class="hero-left">
-            <input type="checkbox" ${owned ? "checked" : ""} onchange="toggleOwned('${h.id}', this.checked)" />
-            <span class="tier-tag tier-${h.tier}">${h.tier}</span>
-            <div class="hero-meta">
-              <div class="hero-name">${h.name} <span style="font-size:0.74rem; color:var(--muted);">[${typeLabel[h.type]}]</span></div>
-              <div class="hero-skill">${buffLabel[h.buffType]} ${valText}（${probText}）${h.unique ? "・重複不可" : ""}</div>
-            </div>
-          </div>
-          <div class="hero-right">
-            <select onchange="changeHeroLv('${h.id}', this.value)">
-              <option value="1" ${lv==1?"selected":""}>Lv.1</option>
-              <option value="2" ${lv==2?"selected":""}>Lv.2</option>
-              <option value="3" ${lv==3?"selected":""}>Lv.3</option>
-              <option value="4" ${lv==4?"selected":""}>Lv.4</option>
-              <option value="5" ${lv==5?"selected":""}>Lv.5</option>
-            </select>
-            <button class="icon-btn" title="編集" onclick="openHeroEditor('${h.id}')">✏️</button>
-          </div>
-        </div>
-      `;
-    }).join("");
-  }
-
-  function toggleOwned(id, checked) {
-    userState.ownedMap[id] = checked;
-    saveUserState();
-    renderHeroCards();
-    recalc();
-  }
-
-  function changeHeroLv(id, val) {
-    userState.lvMap[id] = Number(val);
-    saveUserState();
-    renderHeroCards();
-    recalc();
-  }
-
-  // ==========================================
-  // 5. 期待値計算（10ターンマルコフモデル）＆部隊別定員・弓兵上限対応兵力配分
-  // ==========================================
-  function calcEffectiveTurns(chancePct, duration) {
-    if (chancePct >= 100) return 10.0;
-    const p = chancePct / 100;
-    if (duration <= 1) return 10 * p;
-    let activeTurns = 0;
-    let stateProb = new Array(duration + 1).fill(0);
-    stateProb[0] = 1.0;
-    for (let t = 1; t <= 10; t++) {
-      let nextProb = new Array(duration + 1).fill(0);
-      for (let rem = 0; rem <= duration; rem++) {
-        const prob = stateProb[rem];
-        if (prob === 0) continue;
-        nextProb[duration] += prob * p;
-        activeTurns += prob * p;
-        if (rem > 1) {
-          nextProb[rem - 1] += prob * (1 - p);
-          activeTurns += prob * (1 - p);
-        } else {
-          nextProb[0] += prob * (1 - p);
-        }
-      }
-      stateProb = nextProb;
-    }
-    return activeTurns;
-  }
-
-  function getHeroScore(h, priorityMode) {
-    if (h.buffType === "invalid") return -1;
-    const lv = userState.lvMap[h.id] || 5;
-    const lvObj = normalizeHeroLvMap(h.lv);
-    const mag = lvObj[lv] || lvObj[5] || 0;
-    const effTurns = calcEffectiveTurns(h.chance, h.dur);
-    let ev = mag * (effTurns / 10);
-    if (priorityMode === "atk" && h.buffType === "atk") {
-      ev *= 1.06;
-    } else if (priorityMode === "leth" && h.buffType === "leth") {
-      ev *= 1.06;
-    }
-    if (h.chance === 100) ev += 0.05;
-    return ev;
-  }
-
-  function recalc() {
-    saveUserState();
-
-    const rInf = userState.rallyInf;
-    const rCav = userState.rallyCav;
-    const rArc = userState.rallyArc;
-    const warnEl = document.getElementById("interferenceWarn");
-    if (rCav.includes("ペーラ") && rInf.includes("ゾーイ")) {
-      warnEl.classList.add("active");
-    } else {
-      warnEl.classList.remove("active");
-    }
-
-    const usedInRally = [rInf, rCav, rArc];
-    const candidates = masterData.heroes
-      .filter(h => userState.ownedMap[h.id] && h.buffType !== "invalid")
-      .filter(h => !h.rallyAlias || !usedInRally.includes(h.rallyAlias))
-      .map(h => ({ ...h, score: getHeroScore(h, userState.buffPriority || "leth") }))
-      .sort((a, b) => b.score - a.score);
-
-    const n = userState.squadCount;
-    const caps = userState.marchCaps;
-    const minT = userState.minTroop;
-    const maxArcCapPerSquad = caps.map(c => Math.floor(c * ((userState.maxArcPct ?? 90) / 100)));
-    let remInf = userState.infTotal;
-    let remCav = userState.cavTotal;
-    let remArc = userState.arcTotal;
-
-    const arcRatios = [];
-    if (userState.stance === "top") {
-      arcRatios.push(0.80);
-      for (let i = 1; i < n; i++) arcRatios.push(Math.max(0.45, 0.75 - (i - 1) * 0.08));
-    } else if (userState.stance === "mid") {
-      arcRatios.push(0.60);
-      const joinPattern = [0.87, 0.82, 0.77, 0.65, 0.55, 0.45];
-      for (let i = 1; i < n; i++) arcRatios.push(joinPattern[i - 1] || 0.45);
-    } else {
-      arcRatios.push(0.35);
-      const supPattern = [0.88, 0.85, 0.80, 0.75, 0.60, 0.50];
-      for (let i = 1; i < n; i++) arcRatios.push(supPattern[i - 1] || 0.50);
-    }
-
-    const squads = [];
-    for (let i = 0; i < n; i++) {
-      let capLeft = caps[i];
-      const aInf = Math.min(remInf, minT, capLeft); remInf -= aInf; capLeft -= aInf;
-      const aCav = Math.min(remCav, minT, capLeft); remCav -= aCav; capLeft -= aCav;
-      const arcAllowedByCap = Math.max(0, maxArcCapPerSquad[i]);
-      const aArc = Math.min(remArc, minT, capLeft, arcAllowedByCap); remArc -= aArc; capLeft -= aArc;
-      squads.push({ inf: aInf, cav: aCav, arc: aArc, cap: caps[i], maxArc: maxArcCapPerSquad[i] });
-    }
-
-    const fillOrder = userState.stance === "top"
-      ? [...Array(n).keys()]
-      : [1, 2, 0, 3, 4, 5, 6].filter(idx => idx < n);
-
-    fillOrder.forEach(idx => {
-      const s = squads[idx];
-      const currentTotal = s.inf + s.cav + s.arc;
-      const room = Math.max(0, s.cap - currentTotal);
-      const arcRoom = Math.max(0, s.maxArc - s.arc);
-      const targetArc = Math.min(s.maxArc, Math.floor(s.cap * arcRatios[idx]));
-      const needArc = Math.max(0, Math.min(room, arcRoom, targetArc - s.arc, remArc));
-      s.arc += needArc;
-      remArc -= needArc;
-    });
-
-    fillOrder.forEach(idx => {
-      const s = squads[idx];
-      let room = Math.max(0, s.cap - (s.inf + s.cav + s.arc));
-      const arcRoom = Math.max(0, s.maxArc - s.arc);
-      if (room > 0 && arcRoom > 0 && remArc > 0) {
-        const add = Math.min(room, arcRoom, remArc);
-        s.arc += add; remArc -= add; room -= add;
-      }
-      if (room > 0 && remCav > 0) {
-        const add = Math.min(room, remCav);
-        s.cav += add; remCav -= add; room -= add;
-      }
-      if (room > 0 && remInf > 0) {
-        const add = Math.min(room, remInf);
-        s.inf += add; remInf -= add; room -= add;
-      }
-    });
-
-    const tbody = document.getElementById("resultBody");
-    const mobileCardsEl = document.getElementById("mobileResultCards");
-    let rowsHtml = "";
-    let mobileHtml = "";
-    window._lastExportLines = [];
-
-    squads.forEach((s, i) => {
-      const total = s.inf + s.cav + s.arc;
-      const pInf = total ? Math.round((s.inf / total) * 100) : 0;
-      const pCav = total ? Math.round((s.cav / total) * 100) : 0;
-      const pArc = total ? Math.max(0, 100 - pInf - pCav) : 0;
-
-      if (i === 0) {
-        const heroStr = `${rInf} / ${rCav} / ${rArc}`;
-        rowsHtml += `
-          <tr class="squad-rally">
-            <td><strong>🔥 自集結</strong><div style="font-size:0.74rem; color:var(--accent);">集結主</div></td>
-            <td><strong>${heroStr}</strong></td>
-            <td>${s.inf.toLocaleString()}</td>
-            <td>${s.cav.toLocaleString()}</td>
-            <td><strong style="color:var(--accent);">${s.arc.toLocaleString()}</strong></td>
-            <td>
-              <strong>${total.toLocaleString()}</strong> <span style="font-size:0.75rem; color:var(--muted);">/ ${s.cap.toLocaleString()}</span>
-              <div style="font-size:0.75rem; color:var(--muted);">${pInf}% / ${pCav}% / ${pArc}%</div>
-              <div class="ratio-bar">
-                <div class="r-inf" style="width:${pInf}%"></div>
-                <div class="r-cav" style="width:${pCav}%"></div>
-                <div class="r-arc" style="width:${pArc}%"></div>
-              </div>
-            </td>
-          </tr>
-        `;
-        mobileHtml += `
-          <div class="m-squad-card rally">
-            <div class="m-squad-head">
-              <span class="m-squad-title" style="color:var(--accent);">🔥 自集結（集結主）</span>
-              <span class="m-squad-cap">計 ${total.toLocaleString()} / ${s.cap.toLocaleString()}</span>
-            </div>
-            <div class="m-squad-hero">${heroStr}</div>
-            <div class="m-troop-pills">
-              <div class="m-pill"><span class="m-pill-lbl">🛡️ 歩兵</span><span class="m-pill-val">${s.inf.toLocaleString()}</span><span class="m-pill-pct">${pInf}%</span></div>
-              <div class="m-pill"><span class="m-pill-lbl">🐎 騎兵</span><span class="m-pill-val">${s.cav.toLocaleString()}</span><span class="m-pill-pct">${pCav}%</span></div>
-              <div class="m-pill" style="border-color:rgba(245,158,11,0.5);"><span class="m-pill-lbl">🏹 弓兵</span><span class="m-pill-val" style="color:var(--accent);">${s.arc.toLocaleString()}</span><span class="m-pill-pct">${pArc}%</span></div>
-            </div>
-            <div class="ratio-bar">
-              <div class="r-inf" style="width:${pInf}%"></div>
-              <div class="r-cav" style="width:${pCav}%"></div>
-              <div class="r-arc" style="width:${pArc}%"></div>
-            </div>
-          </div>
-        `;
-        window._lastExportLines.push(`【自集結】${heroStr}｜歩:${s.inf.toLocaleString()} / 騎:${s.cav.toLocaleString()} / 弓:${s.arc.toLocaleString()}（${pInf}/${pCav}/${pArc}%）`);
-      } else {
-        const leader = candidates[i - 1];
-        const leaderName = leader ? `${leader.name} (Lv.${userState.lvMap[leader.id] || 5})` : "未設定（自由枠）";
-        const dupTag = leader && leader.unique
-          ? `<div><span class="dup-badge">⚠️集結主含め集結内に1人まで（重複不可）</span></div>`
-          : "";
-        rowsHtml += `
-          <tr>
-            <td><strong>⚔️ 乗り ${i}軍</strong><div style="font-size:0.74rem; color:var(--muted);">参加者枠</div></td>
-            <td>
-              <strong style="color:var(--blue);">${leaderName}</strong> <span style="font-size:0.76rem; color:var(--muted);">＋ 自由2名</span>
-              ${dupTag}
-            </td>
-            <td>${s.inf.toLocaleString()}</td>
-            <td>${s.cav.toLocaleString()}</td>
-            <td><strong>${s.arc.toLocaleString()}</strong></td>
-            <td>
-              <strong>${total.toLocaleString()}</strong> <span style="font-size:0.75rem; color:var(--muted);">/ ${s.cap.toLocaleString()}</span>
-              <div style="font-size:0.75rem; color:var(--muted);">${pInf}% / ${pCav}% / ${pArc}%</div>
-              <div class="ratio-bar">
-                <div class="r-inf" style="width:${pInf}%"></div>
-                <div class="r-cav" style="width:${pCav}%"></div>
-                <div class="r-arc" style="width:${pArc}%"></div>
-              </div>
-            </td>
-          </tr>
-        `;
-        mobileHtml += `
-          <div class="m-squad-card">
-            <div class="m-squad-head">
-              <span class="m-squad-title">⚔️ 乗り ${i}軍</span>
-              <span class="m-squad-cap">計 ${total.toLocaleString()} / ${s.cap.toLocaleString()}</span>
-            </div>
-            <div class="m-squad-hero">左端: ${leaderName} <span style="font-size:0.74rem; color:var(--muted); font-weight:400;">＋ 自由2名</span>${dupTag}</div>
-            <div class="m-troop-pills">
-              <div class="m-pill"><span class="m-pill-lbl">🛡️ 歩兵</span><span class="m-pill-val">${s.inf.toLocaleString()}</span><span class="m-pill-pct">${pInf}%</span></div>
-              <div class="m-pill"><span class="m-pill-lbl">🐎 騎兵</span><span class="m-pill-val">${s.cav.toLocaleString()}</span><span class="m-pill-pct">${pCav}%</span></div>
-              <div class="m-pill"><span class="m-pill-lbl">🏹 弓兵</span><span class="m-pill-val" style="color:var(--accent);">${s.arc.toLocaleString()}</span><span class="m-pill-pct">${pArc}%</span></div>
-            </div>
-            <div class="ratio-bar">
-              <div class="r-inf" style="width:${pInf}%"></div>
-              <div class="r-cav" style="width:${pCav}%"></div>
-              <div class="r-arc" style="width:${pArc}%"></div>
-            </div>
-          </div>
-        `;
-        window._lastExportLines.push(`【乗り${i}軍】左端:${leaderName}｜歩:${s.inf.toLocaleString()} / 騎:${s.cav.toLocaleString()} / 弓:${s.arc.toLocaleString()}（${pInf}/${pCav}/${pArc}%）`);
-      }
-    });
-
-    tbody.innerHTML = rowsHtml;
-    if (mobileCardsEl) mobileCardsEl.innerHTML = mobileHtml;
-  }
-
-  function fallbackCopyText(text, successMsg) {
-    try {
-      if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
-        navigator.clipboard.writeText(text).then(() => showToast(successMsg)).catch(() => {
-          execCommandCopy(text, successMsg);
-        });
-      } else {
-        execCommandCopy(text, successMsg);
-      }
-    } catch (e) {
-      execCommandCopy(text, successMsg);
-    }
-  }
-
-  function execCommandCopy(text, successMsg) {
-    try {
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      ta.setAttribute("readonly", "");
-      ta.style.position = "fixed";
-      ta.style.top = "-9999px";
-      ta.style.left = "-9999px";
-      document.body.appendChild(ta);
-      ta.select();
-      ta.setSelectionRange(0, text.length);
-      document.execCommand("copy");
-      document.body.removeChild(ta);
-      showToast(successMsg);
-    } catch (err) {
-      showToast("コピー操作を実行しました");
-    }
-  }
-
-  function copyFormation() {
-    const header = `🐻 巨熊狩猟 最適編成表\n`;
-    const text = header + (window._lastExportLines || []).join("\n");
-    fallbackCopyText(text, "編成表をクリップボードにコピーしました！");
-  }
-
-  // ==========================================
-  // 6. 英雄個別編集モーダル（rallyPools 整合性連動）
-  // ==========================================
-  function openHeroEditor(heroId) {
-    const delBtn = document.getElementById("deleteHeroBtn");
-    if (!heroId) {
-      document.getElementById("editModalTitle").textContent = "新規英雄の追加";
-      document.getElementById("editHeroId").value = "";
-      document.getElementById("editName").value = "";
-      document.getElementById("editType").value = "arc";
-      document.getElementById("editTier").value = "S";
-      document.getElementById("editBuffType").value = "atk";
-      document.getElementById("editUnique").value = "false";
-      document.getElementById("editChance").value = 100;
-      document.getElementById("editDur").value = 10;
-      document.getElementById("editLv1").value = 6;
-      document.getElementById("editLv3").value = 18;
-      document.getElementById("editLv5").value = 30;
-      delBtn.style.display = "none";
-    } else {
-      const h = masterData.heroes.find(x => x.id === heroId);
-      if (!h) return;
-      const lvObj = normalizeHeroLvMap(h.lv);
-      document.getElementById("editModalTitle").textContent = `${h.name} のスキル編集`;
-      document.getElementById("editHeroId").value = h.id;
-      document.getElementById("editName").value = h.name;
-      document.getElementById("editType").value = h.type;
-      document.getElementById("editTier").value = h.tier;
-      document.getElementById("editBuffType").value = h.buffType;
-      document.getElementById("editUnique").value = String(!!h.unique);
-      document.getElementById("editChance").value = h.chance;
-      document.getElementById("editDur").value = h.dur;
-      document.getElementById("editLv1").value = lvObj[1];
-      document.getElementById("editLv3").value = lvObj[3];
-      document.getElementById("editLv5").value = lvObj[5];
-      delBtn.style.display = "inline-flex";
-    }
-    openModal("heroEditModal");
-  }
-
-  function saveHeroEdit() {
-    const id = document.getElementById("editHeroId").value || ("custom_" + Date.now());
-    const name = document.getElementById("editName").value.trim();
-    if (!name) return alert("英雄名を入力してください");
-    const lv1 = Number(document.getElementById("editLv1").value) || 0;
-    const lv3 = Number(document.getElementById("editLv3").value) || 0;
-    const lv5 = Number(document.getElementById("editLv5").value) || 0;
-    const lv2 = Number(((lv1 + lv3) / 2).toFixed(1));
-    const lv4 = Number(((lv3 + lv5) / 2).toFixed(1));
-    const newType = document.getElementById("editType").value;
-
-    const obj = {
-      id,
-      name,
-      type: newType,
-      tier: document.getElementById("editTier").value,
-      buffType: document.getElementById("editBuffType").value,
-      unique: document.getElementById("editUnique").value === "true",
-      chance: Number(document.getElementById("editChance").value) || 100,
-      dur: Number(document.getElementById("editDur").value) || 10,
-      lv: { 1: lv1, 2: lv2, 3: lv3, 4: lv4, 5: lv5 },
-      defaultOwned: true,
-      defaultLv: 5,
-      rallyAlias: name
-    };
-
-    const idx = masterData.heroes.findIndex(x => x.id === id);
-    if (idx >= 0) {
-      const prev = masterData.heroes[idx];
-      if (prev.type !== newType && Array.isArray(masterData.rallyPools[prev.type])) {
-        masterData.rallyPools[prev.type] = masterData.rallyPools[prev.type].filter(n => n !== prev.name && n !== prev.rallyAlias);
-      }
-      if (prev.name !== name && Array.isArray(masterData.rallyPools[newType])) {
-        masterData.rallyPools[newType] = masterData.rallyPools[newType].map(n => (n === prev.name || n === prev.rallyAlias) ? name : n);
-      }
-      masterData.heroes[idx] = { ...prev, ...obj };
-    } else {
-      masterData.heroes.push(obj);
-      userState.ownedMap[id] = true;
-      userState.lvMap[id] = 5;
-    }
-
-    if (!Array.isArray(masterData.rallyPools[newType])) {
-      masterData.rallyPools[newType] = [];
-    }
-    if (!masterData.rallyPools[newType].includes(name)) {
-      masterData.rallyPools[newType].push(name);
-    }
-
-    normalizeMasterConsistency(masterData, true);
-    saveMasterCache(masterData);
-    closeModal("heroEditModal");
-    renderAll();
-    showToast("英雄データを更新しました");
-  }
-
-  function deleteHero() {
-    const id = document.getElementById("editHeroId").value;
-    if (!id || !confirm("この英雄をリストから削除しますか？")) return;
-    const target = masterData.heroes.find(x => x.id === id);
-    masterData.heroes = masterData.heroes.filter(x => x.id !== id);
-    if (target && Array.isArray(masterData.rallyPools[target.type])) {
-      masterData.rallyPools[target.type] = masterData.rallyPools[target.type].filter(
-        n => n !== target.name && n !== target.rallyAlias
-      );
-    }
-    saveMasterCache(masterData);
-    closeModal("heroEditModal");
-    renderAll();
-  }
-
-  // ==========================================
-  // 7. マスタデータ JSON / AIプロンプト / Firebase 一括更新
-  // ==========================================
-  function openDataModal() {
-    normalizeMasterConsistency(masterData, true);
-    document.getElementById("jsonArea").value = JSON.stringify(masterData, null, 2);
-    openModal("dataModal");
-  }
-
-  function exportMasterJson() {
-    normalizeMasterConsistency(masterData, true);
-    const str = JSON.stringify(masterData, null, 2);
-    document.getElementById("jsonArea").value = str;
-    fallbackCopyText(str, "マスタJSONをコピーしました！");
-  }
-
-  function copyAiUpdatePrompt() {
-    normalizeMasterConsistency(masterData, true);
-    const currentJson = JSON.stringify(masterData, null, 2);
-    const promptText = `あなたはスマホゲーム「キングショット（KingShot）」の巨熊狩猟（Bear Trap）データアナリストです。
-以下の手順とルールに従って、既存の「マスターデータJSON」を最新世代までアップデートした新しいJSONを作成してください。
-
-【情報収集・分析の役割分担（厳守）】
-1. キャラクター情報・兵種・スキル数値の一次ソース（日本の攻略サイト最優先）：
-   - キャラクター名・兵種（inf=歩兵 / cav=騎兵 / arc=弓兵）・スキル効果・Lv倍率（"lv": {"1": ..., "2": ..., "3": ..., "4": ..., "5": ...} のオブジェクト形式）・確率・持続ターンなどの基礎マスタデータは、必ず「アルテマ（altema.jp/kingshot）」を最優先で参照して収集してください。
-   - アルテマで見つからない・未掲載の項目がある場合のみ、他の日本語攻略サイト（Game8・攻略Wiki・日本語データベース等）を補完的に参照して収集してください。
-   - 英語圏のRedditからキャラ情報やスキル数値を直接収集しないでください。
-2. Reddit（r/KingShot）の活用範囲（仕様考察・判定の参考のみ）：
-   - Redditの考察・検証情報は、「このスキルは巨熊にダメージが入る／無効になる」「状態異常や重複バフの挙動はどうなるか」「実戦での評価や立ち回り」といった**仕様判定・考察の参考**としてのみ活用してください。
-3. 集結主リスト（rallyPools）の兵種別更新：
-   - rallyPools.inf（歩兵のみ）、rallyPools.cav（騎兵のみ）、rallyPools.arc（弓兵のみ）のそれぞれに、アルテマ等の日本語攻略サイトで確認できた該当兵種のキャラクターのみを登録してください（他兵種を絶対に混ぜないでください）。
-4. 環境Tier表（tierGuide）の同時更新：
-   - JSON内の "version" および "tierGuide"（集結主優先度・乗り手S/A基準・10ターン仕様とReddit検証考察）も、新世代の評価を含めた最新内容へ書き換えてください。
-5. 出力形式の厳守：
-   - 既存キャラクターの "id" は変更しないでください（ユーザーの個人保存データとスマートマージするため）。
-   - "lv" は配列ではなく必ず {"1": 数値, "2": 数値, "3": 数値, "4": 数値, "5": 数値} の形式にしてください。
-   - 解説は最小限にし、そのままツールへ貼り付けられる完全なJSONコードブロックのみを出力してください。
-
-【現在のマスターデータJSON】
-${currentJson}`;
-
-    fallbackCopyText(promptText, "🤖 AI更新用プロンプト＋現行JSONをコピーしました！");
-  }
-
-  function applyMasterUpdate(incoming, smartMerge) {
-    if (!incoming || !Array.isArray(incoming.heroes)) {
-      throw new Error("不正なJSON形式です（heroes配列が必要です）");
-    }
-    const normalized = normalizeMasterConsistency(sanitizeMasterObject(incoming), true);
-    normalized._trustedManual = true;
-    normalized.updatedAt = Number(incoming.updatedAt) || Date.now();
-    masterData = normalized;
-    if (!masterData.tierGuide) {
-      masterData.tierGuide = JSON.parse(JSON.stringify(DEFAULT_MASTER.tierGuide));
-    }
-    masterData.heroes.forEach(h => {
-      if (!smartMerge || userState.ownedMap[h.id] === undefined) {
-        userState.ownedMap[h.id] = !!h.defaultOwned;
-      }
-      if (!smartMerge || userState.lvMap[h.id] === undefined) {
-        userState.lvMap[h.id] = h.defaultLv || 5;
-      }
-    });
-    saveMasterCache(masterData);
-    saveUserState();
-  }
-
-  function importLocalJson() {
-    try {
-      const parsed = JSON.parse(document.getElementById("jsonArea").value);
-      parsed._trustedManual = true;
-      const smart = document.getElementById("smartMergeChk").checked;
-      applyMasterUpdate(parsed, smart);
-      closeModal("dataModal");
-      renderAll();
-      showToast("端末内のマスタデータとTier表を更新しました！");
-    } catch (e) {
-      alert("JSONの読み込みに失敗しました: " + e.message);
-    }
-  }
-
-  function pushMasterToFirebase() {
-    const pass = document.getElementById("adminPassInput").value.trim();
-    if (pass !== ADMIN_PASSCODE) {
-      return alert("管理者パスコードが一致しません。");
-    }
-    if (!db) {
-      initFirebase();
-    }
-    if (!db) {
-      return alert("Firebaseが初期化されていません。設定を確認してください。");
-    }
-    try {
-      const rawParsed = JSON.parse(document.getElementById("jsonArea").value);
-      rawParsed._trustedManual = true;
-      rawParsed.updatedAt = Date.now();
-      const parsed = normalizeMasterConsistency(sanitizeMasterObject(rawParsed), true);
-      parsed._trustedManual = true;
-      parsed.updatedAt = rawParsed.updatedAt;
-      saveMasterCache(parsed);
-      db.ref(DB_NODE).set(parsed).then(() => {
-        applyMasterUpdate(parsed, true);
-        closeModal("dataModal");
-        renderAll();
-        showToast("☁️ Firebaseへ保存し、全メンバーの英雄・Tier表を更新しました！");
-      }).catch(err => {
-        alert("Firebase書き込みエラー（Realtime Databaseのルールを確認してください）: " + err.message);
-      });
-    } catch (e) {
-      alert("JSON形式エラー: " + e.message);
-    }
-  }
-
-  function openModal(id) { document.getElementById(id).classList.add("open"); }
-  function closeModal(id) { document.getElementById(id).classList.remove("open"); }
-  function showToast(msg) {
-    const t = document.getElementById("toast");
-    t.textContent = msg;
-    t.classList.add("show");
-    setTimeout(() => t.classList.remove("show"), 2600);
-  }
-
-  // ==========================================
-  // 8. マスターデータ確認・補正ページ（一覧表示＆ワンクリック兵種・数値補正）
-  // ==========================================
-  function openInspectModal() {
-    document.getElementById("inspectVersionBadge").textContent = masterData.version || "S1〜S8完全対応";
-    switchInspectTab("pools");
-    renderInspectModal();
-    openModal("inspectModal");
-  }
-
-  function switchInspectTab(tabName) {
-    ["pools", "heroes", "tier"].forEach((t) => {
-      const btn = document.getElementById("tabInspect" + t.charAt(0).toUpperCase() + t.slice(1));
-      const pane = document.getElementById("inspectPane" + t.charAt(0).toUpperCase() + t.slice(1));
-      if (btn) btn.classList.toggle("active", t === tabName);
-      if (pane) pane.style.display = t === tabName ? "block" : "none";
-    });
-    renderInspectModal();
-  }
-
-  function renderInspectModal() {
-    const poolsEl = document.getElementById("inspectPoolsGrid");
-    const typeDefs = [
-      { key: "inf", label: "🛡️ 歩兵（集結主）", color: "#60a5fa" },
-      { key: "cav", label: "🐎 騎兵（集結主）", color: "#34d399" },
-      { key: "arc", label: "🏹 弓兵（集結主）", color: "#fbbf24" }
-    ];
-    poolsEl.innerHTML = typeDefs.map((td) => {
-      const list = (masterData.rallyPools && masterData.rallyPools[td.key]) || [];
-      const rows = list.map((name, idx) => {
-        const isRec = (RALLY_RECOMMENDED[td.key] || []).includes(name);
-        return `
-          <div class="pool-item-row">
-            <span class="pool-item-name" title="${name}">${isRec ? "★ " : ""}${name}</span>
-            <di
+      document.getElementById(`cap${i}`).
