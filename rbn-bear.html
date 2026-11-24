@@ -1,8 +1,3 @@
-スマホのChromeやSafariでタップが確実に効くよう修正した完全版HTMLコードをそのまま出力します。
-スマホ向けタップ安定化の修正ポイント
- * 非表示モーダルのタップ透過（pointer-events: none）： 閉じているモーダル背景幕がタップを遮らないよう明示し、.open 時のみ pointer-events: auto にしました。
- * スマホ向けタッチ操作の最適化（touch-action: manipulation）： iOS Safari や Android Chrome でのダブルタップ遅延・タップ反応不良を防ぐため、ボタン・セレクト・チェックボックス等に touch-action: manipulation を設定しました。
- * 初期化の例外保護（try-catch）＆コピー処理のフォールバック： ストレージや通信環境による例外で初期化が途中で止まらないようにし、クリップボードAPIが使えない環境でもコピー処理が動作するようフォールバックを追加しました。
 <!DOCTYPE html>
 <html lang="ja">
 <head>
